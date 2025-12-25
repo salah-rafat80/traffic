@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String step; // "1 من 3", "2 من 3", "3 من 3"
+  final String step;
   final String? nextStepText; // "التالي : البيانات الشخصية"
   final VoidCallback? onBackPressed;
 
@@ -20,27 +20,23 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
     return SafeArea(
       child: Container(
         color: Colors.white,
+        height: preferredSize.height/1.8,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 8),
-            // Row 1: Logo centered on right
-            Align(
-              alignment: Alignment.centerRight,
-              child: SizedBox(
-                height: 35,
-                child: Image.asset('assets/logo.png', fit: BoxFit.contain),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Row 2: Title with arrow + Progress bars
+
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Progress bars (3 segments) - LEFT side
-                Expanded(child: Row(children: _buildProgressBars())),
-                const SizedBox(width: 16),
+
                 // Title with arrow - RIGHT side
+                SizedBox(
+                  height: 35,
+                  width: 35,
+                  child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+                ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -66,7 +62,9 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+
+            Expanded(child: Row(children: _buildProgressBars())),
+
             // Row 3: Step number + Next step text
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -84,14 +82,27 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
                   )
                 else
                   const SizedBox(),
-                // Step number - RIGHT side
-                Text(
-                  step,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF666666),
-                    fontFamily: 'Tajawal',
+                // Step number - RIGHT side (force RTL order: step ثم من ثم المجموع)
+                Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        step,
+                        textDirection: TextDirection.rtl,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF666666),
+                          fontFamily: 'Tajawal',
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+
+                      const SizedBox(width: 4),
+
+                    ],
                   ),
                 ),
               ],
@@ -110,8 +121,8 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
       final bool isActive = rtlIndex < currentStep;
       return Expanded(
         child: Container(
-          height: 4,
-          margin: EdgeInsets.only(left: index < 2 ? 4 : 0),
+          height: 2,
+          margin: EdgeInsets.only(left: 3),
           decoration: BoxDecoration(
             color: isActive ? const Color(0xFF27AE60) : const Color(0xFFE0E0E0),
             borderRadius: BorderRadius.circular(2),
@@ -122,6 +133,8 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   int _getCurrentStep() {
+    final parsed = int.tryParse(step);
+    if (parsed != null && parsed >= 1 && parsed <= 3) return parsed;
     if (step.contains('1')) return 1;
     if (step.contains('2')) return 2;
     if (step.contains('3')) return 3;

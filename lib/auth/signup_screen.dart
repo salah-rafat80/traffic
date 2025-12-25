@@ -74,7 +74,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (_currentStep < 2) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        curve: Curves.easeIn,
       );
       setState(() {
         _currentStep++;
@@ -213,6 +213,7 @@ class _SignupScreenState extends State<SignupScreen> {
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
+        reverse: true,
         onPageChanged: (index) {
           setState(() => _currentStep = index);
         },
@@ -230,7 +231,7 @@ class _SignupScreenState extends State<SignupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const SizedBox(height: 8),
+            // const SizedBox(height: 8),
             const Text(
               'معلومات التواصل',
               style: TextStyle(
@@ -240,7 +241,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 fontFamily: 'Tajawal',
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
             // Username field
             const Text(
               'اسم المستخدم',
@@ -276,7 +277,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
             // Email field
             const Text(
               'البريد الإلكتروني',
@@ -313,7 +314,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
             // Phone field
             const Text(
               'رقم الهاتف',
@@ -324,7 +325,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 fontFamily: 'Tajawal',
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             Row(
               children: [
                 Expanded(
@@ -344,8 +345,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
+                    horizontal: 12,
+                    vertical: 12,
                   ),
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -359,7 +360,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   child: const Text(
                     '+20',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w400,
                       color: Colors.black,
                       fontFamily: 'Tajawal',
@@ -381,11 +382,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
-            SizedBox(height: size.height * 0.15),
+            SizedBox(height: size.height * 0.12),
             // Next button
             SizedBox(
               width: double.infinity,
-              height: 56,
+              height: 48,
               child: ElevatedButton(
                 onPressed: _onNextPressed,
                 style: ElevatedButton.styleFrom(
@@ -421,7 +422,7 @@ class _SignupScreenState extends State<SignupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const SizedBox(height: 8),
+
             const Text(
               'البيانات الشخصية',
               style: TextStyle(
@@ -431,7 +432,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 fontFamily: 'Tajawal',
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
             // First name field
             const Text(
               'الاسم الأول',
@@ -442,14 +443,14 @@ class _SignupScreenState extends State<SignupScreen> {
                 fontFamily: 'Tajawal',
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             CustomTextField(
               controller: _firstNameController,
               hintText: 'أميرة',
               textAlign: TextAlign.right,
               onChanged: (_) => setState(() {}),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
             // Family name field
             const Text(
               'اسم العائلة',
@@ -460,14 +461,14 @@ class _SignupScreenState extends State<SignupScreen> {
                 fontFamily: 'Tajawal',
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             CustomTextField(
               controller: _familyNameController,
               hintText: 'بدر',
               textAlign: TextAlign.right,
               onChanged: (_) => setState(() {}),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
             // National ID field
             const Text(
               'الرقم القومي',
@@ -478,7 +479,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 fontFamily: 'Tajawal',
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             CustomTextField(
               controller: _nationalIdController,
               hintText: '12345678900-',
@@ -506,7 +507,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
             // Terms checkbox
             Row(
               children: [
@@ -548,7 +549,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 // Next button
                 Expanded(
                   child: SizedBox(
-                    height: 56,
+                    height: 48,
                     child: ElevatedButton(
                       onPressed: _isStep2Valid ? _onNextPressed : null,
                       style: ElevatedButton.styleFrom(
@@ -578,7 +579,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 // Previous button
                 Expanded(
                   child: SizedBox(
-                    height: 56,
+                    height: 48,
                     child: OutlinedButton(
                       onPressed: _goToPreviousStep,
                       style: OutlinedButton.styleFrom(
@@ -619,7 +620,7 @@ class _SignupScreenState extends State<SignupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const SizedBox(height: 24),
+
             const Text(
               'أنشئ كلمة المرور الخاصة بك',
               style: TextStyle(
@@ -629,7 +630,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 fontFamily: 'Tajawal',
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
             const Text(
               'أنشئ كلمة المرور',
               style: TextStyle(
@@ -639,7 +640,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 fontFamily: 'Tajawal',
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             CustomTextField(
               controller: _passwordController,
               hintText: 'Amira297',
@@ -661,7 +662,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               onChanged: _checkPasswordRequirements,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
             // Password requirements
             PasswordRequirementItem(
               text: '8 أحرف على الأقل',
@@ -691,7 +692,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 // Next button
                 Expanded(
                   child: SizedBox(
-                    height: 56,
+                    height: 48,
                     child: ElevatedButton(
                       onPressed: _allPasswordRequirementsMet
                           ? _onNextPressed
@@ -723,7 +724,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 // Previous button
                 Expanded(
                   child: SizedBox(
-                    height: 56,
+                    height: 48,
                     child: OutlinedButton(
                       onPressed: _goToPreviousStep,
                       style: OutlinedButton.styleFrom(
@@ -749,7 +750,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            // const SizedBox(height: 16),
           ],
         ),
       ),

@@ -85,185 +85,164 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
       ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxContentWidth),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isSmallHeight = size.height < 600;
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxContentWidth),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallHeight = size.height < 600;
 
-                  return Column(
-                    children: [
-                      // Spacer at top
-                      SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x32),
+                return Column(
+                  children: [
+                    // Spacer at top
+                    SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x32),
 
-                      // Image PageView
-                      Expanded(
-                        flex: isSmallHeight ? 4 : 5,
-                        child: PageView.builder(
-                          controller: _pageController,
-                          itemCount: _onboardingData.length,
-                          onPageChanged: (int page) {
-                            setState(() {
-                              _currentPage = page;
-                            });
-                          },
-                          itemBuilder: (context, index) {
-                            return OnboardingPage(
-                              imageData: _onboardingData[index],
-                            );
-                          },
-                        ),
+                    // Image PageView
+                    Expanded(
+                      flex: isSmallHeight ? 4 : 5,
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: _onboardingData.length,
+                        onPageChanged: (int page) {
+                          setState(() {
+                            _currentPage = page;
+                          });
+                        },
+                        itemBuilder: (context, index) {
+                          return OnboardingPage(
+                            imageData: _onboardingData[index],
+                          );
+                        },
                       ),
+                    ),
 
-                      SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
+                    SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
 
-                      // Title
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isTablet ? Insets.x24 : Insets.x16,
+                    // Title
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? Insets.x24 : Insets.x16,
+                      ),
+                      child: Text(
+                        _onboardingData[_currentPage]['title']!,
+                        style: TextStyle(
+                          fontSize: isLargeScreen ? 24 : (isTablet ? 22 : 20),
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+
+                    SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
+
+                    // Page Indicator
+                    SmoothPageIndicator(
+                      controller: _pageController,
+                      count: _onboardingData.length,
+                      effect: ExpandingDotsEffect(
+                        activeDotColor: Theme.of(context).colorScheme.primary,
+                        dotColor: const Color(0xFFD1D5DB),
+                        dotHeight: isTablet ? 8 : 6,
+                        dotWidth: isTablet ? 8 : 6,
+                        spacing: isTablet ? 6 : 5,
+                        expansionFactor: isTablet ? 3 : 2.5,
+                      ),
+                    ),
+
+                    SizedBox(height: isSmallHeight ? Insets.x24 : Insets.x40),
+
+                    // Create Account Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SignupScreen(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            vertical: isTablet ? 20 : 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
                         ),
                         child: Text(
-                          _onboardingData[_currentPage]['title']!,
+                          'إنشاء حساب',
                           style: TextStyle(
-                            fontSize: isLargeScreen ? 24 : (isTablet ? 22 : 20),
+                            fontSize: isTablet ? 20 : 18,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                            height: 1.4,
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                    ),
 
-                      SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
+                    SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
 
-                      // Page Indicator
-                      SmoothPageIndicator(
-                        controller: _pageController,
-                        count: _onboardingData.length,
-                        effect: ExpandingDotsEffect(
-                          activeDotColor: Theme.of(context).colorScheme.primary,
-                          dotColor: const Color(0xFFD1D5DB),
-                          dotHeight: isTablet ? 8 : 6,
-                          dotWidth: isTablet ? 8 : 6,
-                          spacing: isTablet ? 6 : 5,
-                          expansionFactor: isTablet ? 3 : 2.5,
-                        ),
-                      ),
+                    // Login Row
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4,
+                      children: [
 
-                      SizedBox(height: isSmallHeight ? Insets.x24 : Insets.x40),
-
-                      // Create Account Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
+                        TextButton(
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const SignupScreen(),
+                                builder: (context) => const LoginScreen(),
                               ),
                             );
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(
-                              vertical: isTablet ? 20 : 16,
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 0,
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
+                            minimumSize: const Size(0, 30),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                           child: Text(
-                            'إنشاء حساب',
-                            style: TextStyle(
-                              fontSize: isTablet ? 20 : 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
-
-                      // Login Row
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 4,
-                        children: [
-                          Text(
-                            'لديك حساب بالفعل ؟',
+                            'تسجيل دخول',
                             style: TextStyle(
                               fontSize: isTablet ? 17 : 15,
-                              color: Colors.black87,
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 0,
-                              ),
-                              minimumSize: const Size(0, 30),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              'تسجيل دخول',
-                              style: TextStyle(
-                                fontSize: isTablet ? 17 : 15,
-                                fontWeight: FontWeight.w500,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Help Button
-                      TextButton(
-                        onPressed: () {},
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: Insets.x8,
-                            vertical: isSmallHeight ? 4 : Insets.x8,
                           ),
                         ),
-                        child: Text(
-                          'تحتاج إلى المساعدة ؟',
+                        Text(
+                          'لديك حساب بالفعل ؟',
                           style: TextStyle(
                             fontSize: isTablet ? 17 : 15,
-                            color: Theme.of(context).colorScheme.primary,
-                            decoration: TextDecoration.underline,
-                            decorationColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
+                            color: Colors.black87,
                           ),
                         ),
-                      ),
+                      ],
+                    ),
 
-                      SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
-                    ],
-                  );
-                },
-              ),
+                    // Help Button
+
+                    SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
+                  ],
+                );
+              },
             ),
           ),
         ),
