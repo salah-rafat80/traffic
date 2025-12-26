@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'design_system/spacing.dart';
-import 'auth/login_screen.dart';
-import 'auth/signup_screen.dart';
+import 'package:traffic/core/constants/spacing.dart';
+import 'package:traffic/features/auth/presentation/screens/login_screen/login_screen.dart';
+import 'package:traffic/features/auth/presentation/screens/signup_screen/signup_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -200,7 +200,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       spacing: 4,
                       children: [
-
                         TextButton(
                           onPressed: () {
                             Navigator.push(
@@ -238,7 +237,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
 
                     // Help Button
-
                     SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
                   ],
                 );

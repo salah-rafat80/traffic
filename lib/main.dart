@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:traffic/onboarding_screen.dart';
-import 'package:traffic/design_system/app_theme.dart';
+import 'package:traffic/core/utils/app_theme.dart';
+import 'package:traffic/features/main/presentation/screens/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Traffic App',
       theme: AppTheme.light(arabic: true),
-      home: const OnboardingScreen(),
+      home: const SplashScreen(),
     );
   }
 }

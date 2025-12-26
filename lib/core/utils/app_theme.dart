@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'colors.dart';
-import 'spacing.dart';
-import 'radii.dart';
-import 'typography.dart';
+import 'package:traffic/core/constants/colors.dart';
+import 'package:traffic/core/constants/spacing.dart';
+import 'package:traffic/core/constants/radii.dart';
+import 'package:traffic/core/constants/typography.dart';
 
 class AppTheme {
   static ThemeData light({bool arabic = true}) {

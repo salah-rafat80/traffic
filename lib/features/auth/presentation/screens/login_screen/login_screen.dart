@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../design_system/colors.dart';
-import '../design_system/spacing.dart';
-import '../design_system/typography.dart';
-import '../widgets/custom_text_field.dart';
-import 'signup_screen.dart';
+import 'package:traffic/core/constants/colors.dart';
+import 'package:traffic/core/constants/spacing.dart';
+import 'package:traffic/core/constants/typography.dart';
+import 'package:traffic/core/widgets/custom_text_field.dart';
+import 'package:traffic/features/auth/presentation/screens/signup_screen/signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
