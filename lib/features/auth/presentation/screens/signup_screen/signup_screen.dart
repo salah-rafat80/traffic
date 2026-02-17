@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:traffic/core/widgets/signup_app_bar.dart';
-import 'widgets/signup_step1_form.dart';
-import 'widgets/signup_step2_form.dart';
-import 'widgets/signup_step3_form.dart';
+import 'package:traffic/features/auth/presentation/screens/otp_screen/otp_screen.dart';
+import 'widgets/signup_step1_form/signup_step1_form.dart';
+import 'widgets/signup_step2_form/signup_step2_form.dart';
+import 'widgets/signup_step3_form/signup_step3_form.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -42,6 +43,15 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _hasNumber = false;
   bool _hasSpecialChar = false;
   bool _notSameAsUsername = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Add listeners to Step 2 controllers for real-time validation
+    _firstNameController.addListener(() => setState(() {}));
+    _familyNameController.addListener(() => setState(() {}));
+    _nationalIdController.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -149,9 +159,15 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   bool get _isStep2Valid {
+    final nationalId = _nationalIdController.text;
+    final isNationalIdValid =
+        nationalId.isNotEmpty &&
+        nationalId.length == 14 &&
+        RegExp(r'^\d+$').hasMatch(nationalId);
+
     return _firstNameController.text.isNotEmpty &&
         _familyNameController.text.isNotEmpty &&
-        _nationalIdController.text.isNotEmpty &&
+        isNationalIdValid &&
         _acceptedTerms;
   }
 
@@ -196,6 +212,12 @@ class _SignupScreenState extends State<SignupScreen> {
         break;
       case 2:
         if (_allPasswordRequirementsMet) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpScreen(email: _emailController.text),
+            ),
+          );
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
@@ -279,11 +301,20 @@ class _SignupScreenState extends State<SignupScreen> {
                 _acceptedTerms = value ?? false;
               });
             },
-            onFieldChanged: (_) {
-              if (_nationalIdError != null) {
-                setState(() => _nationalIdError = null);
-              }
-              setState(() {});
+            onFieldChanged: (value) {
+              setState(() {
+                _nationalIdError = null;
+                // Validate national ID on every change
+                final nationalId = _nationalIdController.text;
+                if (nationalId.isNotEmpty) {
+                  if (!RegExp(r'^\d+$').hasMatch(nationalId)) {
+                    _nationalIdError =
+                        'الرقم القومي يجب أن يحتوي على أرقام فقط';
+                  } else if (nationalId.length != 14) {
+                    _nationalIdError = 'الرقم القومي يجب أن يكون 14 رقم';
+                  }
+                }
+              });
             },
             onNextPressed: _onNextPressed,
             onPreviousPressed: _goToPreviousStep,

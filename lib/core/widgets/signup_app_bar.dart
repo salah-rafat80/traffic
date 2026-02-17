@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:traffic/core/widgets/custom_appbar.dart';
 
 class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String step;
@@ -13,101 +15,62 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(120);
+  Size get preferredSize => Size.fromHeight(150.h);
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      bottom: false,
       child: Container(
         color: Colors.white,
-        height: preferredSize.height/1.8,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Progress bars (3 segments) - LEFT side
-
-                // Title with arrow - RIGHT side
-                SizedBox(
-                  height: 35,
-                  width: 35,
-                  child: Image.asset('assets/logo.png', fit: BoxFit.contain),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'إنشاء حساب',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                        fontFamily: 'Tajawal',
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: onBackPressed ?? () => Navigator.pop(context),
-                      child: const Icon(
-                        Icons.chevron_right,
-                        color: Colors.black,
-                        size: 28,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            Expanded(child: Row(children: _buildProgressBars())),
-
-            // Row 3: Step number + Next step text
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Next step text - LEFT side
-                if (nextStepText != null)
-                  Text(
-                    nextStepText!,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF999999),
-                      fontFamily: 'Tajawal',
-                    ),
-                  )
-                else
-                  const SizedBox(),
-                // Step number - RIGHT side (force RTL order: step ثم من ثم المجموع)
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        step,
-                        textDirection: TextDirection.rtl,
-                        style: const TextStyle(
-                          fontSize: 13,
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            textDirection: TextDirection.rtl,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomAppbar(onBackPressed: onBackPressed, title: "إنشاء حساب"),
+              SizedBox(height: 12.h),
+              Row(children: _buildProgressBars()),
+              SizedBox(height: 8.h),
+              // Row 3: Step number + Next step text
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Next step text - LEFT side
+                  if (nextStepText != null)
+                    Flexible(
+                      child: Text(
+                        nextStepText!,
+                        style: TextStyle(
+                          fontSize: 13.sp,
                           fontWeight: FontWeight.w400,
-                          color: Color(0xFF666666),
+                          color: const Color(0xFF999999),
                           fontFamily: 'Tajawal',
                         ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                      const SizedBox(width: 4),
-
-                      const SizedBox(width: 4),
-
-                    ],
+                    )
+                  else
+                    const SizedBox(),
+                  // Step number
+                  Text(
+                    step,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF666666),
+                      fontFamily: 'Tajawal',
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -121,11 +84,11 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
       final bool isActive = rtlIndex < currentStep;
       return Expanded(
         child: Container(
-          height: 2,
-          margin: EdgeInsets.only(left: 3),
+          height: 4.h,
+          margin: EdgeInsets.only(left: 3.w),
           decoration: BoxDecoration(
             color: isActive ? const Color(0xFF27AE60) : const Color(0xFFE0E0E0),
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(2.r),
           ),
         ),
       );

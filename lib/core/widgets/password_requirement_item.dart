@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PasswordRequirementItem extends StatelessWidget {
   final String text;
@@ -13,7 +14,7 @@ class PasswordRequirementItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: 8.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.end,
@@ -21,16 +22,16 @@ class PasswordRequirementItem extends StatelessWidget {
         children: [
           Icon(
             isMet ? Icons.check_circle : Icons.circle_outlined,
-            size: 20,
+            size: 20.r,
             color: isMet ? const Color(0xFF27AE60) : const Color(0xFFBDBDBD),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Expanded(
             child: Text(
               text,
               textAlign: TextAlign.right,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 14.sp,
                 fontWeight: FontWeight.w400,
                 color: isMet ? Colors.black : const Color(0xFF666666),
                 fontFamily: 'Tajawal',

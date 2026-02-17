@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:traffic/core/constants/spacing.dart';
+import 'package:traffic/core/constants/app_sizes.dart';
 import 'package:traffic/features/auth/presentation/screens/login_screen/login_screen.dart';
 import 'package:traffic/features/auth/presentation/screens/signup_screen/signup_screen.dart';
 
@@ -37,16 +38,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isTablet = size.width > 600;
-    final isLargeScreen = size.width > 900;
-
     // Responsive sizing
-    final horizontalPadding = isLargeScreen
-        ? 48.0
-        : (isTablet ? 32.0 : Insets.x16);
-    final logoHeight = isTablet ? 50.0 : 40.0;
-    final maxContentWidth = isLargeScreen ? 600.0 : double.infinity;
+    final horizontalPadding = context.isLargeScreen
+        ? 48.w
+        : (context.isTablet ? 32.w : 16.w);
+    final logoHeight = context.isTablet ? 50.r : 40.r;
+    final maxContentWidth = context.isLargeScreen
+        ? AppSizes.maxContentWidth
+        : double.infinity;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -65,12 +64,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 style: TextButton.styleFrom(
                   foregroundColor: Theme.of(context).colorScheme.primary,
                   padding: EdgeInsets.zero,
-                  minimumSize: const Size(50, 30),
+                  minimumSize: Size(50.w, 30.h),
                 ),
                 child: Text(
                   'English',
                   style: TextStyle(
-                    fontSize: isTablet ? 18 : 16,
+                    fontSize: context.isTablet ? 18.sp : 16.sp,
                     fontWeight: FontWeight.w500,
                     color: Theme.of(context).colorScheme.primary,
                   ),
@@ -92,16 +91,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final isSmallHeight = size.height < 600;
-
                 return Column(
                   children: [
                     // Spacer at top
-                    SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x32),
+                    SizedBox(height: context.isSmallHeight ? 16.h : 32.h),
 
                     // Image PageView
                     Expanded(
-                      flex: isSmallHeight ? 4 : 5,
+                      flex: context.isSmallHeight ? 4 : 5,
                       child: PageView.builder(
                         controller: _pageController,
                         itemCount: _onboardingData.length,
@@ -118,17 +115,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
 
-                    SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
+                    SizedBox(height: context.isSmallHeight ? 16.h : 24.h),
 
                     // Title
                     Padding(
                       padding: EdgeInsets.symmetric(
-                        horizontal: isTablet ? Insets.x24 : Insets.x16,
+                        horizontal: context.isTablet ? 24.w : 16.w,
                       ),
                       child: Text(
                         _onboardingData[_currentPage]['title']!,
                         style: TextStyle(
-                          fontSize: isLargeScreen ? 24 : (isTablet ? 22 : 20),
+                          fontSize: context.isLargeScreen
+                              ? 25.sp
+                              : (context.isTablet ? 22.sp : 20.sp),
                           fontWeight: FontWeight.w600,
                           color: Colors.black,
                           height: 1.4,
@@ -139,7 +138,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
 
-                    SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
+                    SizedBox(height: context.isSmallHeight ? 16.h : 24.h),
 
                     // Page Indicator
                     SmoothPageIndicator(
@@ -148,14 +147,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       effect: ExpandingDotsEffect(
                         activeDotColor: Theme.of(context).colorScheme.primary,
                         dotColor: const Color(0xFFD1D5DB),
-                        dotHeight: isTablet ? 8 : 6,
-                        dotWidth: isTablet ? 8 : 6,
-                        spacing: isTablet ? 6 : 5,
-                        expansionFactor: isTablet ? 3 : 2.5,
+                        dotHeight: context.isTablet ? 8.r : 6.r,
+                        dotWidth: context.isTablet ? 8.r : 6.r,
+                        spacing: context.isTablet ? 6.w : 5.w,
+                        expansionFactor: context.isTablet ? 3 : 2.5,
                       ),
                     ),
 
-                    SizedBox(height: isSmallHeight ? Insets.x24 : Insets.x40),
+                    SizedBox(height: context.isSmallHeight ? 24.h : 40.h),
 
                     // Create Account Button
                     SizedBox(
@@ -175,30 +174,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ).colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(
-                            vertical: isTablet ? 20 : 16,
+                            vertical: context.isTablet ? 20.h : 16.h,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8.r),
                           ),
                           elevation: 0,
                         ),
                         child: Text(
                           'إنشاء حساب',
                           style: TextStyle(
-                            fontSize: isTablet ? 20 : 18,
+                            fontSize: context.isTablet ? 20.sp : 18.sp,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ),
 
-                    SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
+                    SizedBox(height: context.isSmallHeight ? 16.h : 24.h),
 
                     // Login Row
                     Wrap(
                       alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 4,
+                      spacing: 4.w,
                       children: [
                         TextButton(
                           onPressed: () {
@@ -210,17 +209,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             );
                           },
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 4.w,
                               vertical: 0,
                             ),
-                            minimumSize: const Size(0, 30),
+                            minimumSize: Size(0, 30.h),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                           child: Text(
                             'تسجيل دخول',
                             style: TextStyle(
-                              fontSize: isTablet ? 17 : 15,
+                              fontSize: context.isTablet ? 17.sp : 15.sp,
                               fontWeight: FontWeight.w500,
                               color: Theme.of(context).colorScheme.primary,
                             ),
@@ -229,7 +228,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           'لديك حساب بالفعل ؟',
                           style: TextStyle(
-                            fontSize: isTablet ? 17 : 15,
+                            fontSize: context.isTablet ? 17.sp : 15.sp,
                             color: Colors.black87,
                           ),
                         ),
@@ -237,7 +236,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
 
                     // Help Button
-                    SizedBox(height: isSmallHeight ? Insets.x16 : Insets.x24),
+                    SizedBox(height: context.isSmallHeight ? 16.h : 24.h),
                   ],
                 );
               },
@@ -256,9 +255,7 @@ class OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isTablet = size.width > 600;
-    final imagePadding = isTablet ? Insets.x40 : Insets.x32;
+    final imagePadding = context.isTablet ? 40.w : 32.w;
 
     return Center(
       child: Padding(
