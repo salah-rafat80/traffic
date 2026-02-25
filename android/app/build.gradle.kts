@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.traffic"
-        minSdk = flutter.minSdkVersion
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -33,19 +33,6 @@ android {
         }
         release {
             signingConfig = signingConfigs.getByName("debug")
-        }
-    }
-    flavorDimensions += "default"
-    productFlavors {
-        create("dev") {
-            dimension = "default"
-            resValue("string", "app_name", "Traffic Dev")
-            applicationIdSuffix = ".dev"
-        }
-        create("production") {
-            dimension = "default"
-            resValue("string", "app_name", "Traffic")
-            applicationIdSuffix = ".production"
         }
     }
 }

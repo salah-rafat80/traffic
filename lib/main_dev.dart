@@ -5,6 +5,7 @@ import 'package:traffic/core/utils/app_theme.dart';
 import 'package:traffic/features/main/presentation/screens/splash_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp(
+          debugShowCheckedModeBanner: false,
           title: 'Traffic App',
           theme: AppTheme.light(arabic: true),
           home: child,

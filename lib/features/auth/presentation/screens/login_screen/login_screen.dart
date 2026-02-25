@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:traffic/core/widgets/custom_appbar.dart';
 import 'package:traffic/features/auth/presentation/screens/signup_screen/signup_screen.dart';
+import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
 
 /// Pixel-perfect Login Screen with real-time validation.
 /// All sizes are responsive using flutter_screenutil.
@@ -94,7 +95,12 @@ class _LoginScreenState extends State<LoginScreen> {
     _validatePassword();
 
     if (_isFormValid) {
-      // TODO: Implement login logic
+      // Navigate to Home
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+        (route) => false,
+      );
     }
   }
 
