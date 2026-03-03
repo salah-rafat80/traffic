@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// A card that displays the selected medical centre's name, address,
-/// and working hours after a booking has been made.
+/// A card that displays a facility's name, address, and working hours after
+/// a booking has been made.
 ///
-/// Matches the green-bordered card design in Iphone13Mini183.
+/// Originally designed for medical centres but generic enough to represent
+/// any facility (e.g. a traffic unit).
 ///
-/// **Usage:**
+/// **Usage (medical):**
 /// ```dart
 /// MedicalCenterInfoCard(
 ///   centerName: 'مستشفي السلام',
@@ -14,8 +15,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 ///   workingHours: '9 ص الي 3 م (الاحد -الخميس)',
 /// )
 /// ```
+/// **Usage (traffic unit):**
+/// ```dart
+/// MedicalCenterInfoCard(
+///   centerName: 'العاشر من رمضان',
+///   address: 'شارع التسعين , العاشر من رمضان , الشرقية',
+///   workingHours: '9 ص الي 3 م (الاحد -الخميس)',
+/// )
+/// ```
 class MedicalCenterInfoCard extends StatelessWidget {
-  /// Name of the medical centre shown as the card title.
+  /// Primary name displayed as the card heading.
   final String centerName;
 
   /// Full address string.

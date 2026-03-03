@@ -4,9 +4,9 @@ import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 import 'package:traffic/features/auth/presentation/screens/signup_screen/widgets/signup_step1_form/widgets/next_button_widget.dart';
 import 'package:traffic/features/driving_license/domain/enums/license_status.dart';
-import 'package:traffic/features/driving_license/presentation/screens/document_upload/document_upload_screen.dart';
 import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/violations_list_screen.dart';
+import 'license_details_confirmation_screen.dart';
 import 'widgets/license_info_card.dart';
 import 'widgets/warning_banner.dart';
 
@@ -59,9 +59,13 @@ class _LicenseDetailsScreenState extends State<LicenseDetailsScreen> {
   }
 
   void _onNextPressed() {
+    final lic = _selectedLicense;
+    if (lic == null) return;
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const DocumentUploadScreen()),
+      MaterialPageRoute(
+        builder: (_) => LicenseDetailsConfirmationScreen(license: lic),
+      ),
     );
   }
 

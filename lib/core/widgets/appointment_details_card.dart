@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// A card that displays the confirmed appointment's date, time, and
-/// booking reference number after a booking has been made.
+/// A card that displays the confirmed appointment's date, time, booking
+/// reference number, and optional request number after a booking has been made.
 ///
-/// Matches the green-bordered card design in Iphone13Mini183.
+/// Generic enough to be used in both the medical-check and theory-test flows.
 ///
 /// **Usage:**
 /// ```dart
 /// AppointmentDetailsCard(
+///   title: 'موعد الاختبار',          // optional – defaults to 'موعد الكشف الطبي'
 ///   date: '25 اكتوبر 2025',
 ///   time: '10:30 صباحا',
 ///   bookingNumber: '10',
+///   requestNumber: '13456670',       // optional
 /// )
 /// ```
 class AppointmentDetailsCard extends StatelessWidget {
+  /// Card heading. Defaults to `'موعد الكشف الطبي'` for backward compatibility.
+  final String? title;
+
   /// Human-readable date string (e.g. "25 اكتوبر 2025").
   final String date;
 
@@ -24,11 +29,16 @@ class AppointmentDetailsCard extends StatelessWidget {
   /// Booking reference number as a string.
   final String bookingNumber;
 
+  /// Optional request / order number shown as a fourth row.
+  final String? requestNumber;
+
   const AppointmentDetailsCard({
     super.key,
+    this.title,
     required this.date,
     required this.time,
     required this.bookingNumber,
+    this.requestNumber,
   });
 
   @override
@@ -48,7 +58,7 @@ class AppointmentDetailsCard extends StatelessWidget {
         children: [
           // ── Card title ─────────────────────────────────────────────────
           Text(
-            'موعد الكشف الطبي',
+            title ?? 'موعد الكشف الطبي',
             textAlign: TextAlign.right,
             textDirection: TextDirection.rtl,
             style: TextStyle(
@@ -76,6 +86,15 @@ class AppointmentDetailsCard extends StatelessWidget {
             icon: Icons.format_list_bulleted_outlined,
             text: 'رقم الحجز : $bookingNumber',
           ),
+
+          // ── Request number row (optional) ──────────────────────────────
+          if (requestNumber != null) ...[
+            SizedBox(height: 6.h),
+            _DetailRow(
+              icon: Icons.receipt_long_outlined,
+              text: 'رقم الطلب : $requestNumber',
+            ),
+          ],
         ],
       ),
     );
