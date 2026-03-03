@@ -331,24 +331,26 @@ class _BookingCard extends StatelessWidget {
             )
           else
             // ── Default state: book button ───────────────────────────────
-            ElevatedButton(
-              onPressed: onBookPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF27AE60),
-                foregroundColor: Colors.white,
-                minimumSize: Size(double.infinity, 40.h),
-                shape: RoundedRectangleBorder(
+            InkWell(
+              onTap: onBookPressed,
+              child: Container(
+                height: 40.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF27AE60),
                   borderRadius: BorderRadius.circular(4.r),
                 ),
-                elevation: 0,
-              ),
-              child: Text(
-                'حجز الموعد',
-                style: TextStyle(
-                  color: const Color(0xFFF5F5F5),
-                  fontSize: 16.sp,
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.w600,
+                alignment: Alignment.center,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'حجز الموعد',
+                    style: TextStyle(
+                      color: const Color(0xFFF5F5F5),
+                      fontSize: 16.sp,
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),

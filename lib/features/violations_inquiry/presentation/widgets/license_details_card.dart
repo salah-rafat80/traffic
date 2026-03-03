@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:traffic/core/widgets/Radio_dot.dart';
+import 'package:traffic/features/driving_license/domain/enums/license_status.dart';
 import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
 
 /// Card widget that displays driving license details with a radio selection.
@@ -48,7 +50,7 @@ class LicenseDetailsCard extends StatelessWidget {
             // ── Radio button ──
             Align(
               alignment: Alignment.centerLeft,
-              child: _RadioDot(isSelected: isSelected),
+              child: RadioDot(isSelected: isSelected),
             ),
             SizedBox(height: 12.h),
 
@@ -62,7 +64,7 @@ class LicenseDetailsCard extends StatelessWidget {
             Divider(),
 
             // ── Type ──
-            _DetailRow(label: 'نوع الرخصة', value: license.type),
+            _DetailRow(label: 'نوع الرخصة', value: license.licenseType),
             SizedBox(height: 6.h),
             Divider(),
             // ── Governorate ──
@@ -96,38 +98,6 @@ class LicenseDetailsCard extends StatelessWidget {
 
 // ── Radio dot indicator ──────────────────────────────────────────────────────
 
-class _RadioDot extends StatelessWidget {
-  final bool isSelected;
-  const _RadioDot({required this.isSelected});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 22.w,
-      height: 22.w,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isSelected ? const Color(0xFF27AE60) : const Color(0xFFBDBDBD),
-          width: 2,
-        ),
-      ),
-      child: isSelected
-          ? Center(
-              child: Container(
-                width: 12.w,
-                height: 12.w,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF27AE60),
-                ),
-              ),
-            )
-          : null,
-    );
-  }
-}
-
 // ── License number chip ──────────────────────────────────────────────────────
 
 class _LicenseNumberChip extends StatelessWidget {
@@ -160,12 +130,25 @@ class _LicenseNumberChip extends StatelessWidget {
 // ── Status chip ──────────────────────────────────────────────────────────────
 
 class _StatusChip extends StatelessWidget {
-  final String status;
+  final LicenseStatus status;
   const _StatusChip({required this.status});
 
   @override
   Widget build(BuildContext context) {
-    final isActive = status == 'سارية';
+    String statusText = '';
+    switch (status) {
+      case LicenseStatus.valid:
+        statusText = 'سارية';
+        break;
+      case LicenseStatus.withdrawn:
+        statusText = 'مسحوبة';
+        break;
+      case LicenseStatus.expired:
+        statusText = 'منتهية';
+        break;
+    }
+
+    final isActive = status == LicenseStatus.valid;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
       decoration: BoxDecoration(
@@ -179,7 +162,7 @@ class _StatusChip extends StatelessWidget {
         ),
       ),
       child: Text(
-        status,
+        statusText,
         style: TextStyle(
           fontFamily: 'Tajawal',
           fontSize: 13.sp,

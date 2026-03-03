@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/service_list_item.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
+import 'package:traffic/features/driving_license/presentation/screens/terms_and_conditions/renewal_terms_screen.dart';
 import 'package:traffic/features/driving_license/presentation/screens/terms_and_conditions/terms_and_conditions_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/select_license_screen.dart';
 
@@ -50,6 +51,12 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
                   ServiceListItem(
                     title: 'تجديد رخصة القيادة',
                     icon: 'assets/loding.svg',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RenewalTermsScreen(),
+                      ),
+                    ),
                   ),
                   SizedBox(height: 24.h),
                   ServiceListItem(
