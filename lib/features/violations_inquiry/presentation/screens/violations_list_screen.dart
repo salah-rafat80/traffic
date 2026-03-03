@@ -5,6 +5,7 @@ import 'package:traffic/core/widgets/service_screen_appbar.dart';
 import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
 import 'package:traffic/features/violations_inquiry/data/models/violation_model.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/violation_details_screen.dart';
+import 'package:traffic/features/violations_inquiry/presentation/screens/violation_review_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/widgets/violation_filter_tabs.dart';
 import 'package:traffic/features/violations_inquiry/presentation/widgets/violation_list_item.dart';
 import 'package:traffic/features/violations_inquiry/presentation/widgets/violations_summary_card.dart';
@@ -154,7 +155,24 @@ class _ViolationsListScreenState extends State<ViolationsListScreen> {
                   width: double.infinity,
                   height: 52.h,
                   child: ElevatedButton(
-                    onPressed: _selectedCount > 0 ? () {} : null,
+                    onPressed: _selectedCount > 0
+                        ? () {
+                            final selected = _allViolations
+                                .where((v) =>
+                                    _selectedViolationIds.contains(v.id))
+                                .toList();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ViolationReviewScreen(
+                                  selectedViolations: selected,
+                                  onNext: () {},
+                                  onEdit: () => Navigator.pop(context),
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2E7D32),
                       disabledBackgroundColor: const Color(

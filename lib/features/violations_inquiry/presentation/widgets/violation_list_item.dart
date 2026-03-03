@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:traffic/features/violations_inquiry/data/models/violation_model.dart';
 
 /// Maps violation titles to SVG asset paths.
@@ -101,7 +100,8 @@ class ViolationListItem extends StatelessWidget {
                     Text(
                       violation.title,
                       textDirection: TextDirection.rtl,
-                      style: GoogleFonts.cairo(
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF1A1A1A),
@@ -111,7 +111,8 @@ class ViolationListItem extends StatelessWidget {
                     Text(
                       '${violation.amount.toInt()} جنية مصري',
                       textDirection: TextDirection.rtl,
-                      style: GoogleFonts.cairo(
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF2E7D32),
@@ -170,7 +171,8 @@ class ViolationListItem extends StatelessWidget {
                 ),
                 child: Text(
                   violation.violationNumber,
-                  style: GoogleFonts.cairo(
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -181,7 +183,8 @@ class ViolationListItem extends StatelessWidget {
               // Label
               Text(
                 'رقم المخالفة',
-                style: GoogleFonts.cairo(
+                style: TextStyle(
+                  fontFamily: 'Cairo',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
                   color: const Color(0xFF555555),
@@ -216,7 +219,8 @@ class ViolationListItem extends StatelessWidget {
               Text(
                 violation.location,
                 textDirection: TextDirection.rtl,
-                style: GoogleFonts.cairo(
+                style: TextStyle(
+                  fontFamily: 'Cairo',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
                   color: const Color(0xFF555555),
@@ -239,8 +243,8 @@ class ViolationListItem extends StatelessWidget {
             children: [
               Text(
                 '${violation.time} , ${violation.date}',
-                // textDirection: TextDirection.rtl,
-                style: GoogleFonts.cairo(
+                style: TextStyle(
+                  fontFamily: 'Cairo',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
                   color: const Color(0xFF555555),
@@ -259,7 +263,8 @@ class ViolationListItem extends StatelessWidget {
               onTap: onTap,
               child: Text(
                 'عرض التفاصيل',
-                style: GoogleFonts.cairo(
+                style: TextStyle(
+                  fontFamily: 'Cairo',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF2E7D32),

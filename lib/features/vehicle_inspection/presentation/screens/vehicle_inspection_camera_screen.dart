@@ -6,7 +6,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 import 'package:traffic/features/vehicle_inspection/presentation/screens/vehicle_inspection_preview_screen.dart';
-import 'package:traffic/features/vehicle_inspection/presentation/widgets/viewfinder_painter.dart';
+import 'package:traffic/features/vehicle_inspection/presentation/widgets/camera_capture_button.dart';
+import 'package:traffic/features/vehicle_inspection/presentation/widgets/camera_guidance_chip.dart';
+import 'package:traffic/features/vehicle_inspection/presentation/widgets/camera_preview_with_viewfinder.dart';
 
 /// Screen 2 — In-app camera screen with live preview.
 ///
@@ -157,7 +159,8 @@ class _VehicleInspectionCameraScreenState
           ServiceScreenAppBar(
             title: 'فحص المركبة بالذكاء الاصطناعي',
             onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-          ),          SizedBox(height: 5.h,),
+          ),
+          SizedBox(height: 5.h),
 
           Expanded(
             child: Column(
@@ -166,107 +169,25 @@ class _VehicleInspectionCameraScreenState
                 const Spacer(flex: 1),
 
                 // ── Camera preview with viewfinder overlay ──
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30.w),
-                  child: AspectRatio(
-                    aspectRatio: 3 / 4,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16.r),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          // Camera preview or placeholder
-                          _buildCameraPreview(),
-
-                          // Viewfinder corner brackets overlay
-                          Positioned.fill(
-                            child: Padding(
-                              padding: EdgeInsets.all(20.w),
-                              child: CustomPaint(
-                                painter: ViewfinderPainter(
-                                  color: const Color(0xFF2E7D32),
-                                  strokeWidth: 3.5,
-                                  cornerLength: 35.w,
-                                  cornerRadius: 14.r,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                CameraPreviewWithViewfinder(
+                  cameraController: _cameraController,
+                  isCameraInitialized: _isCameraInitialized,
+                  errorMessage: _errorMessage,
                 ),
 
                 SizedBox(height: 20.h),
 
                 // ── Guidance text ──
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 8.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F0F0),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    textDirection: TextDirection.rtl,
-                    children: [
-                      Text(
-                        'تأكد من ظهور المركبة بالكامل',
-                        textDirection: TextDirection.rtl,
-                        style: TextStyle(
-                          fontFamily: 'Tajawal',
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF666666),
-                        ),
-                      ),
-                      SizedBox(width: 6.w),
-                      Icon(
-                        Icons.info_outline,
-                        size: 16.w,
-                        color: const Color(0xFF999999),
-                      ),
-                    ],
-                  ),
+                const CameraGuidanceChip(
+                  message: 'تأكد من ظهور المركبة بالكامل',
                 ),
 
                 const Spacer(flex: 2),
 
                 // ── Camera capture button ──
-                GestureDetector(
+                CameraCaptureButton(
+                  isCapturing: _isCapturing,
                   onTap: _captureImage,
-                  child: Container(
-                    width: 70.w,
-                    height: 70.w,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2E7D32),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF2E7D32).withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: _isCapturing
-                        ? Padding(
-                            padding: EdgeInsets.all(18.w),
-                            child: const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          )
-                        : Icon(
-                            Icons.camera_alt,
-                            size: 30.w,
-                            color: Colors.white,
-                          ),
-                  ),
                 ),
 
                 SizedBox(height: 40.h),
@@ -276,72 +197,5 @@ class _VehicleInspectionCameraScreenState
         ],
       ),
     );
-  }
-
-  Widget _buildCameraPreview() {
-    if (_errorMessage != null) {
-      return Container(
-        color: const Color(0xFFF5F5F5),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.camera_alt_outlined,
-                size: 50.w,
-                color: const Color(0xFF9E9E9E),
-              ),
-              SizedBox(height: 12.h),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Text(
-                  _errorMessage!,
-                  textAlign: TextAlign.center,
-                  textDirection: TextDirection.rtl,
-                  style: TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 14.sp,
-                    color: const Color(0xFF999999),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (!_isCameraInitialized || _cameraController == null) {
-      return Container(
-        color: const Color(0xFFF5F5F5),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 40.w,
-                height: 40.w,
-                child: const CircularProgressIndicator(
-                  color: Color(0xFF2E7D32),
-                  strokeWidth: 3,
-                ),
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                'جاري تشغيل الكاميرا...',
-                textDirection: TextDirection.rtl,
-                style: TextStyle(
-                  fontFamily: 'Tajawal',
-                  fontSize: 14.sp,
-                  color: const Color(0xFF999999),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return CameraPreview(_cameraController!);
   }
 }

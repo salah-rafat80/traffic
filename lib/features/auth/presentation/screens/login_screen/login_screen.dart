@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:traffic/core/widgets/custom_appbar.dart';
 import 'package:traffic/features/auth/presentation/screens/signup_screen/signup_screen.dart';
 import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
@@ -420,7 +421,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Center(
               child: Text(
                 'G',
-                style: GoogleFonts.openSans(
+                style: GoogleFonts.cairo(
                   fontSize: 24.sp,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF4285F4),

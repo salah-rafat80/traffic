@@ -1,0 +1,6 @@
+Analyzing violations_inquiry...                                 
+
+warning - Unused import: 'package:flutter_svg/flutter_svg.dart' - lib\features\violations_inquiry\presentation\widgets\violation_illustration.dart:3:8 - unused_import
+warning - The value of the local variable 'svgPath' isn't used - lib\features\violations_inquiry\presentation\widgets\violation_illustration.dart:25:11 - unused_local_variable
+
+2 issues found. (ran in 1.8s)

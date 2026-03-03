@@ -42,7 +42,7 @@ class ViolationsSummaryCard extends StatelessWidget {
                 label12: "",
                 label11: " مخالفات",
                 label: 'اجمالي المخالفات',
-                value: '${totalViolations}',
+                value: '$totalViolations',
               ),
               _SummaryItem(
                 label12: "جنية مصري",
@@ -89,9 +89,7 @@ class _SummaryItem extends StatelessWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-
           style: GoogleFonts.cairo(
-
             fontSize: 15.sp,
             fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,

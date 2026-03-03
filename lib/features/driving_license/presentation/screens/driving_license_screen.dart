@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/service_list_item.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
+import 'package:traffic/features/driving_license/presentation/screens/terms_and_conditions/terms_and_conditions_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/select_license_screen.dart';
 
 class DrivingLicenseScreen extends StatefulWidget {
@@ -27,7 +28,7 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
             title: 'رخصة القيادة',
             onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
           ),
-          SizedBox(height: 5.h,),
+          SizedBox(height: 5.h),
 
           Expanded(
             child: SingleChildScrollView(
@@ -38,6 +39,12 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
                   ServiceListItem(
                     title: 'اصدار رخصة قيادة لأول مرة',
                     icon: 'assets/license_s.svg',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TermsAndConditionsScreen(),
+                      ),
+                    ),
                   ),
                   SizedBox(height: 24.h),
                   ServiceListItem(

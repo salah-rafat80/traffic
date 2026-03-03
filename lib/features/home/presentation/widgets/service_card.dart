@@ -1,7 +1,6 @@
-// path: lib/features/home/presentation/widgets/service_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// A tall service card with icon on top and label below,
@@ -86,7 +85,6 @@ class _AssistantContent extends StatelessWidget {
       children: [
         SvgPicture.asset(icon, width: 28.w, height: 28.w),
         SizedBox(width: 10.w),
-
         Text(
           title,
           textAlign: TextAlign.center,
@@ -101,3 +99,4 @@ class _AssistantContent extends StatelessWidget {
     );
   }
 }
+

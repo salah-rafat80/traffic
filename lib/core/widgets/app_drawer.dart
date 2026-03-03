@@ -111,14 +111,17 @@ class _DrawerItem extends StatelessWidget {
               ),
             ),
             SizedBox(width: 16.w),
-            Text(
-              label,
-              textDirection: TextDirection.rtl,
-              style: TextStyle(
-                fontFamily: 'Tajawal',
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF27AE60),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                textDirection: TextDirection.rtl,
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF27AE60),
+                ),
               ),
             ),
           ],

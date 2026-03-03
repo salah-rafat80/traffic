@@ -52,7 +52,7 @@ class ServiceScreenAppBar extends StatelessWidget {
                   height: 24.w,
                 ),
               ),
-      
+
               // ── Title (centered) ──
               Expanded(
                 child: Text(
@@ -66,7 +66,7 @@ class ServiceScreenAppBar extends StatelessWidget {
                   ),
                 ),
               ),
-      
+
               // ── Hamburger menu (left side in RTL) ──
               GestureDetector(
                 onTap: onMenuPressed,
