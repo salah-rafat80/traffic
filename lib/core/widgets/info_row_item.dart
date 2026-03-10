@@ -45,27 +45,37 @@ class InfoRowItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // ── Label (right in RTL) ──────────────────────────────────────
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF222222),
+              Flexible(
+                flex: 2,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF707070),
+                  ),
                 ),
               ),
 
+              SizedBox(width: 8.w),
+
               // ── Value (left in RTL) ───────────────────────────────────────
-              valueWidget ??
-                  Text(
-                    value!,
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF222222),
+              Flexible(
+                flex: 3,
+                child:
+                    valueWidget ??
+                    Text(
+                      value!,
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF222222),
+                      ),
                     ),
-                  ),
+              ),
             ],
           ),
         ),

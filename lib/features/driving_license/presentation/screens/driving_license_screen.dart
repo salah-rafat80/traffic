@@ -7,6 +7,8 @@ import 'package:traffic/features/driving_license/presentation/screens/terms_and_
 import 'package:traffic/features/driving_license/presentation/screens/terms_and_conditions/terms_and_conditions_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/select_license_screen.dart';
 
+import '../../../lost_license/presentation/screens/lost_license_selection_screen.dart';
+
 class DrivingLicenseScreen extends StatefulWidget {
   const DrivingLicenseScreen({super.key});
 
@@ -62,6 +64,12 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
                   ServiceListItem(
                     title: 'اصدار بدل فاقد / تالف رخصة',
                     icon: "assets/file_s.svg",
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LostLicenseSelectionScreen(),
+                      ),
+                    ),
                   ),
                   SizedBox(height: 24.h),
                   ServiceListItem(

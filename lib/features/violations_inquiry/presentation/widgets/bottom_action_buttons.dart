@@ -24,25 +24,23 @@ class BottomActionButtons extends StatelessWidget {
           children: [
             // ── Primary: التالي ──
             Expanded(
-              child: SizedBox(
-                height: 48.h,
-                child: ElevatedButton(
-                  onPressed: onNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF27AE60),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5.r),
-                    ),
+              child: InkWell(
+                onTap: onNext,
+                child: Container(
+                  height: 48.h,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF27AE60),
+                    borderRadius: BorderRadius.circular(5.r),
                   ),
-                  child: Text(
-                    'التالي',
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                  child: Center(
+                    child: Text(
+                      'التالي',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -53,27 +51,24 @@ class BottomActionButtons extends StatelessWidget {
 
             // ── Secondary: تعديل الاختيارات ──
             Expanded(
-              child: SizedBox(
-                height: 48.h,
-                child: OutlinedButton(
-                  onPressed: onEdit,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF27AE60),
-                    side: const BorderSide(
-                      color: Color(0xFF27AE60),
-                      width: 1,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5.r),
-                    ),
+              child: InkWell(
+                onTap: onEdit,
+                child: Container(
+                  height: 48.h,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0xFF27AE60)),
+                    color: const Color(0xFFF5F5F5),
+                    borderRadius: BorderRadius.circular(5.r),
                   ),
-                  child: Text(
-                    'تعديل الاختيارات',
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF27AE60),
+                  child: Center(
+                    child: Text(
+                      'تعديل الاختيارات',
+                      style: TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF27AE60),
+                      ),
                     ),
                   ),
                 ),
@@ -85,4 +80,3 @@ class BottomActionButtons extends StatelessWidget {
     );
   }
 }
-

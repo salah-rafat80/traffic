@@ -134,7 +134,14 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   void _onNextPressed() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const MedicalCheckScreen()),
+      MaterialPageRoute(
+        builder: (_) => MedicalCheckScreen(
+          appBarTitle: 'اصدار رخصة قيادة',
+          onNextPressed: () {
+            // TODO: Navigate to the next step in the flow.
+          },
+        ),
+      ),
     );
   }
 

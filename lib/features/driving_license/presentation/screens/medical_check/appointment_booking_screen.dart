@@ -28,7 +28,19 @@ class AppointmentResult {
 /// Uses [CalendarCarousel] for the date picker and [TimeSlotGrid] for slots.
 /// Pops with an [AppointmentResult] when the user taps "تأكيد الموعد".
 class AppointmentBookingScreen extends StatefulWidget {
-  const AppointmentBookingScreen({super.key});
+  /// Title displayed in the app bar. Passed down from the parent booking screen
+  /// so it stays consistent with the current flow.
+  final String appBarTitle;
+
+  /// Title displayed above the calendar, e.g. "حجز موعد الكشف الطبي" or
+  /// "حجز موعد اختبار القيادة العملي".
+  final String bookingHeaderTitle;
+
+  const AppointmentBookingScreen({
+    super.key,
+    this.appBarTitle = 'اصدار رخصة قيادة',
+    this.bookingHeaderTitle = 'حجز موعد الكشف الطبي',
+  });
 
   @override
   State<AppointmentBookingScreen> createState() =>
@@ -90,7 +102,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
         children: [
           // ── App bar ──────────────────────────────────────────────────────
           ServiceScreenAppBar(
-            title: 'اصدار رخصة قيادة',
+            title: widget.appBarTitle,
             onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
           ),
 
@@ -105,7 +117,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
 
                   // ── Section title ──────────────────────────────────────
                   Text(
-                    'حجز موعد الكشف الطبي',
+                    widget.bookingHeaderTitle,
                     textAlign: TextAlign.right,
                     textDirection: TextDirection.rtl,
                     style: TextStyle(

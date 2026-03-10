@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:traffic/core/features/payment/screens/payment_method_screen.dart';
+import 'package:traffic/core/features/payment/models/payment_intent.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
+import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
 import 'package:traffic/features/violations_inquiry/data/models/violation_model.dart';
@@ -63,7 +66,7 @@ class _ViolationsListScreenState extends State<ViolationsListScreen> {
             title: 'استعلام عن مخالفات رخصة القيادة',
             onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
           ),
-          SizedBox(height: 5.h,),
+          SizedBox(height: 5.h),
 
           // ── Content ──
           Expanded(
@@ -151,51 +154,42 @@ class _ViolationsListScreenState extends State<ViolationsListScreen> {
               top: false,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 52.h,
-                  child: ElevatedButton(
-                    onPressed: _selectedCount > 0
-                        ? () {
-                            final selected = _allViolations
-                                .where((v) =>
-                                    _selectedViolationIds.contains(v.id))
-                                .toList();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ViolationReviewScreen(
-                                  selectedViolations: selected,
-                                  onNext: () {},
-                                  onEdit: () => Navigator.pop(context),
-                                ),
+                child: PrimaryButton(
+                  label: _selectedCount > 0
+                      ? 'سداد $_selectedCount مخالفات  (${_selectedAmount.toInt()} جنية)'
+                      : 'سداد المخالفات',
+                  onPressed: _selectedCount > 0
+                      ? () {
+                          final selected = _allViolations
+                              .where(
+                                (v) => _selectedViolationIds.contains(v.id),
+                              )
+                              .toList();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ViolationReviewScreen(
+                                selectedViolations: selected,
+                                onNext: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PaymentMethodScreen(
+                                        paymentIntent: PaymentIntent(
+                                          orderType: 'مخالفات رخصة القيادة',
+                                          amount: _selectedAmount,
+                                          currency: 'جنية مصري',
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                onEdit: () => Navigator.pop(context),
                               ),
-                            );
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      disabledBackgroundColor: const Color(
-                        0xFF2E7D32,
-                      ).withValues(alpha: 0.4),
-                      foregroundColor: Colors.white,
-                      disabledForegroundColor: Colors.white70,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      _selectedCount > 0
-                          ? 'سداد $_selectedCount مخالفات  (${_selectedAmount.toInt()} جنية)'
-                          : 'سداد المخالفات',
-                      style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+                            ),
+                          );
+                        }
+                      : null,
                 ),
               ),
             ),

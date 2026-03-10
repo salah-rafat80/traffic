@@ -18,8 +18,23 @@ class AgreementCheckbox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
+        SizedBox(
+          width: 24.r,
+          height: 24.r,
+          child: Checkbox(
+            value: isAgreed,
+            onChanged: onChanged != null ? (v) => onChanged!(v ?? false) : null,
+            activeColor: const Color(0xFF27AE60),
+            side: BorderSide(color: Colors.black, width: 1.r),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+          ),
+        ),
         SizedBox(width: 8.w),
 
         // ── Label ─────────────────────────────────────────────────────────
@@ -49,22 +64,8 @@ class AgreementCheckbox extends StatelessWidget {
           ),
           textDirection: TextDirection.rtl,
         ),
+
         // ── Checkbox ─────────────────────────────────────────────────────
-        SizedBox(
-          width: 24.r,
-          height: 24.r,
-          child: Checkbox(
-            value: isAgreed,
-            onChanged: onChanged != null ? (v) => onChanged!(v ?? false) : null,
-            activeColor: const Color(0xFF27AE60),
-            side: BorderSide(color: Colors.black, width: 1.r),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-          ),
-        ),
       ],
     );
   }

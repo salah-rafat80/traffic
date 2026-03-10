@@ -30,7 +30,9 @@ class LicenseDetailsConfirmationScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const TheoryTestBookingScreen(),
+        builder: (_) => const TheoryTestBookingScreen(
+          appBarTitle: 'تجديد رخصة القيادة',
+        ),
       ),
     );
   }

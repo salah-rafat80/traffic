@@ -31,7 +31,7 @@ class NextButtonWidget extends StatelessWidget {
               color: Colors.white,
               fontSize: 18.sp,
               fontWeight: FontWeight.w500,
-              fontFamily: 'Tajawal',
+              fontFamily: 'Cairo',
             ),
           ),
         ),
