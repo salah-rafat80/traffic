@@ -6,6 +6,7 @@ import 'package:traffic/core/constants/colors.dart';
 import 'package:traffic/features/home/presentation/screens/home_screen.dart';
 import 'package:traffic/features/profile/presentation/profile_screen.dart';
 import 'package:traffic/features/orders/presentation/my_orders_screen.dart';
+import 'package:traffic/features/settings/presentation/screens/settings_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -26,7 +27,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<Widget> _screens = [
     const ProfileScreen(),
-    const Center(child: Text('الاعدادات')),
+    const SettingsScreen(),
     const MyOrdersScreen(),
     const HomeScreen(),
   ];
