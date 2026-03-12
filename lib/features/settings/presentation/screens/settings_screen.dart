@@ -4,6 +4,8 @@ import 'package:traffic/features/profile/presentation/widgets/profile_header.dar
 
 import '../widgets/logout_button.dart';
 import '../widgets/settings_menu_item.dart';
+import 'faq_screen.dart';
+import 'support_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -56,14 +58,24 @@ class SettingsScreen extends StatelessWidget {
                           title: 'الاسئلة الشائعة',
                           icon: Icons.help_outline,
                           onTap: () {
-                            // TODO: Navigate to FAQ
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const FaqScreen(),
+                              ),
+                            );
                           },
                         ),
                         SettingsMenuItem(
                           title: 'التواصل مع الدعم',
                           icon: Icons.call_outlined,
                           onTap: () {
-                            // TODO: Navigate to Contact Support
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SupportScreen(),
+                              ),
+                            );
                           },
                         ),
                         SettingsMenuItem(
