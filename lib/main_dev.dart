@@ -28,8 +28,7 @@ class MyApp extends StatelessWidget {
         );
       },
       child:
-          const
-          //  SplashScreen()
+          //  const SplashScreen(),
           MainNavigationScreen(),
     );
   }
