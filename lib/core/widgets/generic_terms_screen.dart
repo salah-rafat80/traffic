@@ -3,84 +3,54 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/features/auth/presentation/screens/signup_screen/widgets/signup_step1_form/widgets/next_button_widget.dart';
-
-import 'package:traffic/features/driving_license/presentation/screens/license_details/license_details_screen.dart';
-import 'widgets/agreement_checkbox.dart';
-import 'widgets/custom_expansion_tile.dart';
+import 'package:traffic/features/driving_license/presentation/screens/terms_and_conditions/widgets/agreement_checkbox.dart';
+import 'package:traffic/features/driving_license/presentation/screens/terms_and_conditions/widgets/custom_expansion_tile.dart';
 
 // ── Terms data model ──────────────────────────────────────────────────────────
 
 /// Holds the data for a single Terms & Conditions section.
-class _TermsSection {
+class TermsSection {
   final String title;
   final String content;
   final IconData iconData;
 
-  const _TermsSection({
+  const TermsSection({
     required this.title,
     required this.content,
     required this.iconData,
   });
 }
 
-// ── Static terms data ─────────────────────────────────────────────────────────
-
-const List<_TermsSection> _termsSections = [
-  _TermsSection(
-    title: 'الأهلية العامة',
-    content:
-        'الخدمة متاحة فقط للمركبات المسجلة باسم صاحب الحساب.\n'
-        'يجب أن تكون المركبة من الفئات المسموح لها بالتجديد إلكترونيًا.',
-    iconData: Icons.person_outline_rounded,
-  ),
-  _TermsSection(
-    title: 'المخالفات والرسوم',
-    content:
-        'يجب سداد جميع المخالفات المرورية قبل إتمام عملية التجديد.\n'
-        'في حال وجود مخالفات، سيتم توجيهك لخطوة السداد قبل المتابعة.',
-    iconData: Icons.receipt_long_outlined,
-  ),
-  _TermsSection(
-    title: 'التأمين والفحص الفني',
-    content:
-        'يشترط وجود تأمين إلزامي ساري المفعول.\n'
-        'قد يتطلب الفحص الفني حسب سنة الصنع أو حالة المركبة.',
-    iconData: Icons.verified_user_outlined,
-  ),
-  _TermsSection(
-    title: 'حالات تمنع التجديد الإلكتروني',
-    content:
-        'لا يمكن التجديد إلكترونيًا إذا كانت الرخصة مسحوبة أو موقوفة.\n'
-        'لا يمكن التجديد في حالة وجود أمر قضائي أو حجز على المركبة.\n'
-        'في حالة عدم تطابق بيانات المالك، يلزم التوجه إلى وحدة المرور.',
-    iconData: Icons.receipt_outlined,
-  ),
-  _TermsSection(
-    title: 'الاستلام والتوصيل',
-    content:
-        'يمكنك اختيار استلام الرخصة من وحدة المرور أو طلب توصيلها للعنوان.\n'
-        'رسوم التوصيل تُحتسب حسب المحافظة والعنوان.',
-    iconData: Icons.local_shipping_outlined,
-  ),
-];
-
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-/// **Terms & Conditions** screen for the **Licence Renewal** flow.
+/// **Generic Terms & Conditions** screen.
 ///
-/// Displays five collapsible sections using [CustomExpansionTile]. The primary
+/// Displays collapsible sections using [CustomExpansionTile]. The primary
 /// action button ("التالي") is disabled until the user checks the agreement
 /// checkbox.
 ///
 /// State is kept local ([StatefulWidget]) until a Cubit is introduced.
-class RenewalTermsScreen extends StatefulWidget {
-  const RenewalTermsScreen({super.key});
+class GenericTermsScreen extends StatefulWidget {
+  final String appBarTitle;
+  final String subtitle;
+  final String? disclaimer; // Optional secondary lighter text
+  final List<TermsSection> termsData;
+  final VoidCallback onNextPressed;
+
+  const GenericTermsScreen({
+    super.key,
+    required this.appBarTitle,
+    required this.subtitle,
+    this.disclaimer,
+    required this.termsData,
+    required this.onNextPressed,
+  });
 
   @override
-  State<RenewalTermsScreen> createState() => _RenewalTermsScreenState();
+  State<GenericTermsScreen> createState() => _GenericTermsScreenState();
 }
 
-class _RenewalTermsScreenState extends State<RenewalTermsScreen> {
+class _GenericTermsScreenState extends State<GenericTermsScreen> {
   /// Whether the user has agreed to the terms.
   bool _isAgreed = false;
 
@@ -90,13 +60,6 @@ class _RenewalTermsScreenState extends State<RenewalTermsScreen> {
 
   void _onAgreementChanged(bool value) {
     setState(() => _isAgreed = value);
-  }
-
-  void _onNextPressed() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const LicenseDetailsScreen()),
-    );
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -111,7 +74,7 @@ class _RenewalTermsScreenState extends State<RenewalTermsScreen> {
         children: [
           // ── App bar ──────────────────────────────────────────────────────
           ServiceScreenAppBar(
-            title: 'تجديد رخصة القيادة',
+            title: widget.appBarTitle,
             onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
           ),
 
@@ -141,7 +104,7 @@ class _RenewalTermsScreenState extends State<RenewalTermsScreen> {
 
                   // ── Sub-title ─────────────────────────────────────────────
                   Text(
-                    'يرجى قراءة الشروط بعناية قبل متابعة التجديد.',
+                    widget.subtitle,
                     textAlign: TextAlign.right,
                     textDirection: TextDirection.rtl,
                     style: TextStyle(
@@ -152,22 +115,23 @@ class _RenewalTermsScreenState extends State<RenewalTermsScreen> {
                     ),
                   ),
 
-                  SizedBox(height: 8.h),
+                  if (widget.disclaimer != null) ...[
+                    SizedBox(height: 8.h),
 
-                  // ── Disclaimer ────────────────────────────────────────────
-                  Text(
-                    'قبل المتابعة، يرجى التأكد أن المركبة تستوفي جميع الشروط المطلوبة. '
-                    'في حال عدم استيفاء أي شرط، لن تتمكن من إتمام التجديد إلكترونيًا.',
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      color: const Color(0xFF333333),
-                      fontSize: 12.sp,
-                      fontFamily: 'Tajawal',
-                      fontWeight: FontWeight.w500,
-                      height: 1.6,
+                    // ── Disclaimer ────────────────────────────────────────────
+                    Text(
+                      widget.disclaimer!,
+                      textAlign: TextAlign.right,
+                      textDirection: TextDirection.rtl,
+                      style: TextStyle(
+                        color: const Color(0xFF333333),
+                        fontSize: 12.sp,
+                        fontFamily: 'Tajawal',
+                        fontWeight: FontWeight.w500,
+                        height: 1.6,
+                      ),
                     ),
-                  ),
+                  ],
 
                   SizedBox(height: 16.h),
 
@@ -201,7 +165,7 @@ class _RenewalTermsScreenState extends State<RenewalTermsScreen> {
 
                   // ── Primary action button ──────────────────────────────────
                   NextButtonWidget(
-                    onPressed: _onNextPressed,
+                    onPressed: widget.onNextPressed,
                     isValid: _isAgreed,
                     height: 48.h,
                   ),
@@ -222,8 +186,8 @@ class _RenewalTermsScreenState extends State<RenewalTermsScreen> {
   List<Widget> _buildTileList() {
     final List<Widget> tiles = [];
 
-    for (int i = 0; i < _termsSections.length; i++) {
-      final section = _termsSections[i];
+    for (int i = 0; i < widget.termsData.length; i++) {
+      final section = widget.termsData[i];
 
       tiles.add(
         CustomExpansionTile(
@@ -238,7 +202,7 @@ class _RenewalTermsScreenState extends State<RenewalTermsScreen> {
       );
 
       // Add divider between tiles (not after the last one)
-      if (i < _termsSections.length - 1) {
+      if (i < widget.termsData.length - 1) {
         tiles.add(
           Divider(
             height: 1.h,

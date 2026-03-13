@@ -19,6 +19,7 @@ class AgreementCheckbox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
+      textDirection: TextDirection.rtl,
       children: [
         SizedBox(
           width: 24.r,

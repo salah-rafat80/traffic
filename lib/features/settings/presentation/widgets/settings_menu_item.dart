@@ -51,7 +51,7 @@ class SettingsMenuItem extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                Expanded(child: Spacer()),
+                const Spacer(),
                 if (trailingText != null) ...[
                   Text(
                     trailingText!,

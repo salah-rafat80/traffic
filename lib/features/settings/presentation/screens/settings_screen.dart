@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/features/profile/presentation/widgets/profile_header.dart';
+import 'package:traffic/features/settings/presentation/screens/about_app_screen.dart';
+import 'package:traffic/features/settings/presentation/screens/privacy_policy_screen.dart';
+import 'package:traffic/features/settings/presentation/screens/terms_of_use_screen.dart';
+import 'package:traffic/features/settings/presentation/widgets/logout_confirmation_dialog.dart';
+import 'package:traffic/features/smart_assistant/presentation/screens/smart_assistant_chat_screen.dart';
 
 import '../widgets/logout_button.dart';
 import '../widgets/settings_menu_item.dart';
@@ -83,15 +88,19 @@ class SettingsScreen extends StatelessWidget {
                           icon: Icons.smart_toy_outlined,
                           showDivider: false,
                           onTap: () {
-                            // TODO: Navigate to Smart Assistant
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const SmartAssistantChatScreen(),
+                              ),
+                            );
                           },
                         ),
                       ],
                     ),
                   ),
-
                   SizedBox(height: 24.h),
-
                   Text(
                     'عن التطبيق',
                     style: TextStyle(
@@ -125,21 +134,37 @@ class SettingsScreen extends StatelessWidget {
                           title: 'عن التطبيق',
                           icon: Icons.info_outline,
                           onTap: () {
-                            // TODO: Navigate to About App
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AboutAppScreen(),
+                              ),
+                            );
                           },
                         ),
                         SettingsMenuItem(
                           title: 'شروط الاستخدام',
                           icon: Icons.article_outlined,
                           onTap: () {
-                            // TODO: Navigate to Terms of Use
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const TermsOfUseScreen(),
+                              ),
+                            );
                           },
                         ),
                         SettingsMenuItem(
                           title: 'سياسة الخصوصية',
                           icon: Icons.lock_outline,
                           onTap: () {
-                            // TODO: Navigate to Privacy Policy
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PrivacyPolicyScreen(),
+                              ),
+                            );
                           },
                         ),
                         SettingsMenuItem(
@@ -160,7 +185,10 @@ class SettingsScreen extends StatelessWidget {
 
                   LogoutButton(
                     onTap: () {
-                      // TODO: Implement logout logic
+                      showDialog(
+                        context: context,
+                        builder: (context) => const LogoutConfirmationDialog(),
+                      );
                     },
                   ),
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 
 class FaqScreen extends StatefulWidget {
@@ -64,7 +65,7 @@ class _FaqScreenState extends State<FaqScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       key: _scaffoldKey,
-
+      drawer: const AppDrawer(),
       body: Column(
         textDirection: TextDirection.rtl,
         children: [

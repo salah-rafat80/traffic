@@ -118,10 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  CustomAppbar(
-                    onBackPressed: () => Navigator.pop(context),
-                    title: 'تسجيل الدخول',
-                  ),
+                  CustomAppbar(onBackPressed: () {}, title: 'تسجيل الدخول'),
                   SizedBox(height: 32.h),
                   _buildPhoneField(),
                   SizedBox(height: 24.h),

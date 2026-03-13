@@ -28,9 +28,11 @@ class SupportOptionCard extends StatelessWidget {
       ),
       padding: EdgeInsets.all(8.r),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
+
         children: [
           Row(
+            textDirection: TextDirection.rtl,
             children: [
               Text(
                 title,

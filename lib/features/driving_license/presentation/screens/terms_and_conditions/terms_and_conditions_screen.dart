@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
-import 'package:traffic/features/auth/presentation/screens/signup_screen/widgets/signup_step1_form/widgets/next_button_widget.dart';
-import 'package:traffic/features/driving_license/presentation/screens/document_upload/document_upload_screen.dart';
+import 'package:traffic/core/widgets/primary_button.dart';
+import 'package:traffic/core/widgets/generic_document_upload_screen.dart';
+import 'package:traffic/features/driving_license/presentation/screens/medical_check/medical_check_screen.dart';
 import 'widgets/agreement_checkbox.dart';
 import 'widgets/terms_content_card.dart';
 
@@ -37,7 +38,47 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
   void _onNextPressed() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const DocumentUploadScreen()),
+      MaterialPageRoute(
+        builder: (_) => GenericDocumentUploadScreen(
+          appBarTitle: 'اصدار رخصة قيادة',
+          subtitle: 'يرجى رفع المستندات التالية لإتمام إجراءات إصدار رخصة قيادة. يجب أن تكون الصور واضحة ومقروءة.',
+          dropdowns: const [
+            DropdownConfig(
+              title: 'فئة الرخصة',
+              hint: 'اختر فئة الرخصة',
+              options: [
+                'قيادة خاصة',
+                'دراجة نارية',
+                'مهنية درجة ثالثة',
+                'مهنية درجة ثانية',
+                'مهنية درجة أولى',
+                'قيادة معدات ثقيلة',
+                'قيادة جرار زراعي',
+              ],
+            ),
+          ],
+          documents: [
+            DocumentItemModel(title: 'شهادة المؤهل الدراسي', isRequired: true),
+            DocumentItemModel(title: 'صور شخصية حديثة', isRequired: true),
+            DocumentItemModel(title: 'صورة البطاقة الشخصية (وجه + ظهر)', isRequired: true),
+            DocumentItemModel(title: 'إثبات محل الإقامة', isRequired: false),
+            DocumentItemModel(title: 'شهادة طبية', isRequired: false),
+          ],
+          onNextPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MedicalCheckScreen(
+                  appBarTitle: 'اصدار رخصة قيادة',
+                  onNextPressed: () {
+                    // TODO: Navigate to the next step in the flow.
+                  },
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -110,9 +151,9 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                   SizedBox(height: 16.h),
 
                   // ── Primary action button (reused from signup flow) ────
-                  NextButtonWidget(
-                    onPressed: _onNextPressed,
-                    isValid: _isAgreed,
+                  PrimaryButton(
+                    onPressed: _isAgreed ? _onNextPressed : null,
+                    label: 'التالي',
                     height: 48.h,
                   ),
 
