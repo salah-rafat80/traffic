@@ -24,7 +24,7 @@ class ServiceListItem extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 60.h,
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15.r),
@@ -68,7 +68,7 @@ class ServiceListItem extends StatelessWidget {
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF222222),
-                  height: 1.3,
+                  // height: 1.3,
                 ),
               ),
             ),

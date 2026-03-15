@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:traffic/core/features/payment/models/payment_intent.dart';
+import 'package:traffic/core/features/payment/screens/payment_method_screen.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 import 'package:traffic/features/violations_inquiry/data/models/violation_model.dart';
@@ -73,10 +75,20 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
           // ── Bottom pay button (unpaid violations only) ──
           if (!v.isPaid)
             ViolationPayButton(
-              onPressed: () {
-                // TODO(cubit): trigger payment flow
-              },
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PaymentMethodScreen(
+                    paymentIntent: PaymentIntent(
+                      orderType: 'سداد مخالفات رخصة المركبة',
+                      amount: v.amount,
+                      currency: 'جنية مصري',
+                    ),
+                  ),
+                ),
+              ),
             ),
+
         ],
       ),
     );

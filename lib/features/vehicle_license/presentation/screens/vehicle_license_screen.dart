@@ -7,6 +7,10 @@ import 'package:traffic/core/widgets/generic_terms_screen.dart';
 import 'package:traffic/core/widgets/generic_document_upload_screen.dart';
 import 'package:traffic/features/vehicle_license/presentation/screens/vehicle_insurance_screen.dart';
 
+import 'package:traffic/features/vehicle_license/replacement_license/presentation/screens/vehicle_lost_license_selection_screen.dart';
+import 'package:traffic/features/vehicle_license/renewal_license/presentation/screens/renewal_vehicle_selection_screen.dart';
+import 'package:traffic/features/vehicle_license/violations_inquiry/presentation/screens/select_vehicle_violation_screen.dart';
+
 class VehicleLicenseScreen extends StatefulWidget {
   const VehicleLicenseScreen({super.key});
 
@@ -152,6 +156,13 @@ class _VehicleLicenseScreenState extends State<VehicleLicenseScreen> {
                   ),
                   SizedBox(height: 24.h),
                   ServiceListItem(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const VehicleLostLicenseSelectionScreen(),
+                      ),
+                    ),
                     title: 'اصدار بدل فاقد / تالف رخصة مركبة',
                     icon: "assets/file_s.svg",
                   ),
@@ -159,12 +170,71 @@ class _VehicleLicenseScreenState extends State<VehicleLicenseScreen> {
                   ServiceListItem(
                     title: 'تجديد رخصة مركبة',
                     icon: "assets/loding.svg",
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => GenericTermsScreen(
+                          appBarTitle: 'تجديد رخصة مركبة',
+                          subtitle:
+                              'يرجى قراءة الشروط بعناية قبل متابعة التجديد.',
+                          disclaimer:
+                              'قبل المتابعة، يرجى التأكد أن المركبة تستوفي جميع الشروط المطلوبة. في حال عدم استيفاء أي شرط، لن تتمكن من إتمام التجديد إلكترونيًا.',
+                          termsData: const [
+                            TermsSection(
+                              title: 'الأهلية العامة',
+                              content:
+                                  'الخدمة متاحة فقط للمركبات المسجلة باسم صاحب الحساب.\nيجب أن تكون المركبة من الفئات المسموح لها بالتجديد إلكترونيًا.',
+                              iconData: Icons.person_outline_rounded,
+                            ),
+                            TermsSection(
+                              title: 'المخالفات والرسوم',
+                              content:
+                                  'يجب سداد جميع المخالفات المرورية قبل إتمام عملية التجديد.\nفي حال وجود مخالفات، سيتم توجيهك لخطوة السداد قبل المتابعة.',
+                              iconData: Icons.receipt_long_outlined,
+                            ),
+                            TermsSection(
+                              title: 'التأمين والفحص الفني',
+                              content:
+                                  'يشترط وجود تأمين إلزامي ساري المفعول.\nقد يتطلب الفحص الفني حسب سنة الصنع أو حالة المركبة.',
+                              iconData: Icons.verified_user_outlined,
+                            ),
+                            TermsSection(
+                              title: 'حالات تمنع التجديد الإلكتروني',
+                              content:
+                                  'لا يمكن التجديد إلكترونيًا إذا كانت الرخصة مسحوبة أو موقوفة.\nلا يمكن التجديد في حالة وجود أمر قضائي أو حجز على المركبة.\nفي حالة عدم تطابق بيانات المالك، يلزم التوجه إلى وحدة المرور.',
+                              iconData: Icons.receipt_outlined,
+                            ),
+                            TermsSection(
+                              title: 'الاستلام والتوصيل',
+                              content:
+                                  'يمكنك اختيار استلام الرخصة من وحدة المرور أو طلب توصيلها للعنوان.\nرسوم التوصيل تُحتسب حسب المحافظة والعنوان.',
+                              iconData: Icons.local_shipping_outlined,
+                            ),
+                          ],
+                          onNextPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const RenewalVehicleSelectionScreen(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
+
                   SizedBox(height: 24.h),
                   ServiceListItem(
-                    title: 'استعلام عن مخالفات المركبة',
+                    title: 'استعلام عن مخالفات المركبة و سدادها',
                     icon: "assets/search.svg",
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SelectVehicleViolationScreen(),
+                      ),
+                    ),
                   ),
+
                   SizedBox(height: 24.h),
                   ServiceListItem(
                     title: 'سداد مخالفات المركبة',

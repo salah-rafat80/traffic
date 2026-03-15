@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 /// The "سداد المخالفات" (Pay Violations) primary action button.
 /// Only shown for unpaid violations.
 class ViolationPayButton extends StatelessWidget {
@@ -27,22 +26,26 @@ class ViolationPayButton extends StatelessWidget {
         child: SizedBox(
           width: double.infinity,
           height: 48.h,
-          child: ElevatedButton(
-            onPressed: onPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF27AE60),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
+          child: GestureDetector(
+            onTap: onPressed,
+            child: Container(
+              width: double.infinity,
+              height: 48.h,
+              decoration: BoxDecoration(
+                color: const Color(0xFF27AE60),
                 borderRadius: BorderRadius.circular(5.r),
               ),
-              elevation: 0,
-            ),
-            child: Text(
-              label,
-              style: GoogleFonts.cairo(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFF8F9F9),
+              alignment: Alignment.center,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: GoogleFonts.cairo(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFF8F9F9),
+                  ),
+                ),
               ),
             ),
           ),
