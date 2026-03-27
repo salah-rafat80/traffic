@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:traffic/core/widgets/custom_appbar.dart';
 import 'package:traffic/features/auth/presentation/screens/signup_screen/signup_screen.dart';
 import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
+import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
+import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
+import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
 
 /// Pixel-perfect Login Screen with real-time validation.
 /// All sizes are responsive using flutter_screenutil.
@@ -90,49 +94,76 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordError == null;
   }
 
-  void _onLogin() {
+  void _onLogin(BuildContext context) {
     // Validate before login
     _validatePhone();
     _validatePassword();
 
     if (_isFormValid) {
-      // Navigate to Home
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-        (route) => false,
+      context.read<AuthCubit>().login(
+        _phoneController.text.trim(),
+        _passwordController.text,
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: _white,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  CustomAppbar(onBackPressed: () {}, title: 'تسجيل الدخول'),
-                  SizedBox(height: 32.h),
-                  _buildPhoneField(),
-                  SizedBox(height: 24.h),
-                  _buildPasswordField(),
-                  SizedBox(height: 32.h),
-                  _buildLoginButton(),
-                  SizedBox(height: 24.h),
-                  _buildOrDivider(),
-                  SizedBox(height: 24.h),
-                  _buildSocialButtons(),
-                  SizedBox(height: 48.h),
-                  _buildFooter(),
-                  SizedBox(height: 24.h),
-                ],
+    return BlocProvider(
+      create: (context) => AuthCubit(AuthRepository()),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(
+          backgroundColor: _white,
+          body: BlocListener<AuthCubit, AuthState>(
+            listener: (context, state) {
+              if (state is AuthLoginSuccess) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+                  (route) => false,
+                );
+              } else if (state is AuthFailure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      state.message,
+                      style: GoogleFonts.cairo(),
+                    ),
+                    backgroundColor: _errorRed,
+                  ),
+                );
+              }
+            },
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      CustomAppbar(onBackPressed: () {}, title: 'تسجيل الدخول'),
+                      SizedBox(height: 32.h),
+                      _buildPhoneField(),
+                      SizedBox(height: 24.h),
+                      _buildPasswordField(),
+                      SizedBox(height: 32.h),
+                      BlocBuilder<AuthCubit, AuthState>(
+                        builder: (context, state) {
+                          final isLoading = state is AuthLoading;
+                          return _buildLoginButton(context, isLoading);
+                        },
+                      ),
+                      SizedBox(height: 24.h),
+                      _buildOrDivider(),
+                      SizedBox(height: 24.h),
+                      _buildSocialButtons(),
+                      SizedBox(height: 48.h),
+                      _buildFooter(),
+                      SizedBox(height: 24.h),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -340,11 +371,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // --- Login Button ---
-  Widget _buildLoginButton() {
+  Widget _buildLoginButton(BuildContext context, bool isLoading) {
     return SizedBox(
       height: 52.h,
       child: ElevatedButton(
-        onPressed: _onLogin,
+        onPressed: isLoading ? null : () => _onLogin(context),
         style: ElevatedButton.styleFrom(
           backgroundColor: _green,
           foregroundColor: _white,
@@ -355,14 +386,16 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: EdgeInsets.zero,
         ),
         child: Center(
-          child: Text(
-            'تسجيل الدخول',
-            style: GoogleFonts.cairo(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w700,
-              color: _white,
-            ),
-          ),
+          child: isLoading
+              ? const CircularProgressIndicator(color: _white)
+              : Text(
+                  'تسجيل الدخول',
+                  style: GoogleFonts.cairo(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                    color: _white,
+                  ),
+                ),
         ),
       ),
     );

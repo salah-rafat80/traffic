@@ -3,7 +3,8 @@ import 'package:traffic/core/widgets/password_requirement_item.dart';
 
 class PasswordRequirementsListWidget extends StatelessWidget {
   final bool hasMinLength;
-  final bool hasLetter;
+  final bool hasUppercase;
+  final bool hasLowercase;
   final bool hasNumber;
   final bool hasSpecialChar;
   final bool notSameAsUsername;
@@ -11,7 +12,8 @@ class PasswordRequirementsListWidget extends StatelessWidget {
   const PasswordRequirementsListWidget({
     super.key,
     required this.hasMinLength,
-    required this.hasLetter,
+    required this.hasUppercase,
+    required this.hasLowercase,
     required this.hasNumber,
     required this.hasSpecialChar,
     required this.notSameAsUsername,
@@ -23,8 +25,12 @@ class PasswordRequirementsListWidget extends StatelessWidget {
       children: [
         PasswordRequirementItem(text: '8 أحرف على الأقل', isMet: hasMinLength),
         PasswordRequirementItem(
-          text: 'تحتوي على حرف واحد على الأقل (a-z ,A-Z)',
-          isMet: hasLetter,
+          text: 'تحتوي على حرف كبير واحد على الأقل (A-Z)',
+          isMet: hasUppercase,
+        ),
+        PasswordRequirementItem(
+          text: 'تحتوي على حرف صغير واحد على الأقل (a-z)',
+          isMet: hasLowercase,
         ),
         PasswordRequirementItem(
           text: 'تحتوي على رقم واحد على الأقل (0-9)',
@@ -32,7 +38,7 @@ class PasswordRequirementsListWidget extends StatelessWidget {
         ),
         PasswordRequirementItem(
           text:
-              'تحتوي على رمز خاص واحد على الأقل\n! @ # \$ % ^ & * ( ) _ + - = [ ] { } ; : \' " \\ | , . < > / ?',
+              'تحتوي على رمز خاص واحد على الأقل\n! @ # \$ % ^ & * ( ) _ + - = [ ] { } ; : \' " \\\\ | , . < > / ?',
           isMet: hasSpecialChar,
         ),
         PasswordRequirementItem(

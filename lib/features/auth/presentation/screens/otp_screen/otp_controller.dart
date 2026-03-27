@@ -3,18 +3,28 @@ import 'package:flutter/material.dart';
 /// Controller for OTP screen logic.
 /// Uses ChangeNotifier for state management without external packages.
 class OtpController extends ChangeNotifier {
-  OtpController({required this.email}) {
+  OtpController({
+    required this.email,
+    this.onComplete,
+  }) {
     _initControllers();
     startTimer();
   }
 
   final String email;
+  final void Function(String)? onComplete;
 
   final List<TextEditingController> controllers = [];
   final List<FocusNode> focusNodes = [];
+  String? _currentOtp;
 
   bool _showError = false;
   bool get showError => _showError;
+
+  void setError(bool value) {
+    _showError = value;
+    notifyListeners();
+  }
 
   int _timerSeconds = 300; // 5:00 minutes
   int get timerSeconds => _timerSeconds;
@@ -22,11 +32,11 @@ class OtpController extends ChangeNotifier {
   bool _isTimerRunning = true;
   bool get isTimerRunning => _isTimerRunning;
 
-  bool _isSuccess = false;
-  bool get isSuccess => _isSuccess;
+  bool _isComplete = false;
+  bool get isComplete => _isComplete;
 
   void _initControllers() {
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 6; i++) {
       controllers.add(TextEditingController());
       focusNodes.add(FocusNode());
     }
@@ -60,14 +70,20 @@ class OtpController extends ChangeNotifier {
       notifyListeners();
     }
 
-    if (value.isNotEmpty && index < 3) {
+    if (value.isNotEmpty && index < 5) {
       focusNodes[index + 1].requestFocus();
     }
 
     // Check if all fields are filled
     final otp = controllers.map((c) => c.text).join();
-    if (otp.length == 4) {
-      verifyOtp(otp);
+    if (otp.length == 6 && _currentOtp != otp) {
+      _currentOtp = otp;
+      _isComplete = true; // Signal UI that OTP is ready
+      notifyListeners();
+      onComplete?.call(otp); // Fire callback exactly once here
+    } else if (otp.length < 6) {
+      _isComplete = false;
+      _currentOtp = null;
     }
   }
 
@@ -77,16 +93,7 @@ class OtpController extends ChangeNotifier {
     }
   }
 
-  void verifyOtp(String otp) {
-    // Demo: "1234" is correct, anything else shows error
-    if (otp == '1234') {
-      _isSuccess = true;
-      notifyListeners();
-    } else {
-      _showError = true;
-      notifyListeners();
-    }
-  }
+  String get otpCode => controllers.map((c) => c.text).join();
 
   void resendOtp() {
     _timerSeconds = 300;

@@ -4,8 +4,12 @@ import 'package:traffic/features/auth/presentation/screens/otp_screen/otp_contro
 import 'package:traffic/features/auth/presentation/screens/otp_screen/otp_styles.dart';
 import 'package:traffic/features/auth/presentation/screens/otp_screen/widgets/otp_header.dart';
 import 'package:traffic/features/auth/presentation/screens/otp_screen/widgets/otp_inputs_row.dart';
-import 'package:traffic/features/auth/presentation/screens/otp_screen/widgets/otp_success_sheet.dart';
 import 'package:traffic/features/auth/presentation/screens/otp_screen/widgets/otp_timer_resend.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
+import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
+import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
+import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
 
 /// OTP verification screen with three states: initial, error, and success.
 class OtpScreen extends StatefulWidget {
@@ -20,48 +24,68 @@ class OtpScreen extends StatefulWidget {
 
 class _OtpScreenState extends State<OtpScreen> {
   late OtpController _controller;
+  late final AuthCubit _authCubit;
 
   @override
   void initState() {
     super.initState();
-    _controller = OtpController(email: widget.email);
+    _authCubit = AuthCubit(AuthRepository());
+    _controller = OtpController(
+      email: widget.email,
+      onComplete: (otp) {
+        _authCubit.verifyOtp(widget.email, otp);
+      },
+    );
     _controller.addListener(_onControllerChanged);
   }
 
   void _onControllerChanged() {
-    if (_controller.isSuccess) {
-      _showSuccessSheet();
-      // Remove listener to prevent multiple sheets
-      _controller.removeListener(_onControllerChanged);
-    }
     setState(() {});
-  }
-
-  void _showSuccessSheet() {
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      backgroundColor: Colors.transparent,
-      barrierColor: OtpStyles.barrierColor,
-      builder: (context) => const OtpSuccessSheet(),
-    );
   }
 
   @override
   void dispose() {
     _controller.removeListener(_onControllerChanged);
     _controller.dispose();
+    _authCubit.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: OtpStyles.backgroundColor,
-        body: SafeArea(
+    return BlocProvider.value(
+      value: _authCubit,
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Scaffold(
+          backgroundColor: OtpStyles.backgroundColor,
+          body: Builder(builder: (context) {
+            return BlocListener<AuthCubit, AuthState>(
+              listener: (context, state) {
+                if (state is AuthVerifyOtpSuccess) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MainNavigationScreen(),
+                    ),
+                    (route) => false, // Remove all previous screens
+                  );
+                } else if (state is AuthFailure) {
+                  _controller.setError(true);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        state.message,
+                        textAlign: TextAlign.right,
+                      ),
+                      backgroundColor: const Color(0xFFD32F2F),
+                    ),
+                  );
+                }
+              },
+              child: Stack(
+                children: [
+                  SafeArea(
           child: Column(
             children: [
               // AppBar
@@ -105,6 +129,25 @@ class _OtpScreenState extends State<OtpScreen> {
               ),
             ],
           ),
+        ),
+                  // Loading Overlay
+                  BlocBuilder<AuthCubit, AuthState>(
+                    builder: (context, state) {
+                      if (state is AuthLoading) {
+                        return Container(
+                          color: Colors.black26,
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ],
+              ),
+            );
+          }),
         ),
       ),
     );

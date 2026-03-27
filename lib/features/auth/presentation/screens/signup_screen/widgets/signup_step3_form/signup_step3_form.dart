@@ -9,11 +9,17 @@ import 'widgets/navigation_buttons_widget.dart';
 
 class SignupStep3Form extends StatelessWidget {
   final TextEditingController passwordController;
+  final TextEditingController confirmPasswordController;
   final bool obscurePassword;
+  final bool obscureConfirmPassword;
   final VoidCallback onToggleObscure;
+  final VoidCallback onToggleConfirmObscure;
   final ValueChanged<String> onPasswordChanged;
+  final ValueChanged<String> onConfirmPasswordChanged;
+  final bool passwordsMatch;
   final bool hasMinLength;
-  final bool hasLetter;
+  final bool hasUppercase;
+  final bool hasLowercase;
   final bool hasNumber;
   final bool hasSpecialChar;
   final bool notSameAsUsername;
@@ -24,11 +30,17 @@ class SignupStep3Form extends StatelessWidget {
   const SignupStep3Form({
     super.key,
     required this.passwordController,
+    required this.confirmPasswordController,
     required this.obscurePassword,
+    required this.obscureConfirmPassword,
     required this.onToggleObscure,
+    required this.onToggleConfirmObscure,
     required this.onPasswordChanged,
+    required this.onConfirmPasswordChanged,
+    required this.passwordsMatch,
     required this.hasMinLength,
-    required this.hasLetter,
+    required this.hasUppercase,
+    required this.hasLowercase,
     required this.hasNumber,
     required this.hasSpecialChar,
     required this.notSameAsUsername,
@@ -57,16 +69,38 @@ class SignupStep3Form extends StatelessWidget {
               onToggleObscure: onToggleObscure,
               onChanged: onPasswordChanged,
             ),
+            SizedBox(height: 16.h),
+            const FieldLabelWidget(label: 'تأكيد كلمة المرور'),
+            SizedBox(height: 5.h),
+            PasswordFieldWidget(
+              controller: confirmPasswordController,
+              obscurePassword: obscureConfirmPassword,
+              onToggleObscure: onToggleConfirmObscure,
+              onChanged: onConfirmPasswordChanged,
+            ),
+            if (!passwordsMatch &&
+                confirmPasswordController.text.isNotEmpty) ...[
+              SizedBox(height: 6.h),
+              Text(
+                'كلمتا المرور غير متطابقتين',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: const Color(0xFFD32F2F),
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+            ],
             SizedBox(height: 20.h),
             // Password requirements
             PasswordRequirementsListWidget(
               hasMinLength: hasMinLength,
-              hasLetter: hasLetter,
+              hasUppercase: hasUppercase,
+              hasLowercase: hasLowercase,
               hasNumber: hasNumber,
               hasSpecialChar: hasSpecialChar,
               notSameAsUsername: notSameAsUsername,
             ),
-            SizedBox(height: 0.08.sh),
+            SizedBox(height: 0.05.sh),
             // Buttons
             NavigationButtonsWidget(
               onNextPressed: onNextPressed,
@@ -80,3 +114,4 @@ class SignupStep3Form extends StatelessWidget {
     );
   }
 }
+

@@ -15,7 +15,7 @@ class OtpInputsRow extends StatelessWidget {
       textDirection: TextDirection.ltr,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(4, (index) {
+        children: List.generate(6, (index) {
           return Padding(
             padding: EdgeInsets.only(
               left: index == 0 ? 0 : OtpStyles.inputBoxSpacing,

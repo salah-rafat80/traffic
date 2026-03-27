@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:traffic/core/widgets/signup_app_bar.dart';
+import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
+import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
+import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
 import 'package:traffic/features/auth/presentation/screens/otp_screen/otp_screen.dart';
 import 'widgets/signup_step1_form/signup_step1_form.dart';
 import 'widgets/signup_step2_form/signup_step2_form.dart';
@@ -14,6 +19,7 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final PageController _pageController = PageController();
+  late final AuthCubit _authCubit;
   int _currentStep = 0;
 
   // Step 1 controllers
@@ -29,7 +35,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
   // Step 3 controllers
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  bool _passwordsMatch = true;
 
   // Validation errors
   String? _usernameError;
@@ -39,7 +48,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
   // Password requirements
   bool _hasMinLength = false;
-  bool _hasLetter = false;
+  bool _hasUppercase = false;
+  bool _hasLowercase = false;
   bool _hasNumber = false;
   bool _hasSpecialChar = false;
   bool _notSameAsUsername = true;
@@ -47,6 +57,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void initState() {
     super.initState();
+    _authCubit = AuthCubit(AuthRepository());
     // Add listeners to Step 2 controllers for real-time validation
     _firstNameController.addListener(() => setState(() {}));
     _familyNameController.addListener(() => setState(() {}));
@@ -56,6 +67,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _authCubit.close();
     _usernameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -63,6 +75,7 @@ class _SignupScreenState extends State<SignupScreen> {
     _familyNameController.dispose();
     _nationalIdController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -184,7 +197,8 @@ class _SignupScreenState extends State<SignupScreen> {
   void _checkPasswordRequirements(String password) {
     setState(() {
       _hasMinLength = password.length >= 8;
-      _hasLetter = RegExp(r'[a-zA-Z]').hasMatch(password);
+      _hasUppercase = RegExp(r'[A-Z]').hasMatch(password);
+      _hasLowercase = RegExp(r'[a-z]').hasMatch(password);
       _hasNumber = RegExp(r'[0-9]').hasMatch(password);
       _hasSpecialChar = RegExp(
         r'''[!@#$%^&*()_+\-=\[\]{};:'",.<>/?\\|`~]''',
@@ -196,10 +210,17 @@ class _SignupScreenState extends State<SignupScreen> {
 
   bool get _allPasswordRequirementsMet {
     return _hasMinLength &&
-        _hasLetter &&
+        _hasUppercase &&
+        _hasLowercase &&
         _hasNumber &&
         _hasSpecialChar &&
         _notSameAsUsername;
+  }
+
+  bool get _isStep3Valid {
+    return _allPasswordRequirementsMet &&
+        _confirmPasswordController.text.isNotEmpty &&
+        _passwordsMatch;
   }
 
   void _onNextPressed() {
@@ -211,22 +232,16 @@ class _SignupScreenState extends State<SignupScreen> {
         if (_validateStep2()) _goToNextStep();
         break;
       case 2:
-        if (_allPasswordRequirementsMet) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OtpScreen(email: _emailController.text),
-            ),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'تم إنشاء الحساب بنجاح',
-                textAlign: TextAlign.right,
-                style: TextStyle(fontFamily: 'Tajawal'),
-              ),
-              backgroundColor: Color(0xFF27AE60),
-            ),
+        if (_isStep3Valid) {
+          _authCubit.register(
+            nationalId: _nationalIdController.text,
+            mobileNumber: _phoneController.text,
+            firstName: _firstNameController.text,
+            lastName: _familyNameController.text,
+            email: _emailController.text,
+            username: _usernameController.text,
+            password: _passwordController.text,
+            confirmPassword: _confirmPasswordController.text,
           );
         }
         break;
@@ -235,110 +250,164 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: SignupAppBar(
-        step: _stepText,
-        nextStepText: _nextStepText,
-        onBackPressed: _goToPreviousStep,
-      ),
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        reverse: true,
-        onPageChanged: (index) {
-          setState(() => _currentStep = index);
+    return BlocProvider.value(
+      value: _authCubit,
+      child: BlocListener<AuthCubit, AuthState>(
+        listener: (context, state) {
+          if (state is AuthRegisterSuccess) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    OtpScreen(email: _emailController.text),
+              ),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'تم إنشاء الحساب بنجاح',
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.cairo(),
+                ),
+                backgroundColor: const Color(0xFF27AE60),
+              ),
+            );
+          } else if (state is AuthFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  state.message,
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.cairo(),
+                ),
+                backgroundColor: const Color(0xFFD32F2F),
+              ),
+            );
+          }
         },
-        children: [
-          SignupStep1Form(
-            usernameController: _usernameController,
-            emailController: _emailController,
-            phoneController: _phoneController,
-            usernameError: _usernameError,
-            emailError: _emailError,
-            phoneError: _phoneError,
-            onUsernameChanged: (value) {
-              setState(() {
-                _usernameError = null;
-                if (value.isEmpty && _usernameController.text.isEmpty) {
-                  _usernameError = 'الرجاء إدخال اسم مستخدم صحيح';
-                }
-              });
-            },
-            onEmailChanged: (value) {
-              setState(() {
-                _emailError = null;
-                if (value.isNotEmpty) {
-                  final emailRegex = RegExp(
-                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                  );
-                  if (!emailRegex.hasMatch(value)) {
-                    _emailError = 'الرجاء إدخال عنوان بريد إلكتروني صحيح';
-                  }
-                }
-              });
-            },
-            onPhoneChanged: (value) {
-              setState(() {
-                _phoneError = null;
-                if (value.isNotEmpty && value.length < 10) {
-                  _phoneError =
-                      'الرجاء إدخال رقم هاتف صحيح (10 أرقام على الأقل)';
-                }
-              });
-            },
-            onNextPressed: _onNextPressed,
-            isValid: _isStep1Valid,
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: SignupAppBar(
+            step: _stepText,
+            nextStepText: _nextStepText,
+            onBackPressed: _goToPreviousStep,
           ),
-          SignupStep2Form(
-            firstNameController: _firstNameController,
-            familyNameController: _familyNameController,
-            nationalIdController: _nationalIdController,
-            nationalIdError: _nationalIdError,
-            acceptedTerms: _acceptedTerms,
-            onTermsChanged: (value) {
-              setState(() {
-                _acceptedTerms = value ?? false;
-              });
+          body: PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            reverse: true,
+            onPageChanged: (index) {
+              setState(() => _currentStep = index);
             },
-            onFieldChanged: (value) {
-              setState(() {
-                _nationalIdError = null;
-                // Validate national ID on every change
-                final nationalId = _nationalIdController.text;
-                if (nationalId.isNotEmpty) {
-                  if (!RegExp(r'^\d+$').hasMatch(nationalId)) {
-                    _nationalIdError =
-                        'الرقم القومي يجب أن يحتوي على أرقام فقط';
-                  } else if (nationalId.length != 14) {
-                    _nationalIdError = 'الرقم القومي يجب أن يكون 14 رقم';
-                  }
-                }
-              });
-            },
-            onNextPressed: _onNextPressed,
-            onPreviousPressed: _goToPreviousStep,
-            isValid: _isStep2Valid,
+            children: [
+              SignupStep1Form(
+                usernameController: _usernameController,
+                emailController: _emailController,
+                phoneController: _phoneController,
+                usernameError: _usernameError,
+                emailError: _emailError,
+                phoneError: _phoneError,
+                onUsernameChanged: (value) {
+                  setState(() {
+                    _usernameError = null;
+                    if (value.isEmpty &&
+                        _usernameController.text.isEmpty) {
+                      _usernameError = 'الرجاء إدخال اسم مستخدم صحيح';
+                    }
+                  });
+                },
+                onEmailChanged: (value) {
+                  setState(() {
+                    _emailError = null;
+                    if (value.isNotEmpty) {
+                      final emailRegex = RegExp(
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      );
+                      if (!emailRegex.hasMatch(value)) {
+                        _emailError =
+                            'الرجاء إدخال عنوان بريد إلكتروني صحيح';
+                      }
+                    }
+                  });
+                },
+                onPhoneChanged: (value) {
+                  setState(() {
+                    _phoneError = null;
+                    if (value.isNotEmpty && value.length < 10) {
+                      _phoneError =
+                          'الرجاء إدخال رقم هاتف صحيح (10 أرقام على الأقل)';
+                    }
+                  });
+                },
+                onNextPressed: _onNextPressed,
+                isValid: _isStep1Valid,
+              ),
+              SignupStep2Form(
+                firstNameController: _firstNameController,
+                familyNameController: _familyNameController,
+                nationalIdController: _nationalIdController,
+                nationalIdError: _nationalIdError,
+                acceptedTerms: _acceptedTerms,
+                onTermsChanged: (value) {
+                  setState(() {
+                    _acceptedTerms = value ?? false;
+                  });
+                },
+                onFieldChanged: (value) {
+                  setState(() {
+                    _nationalIdError = null;
+                    final nationalId = _nationalIdController.text;
+                    if (nationalId.isNotEmpty) {
+                      if (!RegExp(r'^\d+$').hasMatch(nationalId)) {
+                        _nationalIdError =
+                            'الرقم القومي يجب أن يحتوي على أرقام فقط';
+                      } else if (nationalId.length != 14) {
+                        _nationalIdError =
+                            'الرقم القومي يجب أن يكون 14 رقم';
+                      }
+                    }
+                  });
+                },
+                onNextPressed: _onNextPressed,
+                onPreviousPressed: _goToPreviousStep,
+                isValid: _isStep2Valid,
+              ),
+              SignupStep3Form(
+                passwordController: _passwordController,
+                confirmPasswordController: _confirmPasswordController,
+                obscurePassword: _obscurePassword,
+                obscureConfirmPassword: _obscureConfirmPassword,
+                onToggleObscure: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+                onToggleConfirmObscure: () {
+                  setState(() {
+                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                  });
+                },
+                onPasswordChanged: _checkPasswordRequirements,
+                onConfirmPasswordChanged: (value) {
+                  setState(() {
+                    _passwordsMatch =
+                        value == _passwordController.text;
+                  });
+                },
+                passwordsMatch: _passwordsMatch,
+                hasMinLength: _hasMinLength,
+                hasUppercase: _hasUppercase,
+                hasLowercase: _hasLowercase,
+                hasNumber: _hasNumber,
+                hasSpecialChar: _hasSpecialChar,
+                notSameAsUsername: _notSameAsUsername,
+                onNextPressed: _onNextPressed,
+                onPreviousPressed: _goToPreviousStep,
+                isValid: _isStep3Valid,
+              ),
+            ],
           ),
-          SignupStep3Form(
-            passwordController: _passwordController,
-            obscurePassword: _obscurePassword,
-            onToggleObscure: () {
-              setState(() {
-                _obscurePassword = !_obscurePassword;
-              });
-            },
-            onPasswordChanged: _checkPasswordRequirements,
-            hasMinLength: _hasMinLength,
-            hasLetter: _hasLetter,
-            hasNumber: _hasNumber,
-            hasSpecialChar: _hasSpecialChar,
-            notSameAsUsername: _notSameAsUsername,
-            onNextPressed: _onNextPressed,
-            onPreviousPressed: _goToPreviousStep,
-            isValid: _allPasswordRequirementsMet,
-          ),
-        ],
+        ),
       ),
     );
   }
