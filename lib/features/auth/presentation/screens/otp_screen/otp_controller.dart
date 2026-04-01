@@ -21,8 +21,12 @@ class OtpController extends ChangeNotifier {
   bool _showError = false;
   bool get showError => _showError;
 
-  void setError(bool value) {
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  void setError(bool value, [String? message]) {
     _showError = value;
+    _errorMessage = value ? message : null;
     notifyListeners();
   }
 

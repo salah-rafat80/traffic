@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:traffic/core/widgets/custom_appbar.dart';
+import 'package:traffic/features/auth/presentation/screens/login_screen/login_screen.dart';
 import 'package:traffic/features/auth/presentation/screens/otp_screen/otp_controller.dart';
 import 'package:traffic/features/auth/presentation/screens/otp_screen/otp_styles.dart';
 import 'package:traffic/features/auth/presentation/screens/otp_screen/widgets/otp_header.dart';
@@ -59,95 +60,97 @@ class _OtpScreenState extends State<OtpScreen> {
         textDirection: TextDirection.ltr,
         child: Scaffold(
           backgroundColor: OtpStyles.backgroundColor,
-          body: Builder(builder: (context) {
-            return BlocListener<AuthCubit, AuthState>(
-              listener: (context, state) {
-                if (state is AuthVerifyOtpSuccess) {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const MainNavigationScreen(),
-                    ),
-                    (route) => false, // Remove all previous screens
-                  );
-                } else if (state is AuthFailure) {
-                  _controller.setError(true);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        state.message,
-                        textAlign: TextAlign.right,
+          body: Builder(
+            builder: (context) {
+              return BlocListener<AuthCubit, AuthState>(
+                listener: (context, state) {
+                  if (state is AuthVerifyOtpSuccess) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
                       ),
-                      backgroundColor: const Color(0xFFD32F2F),
-                    ),
-                  );
-                }
-              },
-              child: Stack(
-                children: [
-                  SafeArea(
-          child: Column(
-            children: [
-              // AppBar
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: OtpStyles.horizontalPadding,
-                ),
-                child: CustomAppbar(
-                  title: "أدخل رمز التحقق",
-                  onBackPressed: () => Navigator.pop(context),
-                ),
-              ),
-
-              SizedBox(height: OtpStyles.appBarToTextSpacing),
-
-              // Instruction text
-              OtpHeader(maskedEmail: _controller.maskedEmail),
-
-              SizedBox(height: OtpStyles.textToInputSpacing),
-
-              // OTP Input Row
-              OtpInputsRow(controller: _controller),
-
-              // Error message
-              if (_controller.showError) ...[
-                SizedBox(height: OtpStyles.errorMessageSpacing),
-                Text(
-                  'الرمز خاطئ يرجى المحاولة مرة اخرى',
-                  style: OtpStyles.errorMessageStyle,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-
-              SizedBox(height: OtpStyles.inputToTimerSpacing),
-
-              // Timer and Resend
-              OtpTimerResend(
-                formattedTimer: _controller.formattedTimer,
-                canResend: _controller.canResend,
-                onResend: _controller.resendOtp,
-              ),
-            ],
-          ),
-        ),
-                  // Loading Overlay
-                  BlocBuilder<AuthCubit, AuthState>(
-                    builder: (context, state) {
-                      if (state is AuthLoading) {
-                        return Container(
-                          color: Colors.black26,
-                          child: const Center(
-                            child: CircularProgressIndicator(),
+                      (route) => false, // Remove all previous screens
+                    );
+                  } else if (state is AuthFailure) {
+                    _controller.setError(true, state.message);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          state.message,
+                          textAlign: TextAlign.right,
+                        ),
+                        backgroundColor: const Color(0xFFD32F2F),
+                      ),
+                    );
+                  }
+                },
+                child: Stack(
+                  children: [
+                    SafeArea(
+                      child: Column(
+                        children: [
+                          // AppBar
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: OtpStyles.horizontalPadding,
+                            ),
+                            child: CustomAppbar(
+                              title: "أدخل رمز التحقق",
+                              onBackPressed: () => Navigator.pop(context),
+                            ),
                           ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ],
-              ),
-            );
-          }),
+
+                          SizedBox(height: OtpStyles.appBarToTextSpacing),
+
+                          // Instruction text
+                          OtpHeader(maskedEmail: _controller.maskedEmail),
+
+                          SizedBox(height: OtpStyles.textToInputSpacing),
+
+                          // OTP Input Row
+                          OtpInputsRow(controller: _controller),
+
+                          // Error message
+                          if (_controller.showError) ...[
+                            SizedBox(height: OtpStyles.errorMessageSpacing),
+                            Text(
+                              _controller.errorMessage ?? 'الرمز خاطئ يرجى المحاولة مرة اخرى',
+                              style: OtpStyles.errorMessageStyle,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+
+                          SizedBox(height: OtpStyles.inputToTimerSpacing),
+
+                          // Timer and Resend
+                          OtpTimerResend(
+                            formattedTimer: _controller.formattedTimer,
+                            canResend: _controller.canResend,
+                            onResend: _controller.resendOtp,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Loading Overlay
+                    BlocBuilder<AuthCubit, AuthState>(
+                      builder: (context, state) {
+                        if (state is AuthLoading) {
+                          return Container(
+                            color: Colors.black26,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

@@ -22,22 +22,26 @@ class AuthRepository {
       );
 
       final data = response.data;
-      String? token;
-      
-      if (data is Map<String, dynamic>) {
-        token = data['token'] as String?;
-      } else if (data is String) {
-        // sometimes auth returns token as string
-        token = data;
-      }
+      debugPrint('✅ Login response: $data');
 
-      if (token != null && token.isNotEmpty) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', token);
-        return null; // Return null on success
+      if (data is Map<String, dynamic>) {
+        final isSuccess = data['isSuccess'] as bool? ?? false;
+        if (isSuccess && data['details'] != null && data['details'] is Map) {
+          final details = data['details'] as Map<String, dynamic>;
+          final token = details['token'] as String?;
+
+          if (token != null && token.isNotEmpty) {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('token', token);
+            return null; // Return null on success
+          }
+        }
+        
+        final message = data['message'] as String?;
+        return message ?? 'فشل تسجيل الدخول. تأكد من صحة البيانات.';
       }
       
-      return 'لم يتم استلام رمز مرور صحيح';
+      return 'لم يتم استلام رد صحيح من السيرفر';
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
          final errorData = e.response!.data;
@@ -129,6 +133,12 @@ class AuthRepository {
 
   Future<String?> verifyOtp(String email, String code) async {
     try {
+      debugPrint('=======================================');
+      debugPrint('🚀 SENDING OTP VERIFICATION REQUEST:');
+      debugPrint('URL: /Auth/verify-otp');
+      debugPrint('Payload: { "email": "$email", "code": "$code" }');
+      debugPrint('=======================================');
+
       final response = await _dio.post(
         '/Auth/verify-otp',
         data: {
@@ -138,21 +148,20 @@ class AuthRepository {
       );
 
       final data = response.data;
-      String? token;
-      
+      debugPrint('✅ Verify OTP response: $data');
+
+      // API returns: {"isSuccess": true, "message": "...", "details": null}
       if (data is Map<String, dynamic>) {
-        token = data['token'] as String?;
-      } else if (data is String) {
-        token = data;
+        final isSuccess = data['isSuccess'] as bool? ?? false;
+        if (isSuccess) {
+          return null; // Return null on success
+        }
+        // If isSuccess is false, return the message from the server
+        final message = data['message'] as String?;
+        return message ?? 'رمز التحقق غير صحيح.';
       }
 
-      if (token != null && token.isNotEmpty) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', token);
-        return null; // Return null on success
-      }
-      
-      return 'رمز التحقق غير صحيح.';
+      return null; // 200 OK without body = success
     } on DioException catch (e) {
       debugPrint('Verify OTP API error: ${e.response?.statusCode}');
       debugPrint('Verify OTP API body: ${e.response?.data}');
