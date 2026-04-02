@@ -137,7 +137,7 @@ class _VehicleLicenseScreenState extends State<VehicleLicenseScreen> {
                                       isRequired: false,
                                     ),
                                   ],
-                                  onNextPressed: () {
+                                  onNextPressed: (selectedDropdowns) {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(

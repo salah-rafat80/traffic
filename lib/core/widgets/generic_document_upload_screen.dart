@@ -44,7 +44,7 @@ class GenericDocumentUploadScreen extends StatefulWidget {
   final String subtitle;
   final List<DropdownConfig>? dropdowns;
   final List<DocumentItemModel> documents;
-  final VoidCallback onNextPressed;
+  final void Function(Map<String, String> selectedDropdowns) onNextPressed;
 
   const GenericDocumentUploadScreen({
     super.key,
@@ -228,7 +228,9 @@ class _GenericDocumentUploadScreenState extends State<GenericDocumentUploadScree
 
                   SizedBox(height: 8.h),
                   PrimaryButton(
-                    onPressed: _canProceed ? widget.onNextPressed : null,
+                    onPressed: _canProceed 
+                        ? () => widget.onNextPressed(_selectedDropdowns.cast<String, String>()) 
+                        : null,
                     label: 'التالي',
                     height: 48.h,
                   ),
