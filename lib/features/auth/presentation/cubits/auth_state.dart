@@ -12,6 +12,10 @@ class AuthRegisterSuccess extends AuthState {}
 
 class AuthVerifyOtpSuccess extends AuthState {}
 
+class AuthUnauthenticated extends AuthState {}
+
+class AuthAuthenticated extends AuthState {}
+
 class AuthFailure extends AuthState {
   final String message;
   AuthFailure({required this.message});

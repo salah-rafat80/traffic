@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/features/auth/presentation/screens/onboarding_screen/onboarding_screen.dart';
+import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
+import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
+
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,19 +16,30 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateToOnboarding();
+    _initApp();
   }
 
-  Future<void> _navigateToOnboarding() async {
+  Future<void> _initApp() async {
     // Wait for 3 seconds
     await Future.delayed(const Duration(seconds: 3));
 
+    // Check authentication status
+    final authRepository = AuthRepository();
+    final isAuthenticated = await authRepository.hasToken();
+
     if (!mounted) return;
 
-    // Navigate to onboarding screen
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-    );
+    if (isAuthenticated) {
+      // Navigate to main navigation screen (Home)
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+      );
+    } else {
+      // Navigate to onboarding screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+      );
+    }
   }
 
   @override

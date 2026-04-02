@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/features/auth/presentation/screens/login_screen/login_screen.dart';
+import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
+
 
 class LogoutConfirmationDialog extends StatelessWidget {
   const LogoutConfirmationDialog({super.key});
@@ -42,7 +44,12 @@ class LogoutConfirmationDialog extends StatelessWidget {
             ),
             SizedBox(height: 32.h),
             InkWell(
-              onTap: () {
+              onTap: () async {
+                final authRepository = AuthRepository();
+                await authRepository.logout();
+                
+                if (!context.mounted) return;
+
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginScreen()),

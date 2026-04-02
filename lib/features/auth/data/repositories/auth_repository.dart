@@ -183,5 +183,16 @@ class AuthRepository {
       return 'حدث خطأ غير متوقع.';
     }
   }
+  Future<bool> hasToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    return token != null && token.isNotEmpty;
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+  }
 }
+
 

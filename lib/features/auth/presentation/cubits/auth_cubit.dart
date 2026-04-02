@@ -66,5 +66,19 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthFailure(message: 'حدث خطأ غير متوقع.'));
     }
   }
+  Future<void> checkAuthStatus() async {
+    final hasToken = await authRepository.hasToken();
+    if (hasToken) {
+      emit(AuthAuthenticated());
+    } else {
+      emit(AuthUnauthenticated());
+    }
+  }
+
+  Future<void> logout() async {
+    await authRepository.logout();
+    emit(AuthUnauthenticated());
+  }
 }
+
 
