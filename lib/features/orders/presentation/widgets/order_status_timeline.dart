@@ -39,7 +39,7 @@ class OrderStatusTimeline extends StatelessWidget {
           isCurrent: true, // Wait, if pending, processing is next? Let's say step 2 is current in pending.
         ));
         break;
-      case OrderStatus.awaitingAppointment:
+      case OrderStatus.awaitingService:
         steps.last.isCompleted = true; // Step 2 is completed
         steps.last.isCurrent = false;
 

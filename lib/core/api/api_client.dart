@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
@@ -44,6 +45,11 @@ class _AuthInterceptor extends Interceptor {
       final token = prefs.getString('token');
       if (token != null && token.isNotEmpty) {
         options.headers['Authorization'] = 'Bearer $token';
+        // Printing the token to the terminal for the user to copy
+        print('\n=== ACCESS TOKEN ===\n$token\n====================\n');
+        debugPrint('AuthInterceptor: Added token for ${options.path}');
+      } else {
+        debugPrint('AuthInterceptor: NO TOKEN found for ${options.path}');
       }
     }
 

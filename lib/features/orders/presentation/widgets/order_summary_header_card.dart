@@ -137,7 +137,7 @@ class _OrderStatusBadge extends StatelessWidget {
         textColor = const Color(0xFFE67E22);
         text = 'بحاجة لبيانات';
         break;
-      case OrderStatus.awaitingAppointment:
+      case OrderStatus.awaitingService:
         bgColor = const Color(0xFFA5D4FF);
         textColor = const Color(0xFF3B82F6);
         text = 'بانتظار الموعد';

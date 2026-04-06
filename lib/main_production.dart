@@ -21,6 +21,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Traffic App',
           theme: AppTheme.light(arabic: true),
+          debugShowCheckedModeBanner: false,
           home: child,
         );
       },

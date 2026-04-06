@@ -122,7 +122,7 @@ class OrderItemCard extends StatelessWidget {
         bgColor = const Color(0xFFFFE3CF);
         textColor = const Color(0xFFDD8C50);
         text = 'مطلوب استكمال البيانات';
-      case OrderStatus.awaitingAppointment:
+      case OrderStatus.awaitingService:
         bgColor = const Color(0xFFA5D4FF);
         textColor = const Color(0xFF3B82F6);
         text = 'بانتظار الموعد';
@@ -159,7 +159,7 @@ class OrderItemCard extends StatelessWidget {
     switch (status) {
       case OrderStatus.pending:
       case OrderStatus.completed:
-      case OrderStatus.awaitingAppointment:
+      case OrderStatus.awaitingService:
         return 'عرض التفاصيل';
       case OrderStatus.needsData:
       case OrderStatus.passed:
