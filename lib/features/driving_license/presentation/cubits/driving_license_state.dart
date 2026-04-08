@@ -1,3 +1,5 @@
+import '../../data/models/driving_license_model.dart';
+
 abstract class DrivingLicenseState {}
 
 class DrivingLicenseInitial extends DrivingLicenseState {}
@@ -13,4 +15,10 @@ class DrivingLicenseUploadSuccess extends DrivingLicenseState {
 class DrivingLicenseFailure extends DrivingLicenseState {
   final String message;
   DrivingLicenseFailure({required this.message});
+}
+
+/// Success state after finalization. Includes the full license data.
+class DrivingLicenseFinalizeSuccess extends DrivingLicenseState {
+  final DrivingLicenseModel license;
+  DrivingLicenseFinalizeSuccess({required this.license});
 }

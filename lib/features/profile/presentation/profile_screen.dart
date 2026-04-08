@@ -1,61 +1,121 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/api/api_client.dart';
 import '../../../core/widgets/primary_button.dart';
-import 'widgets/profile_header.dart';
-import 'widgets/personal_info_card.dart';
-import 'widgets/contact_info_card.dart';
-import 'widgets/security_card.dart';
+import '../../profile/data/repositories/profile_repository.dart';
+import 'cubits/profile_cubit.dart';
+import 'cubits/profile_state.dart';
 import 'edit_profile_screen.dart';
+import 'widgets/contact_info_card.dart';
+import 'widgets/personal_info_card.dart';
+import 'widgets/profile_header.dart';
+import 'widgets/security_card.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) =>
+          ProfileCubit(ProfileRepository(ApiClient()))..loadProfile(),
+      child: const _ProfileScreenBody(),
+    );
+  }
+}
+
+class _ProfileScreenBody extends StatelessWidget {
+  const _ProfileScreenBody();
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      body: Column(
-        children: [
-          const ProfileHeader(title: 'حسابي'),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _buildSectionTitle('البيانات الشخصية'),
-                  SizedBox(height: 8.h),
-                  const PersonalInfoCard(
-                    fullName: 'اميرة عصام حامد',
-                    nationalId: '010123456789099',
-                  ),
-                  SizedBox(height: 24.h),
-                  _buildSectionTitle('معلومات التواصل'),
-                  SizedBox(height: 8.h),
-                  const ContactInfoCard(
-                    email: '42022248@hti.edu.eg',
-                    phoneNumber: '010123456789099',
-                  ),
-                  SizedBox(height: 24.h),
-                  _buildSectionTitle('الأمان'),
-                  SizedBox(height: 8.h),
-                  const SecurityCard(),
-                  SizedBox(height: 32.h),
-                  PrimaryButton(
-                    label: 'تعديل البيانات',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EditProfileScreen(),
-                        ),
-                      );
-                    },
-                    backgroundColor: const Color(0xFF27AE60),
-                  ),
-                ],
+      body: BlocBuilder<ProfileCubit, ProfileState>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              const ProfileHeader(title: 'حسابي'),
+              Expanded(child: _buildContent(context, state)),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, ProfileState state) {
+    if (state is ProfileLoading || state is ProfileInitial) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state is ProfileFailure) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              state.message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: const Color(0xFFE53935),
+                fontSize: 14.sp,
+                fontFamily: 'Cairo',
               ),
             ),
+            SizedBox(height: 16.h),
+            TextButton(
+              onPressed: () => context.read<ProfileCubit>().loadProfile(),
+              child: const Text('إعادة المحاولة'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final profile = state is ProfileLoadSuccess ? state.profile : null;
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _buildSectionTitle('البيانات الشخصية'),
+          SizedBox(height: 8.h),
+          PersonalInfoCard(
+            fullName: profile?.fullName ?? '—',
+            nationalId: profile?.nationalId ?? '—',
+          ),
+          SizedBox(height: 24.h),
+          _buildSectionTitle('معلومات التواصل'),
+          SizedBox(height: 8.h),
+          ContactInfoCard(
+            email: profile?.email ?? '—',
+            phoneNumber: profile?.phoneNumber ?? '—',
+          ),
+          SizedBox(height: 24.h),
+          _buildSectionTitle('الأمان'),
+          SizedBox(height: 8.h),
+          SecurityCard(email: profile?.email ?? '—'),
+          SizedBox(height: 32.h),
+          PrimaryButton(
+            label: 'تعديل البيانات',
+            onPressed: profile == null
+                ? null
+                : () {
+                    final cubit = context.read<ProfileCubit>();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditProfileScreen(profile: profile),
+                      ),
+                    ).then((_) {
+                      // Refresh profile after returning from edit
+                      cubit.loadProfile();
+                    });
+                  },
+            backgroundColor: const Color(0xFF27AE60),
           ),
         ],
       ),

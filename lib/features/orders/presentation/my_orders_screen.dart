@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/features/profile/presentation/widgets/profile_header.dart';
-import '../data/repositories/service_requests_repository.dart';
 import 'cubits/my_orders_cubit.dart';
 import 'cubits/my_orders_state.dart';
 import 'order_details_screen.dart';
@@ -14,12 +12,7 @@ class MyOrdersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => MyOrdersCubit(
-        ServiceRequestsRepository(ApiClient()),
-      )..fetchMyOrders(),
-      child: const _MyOrdersScreenView(),
-    );
+    return const _MyOrdersScreenView();
   }
 }
 

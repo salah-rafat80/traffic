@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/api/api_client.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../lost_license/presentation/widgets/custom_text_form_field.dart';
+import '../../profile/data/models/profile_model.dart';
+import '../../profile/data/repositories/profile_repository.dart';
+import 'confirm_email_change_screen.dart';
+import 'cubits/profile_cubit.dart';
+import 'cubits/profile_state.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_info_row.dart';
 import 'widgets/security_card.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+  final ProfileModel profile;
+
+  const EditProfileScreen({super.key, required this.profile});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -15,74 +24,114 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
 
   @override
   void initState() {
     super.initState();
-    // Simulate initial data
-    _nameController = TextEditingController(text: 'Amira Essam');
-    _emailController = TextEditingController(text: '42022248@hti.edu.eg');
-    _phoneController = TextEditingController(text: '010123456789099');
+    _emailController = TextEditingController(text: widget.profile.email);
+    _phoneController = TextEditingController(text: widget.profile.phoneNumber);
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
 
+  String get _currentEmail => widget.profile.email;
+  bool get _emailChanged =>
+      _emailController.text.trim() != _currentEmail;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: Column(
-        children: [
-          const ProfileHeader(title: 'حسابي'),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _buildSectionTitle('البيانات الشخصية'),
-                    SizedBox(height: 8.h),
-                    _buildPersonalInfoCard(),
-                    SizedBox(height: 24.h),
-                    _buildSectionTitle('معلومات التواصل'),
-                    SizedBox(height: 8.h),
-                    _buildContactInfoCard(),
-                    SizedBox(height: 24.h),
-                    _buildSectionTitle('الأمان'),
-                    SizedBox(height: 8.h),
-                    const SecurityCard(),
-                    SizedBox(height: 32.h),
-                    PrimaryButton(
-                      label: 'حفظ التغيرات',
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          // TODO: Call UpdateProfile Cubit method here
-                          // Simulate success and pop
-                          Navigator.pop(context);
-                        }
-                      },
-                      backgroundColor: const Color(0xFF27AE60),
-                    ),
-                    SizedBox(height: 16.h),
-                    _buildCancelButton(),
-                    SizedBox(height: 20.h),
-                  ],
+    return BlocProvider(
+      create: (_) => ProfileCubit(ProfileRepository(ApiClient())),
+      child: BlocConsumer<ProfileCubit, ProfileState>(
+        listener: (context, state) {
+          if (state is ProfileEmailChangeRequested) {
+            // Navigate to OTP confirmation, passing the cubit down
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BlocProvider.value(
+                  value: context.read<ProfileCubit>(),
+                  child: ConfirmEmailChangeScreen(
+                    newEmail: state.newEmail,
+                  ),
                 ),
               ),
+            );
+          } else if (state is ProfileFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        builder: (context, state) {
+          final isLoading = state is ProfileLoading;
+          return Scaffold(
+            backgroundColor: const Color(0xFFF5F5F5),
+            body: Column(
+              children: [
+                const ProfileHeader(title: 'حسابي'),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 16.w, vertical: 20.h),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          _buildSectionTitle('البيانات الشخصية'),
+                          SizedBox(height: 8.h),
+                          _buildPersonalInfoCard(),
+                          SizedBox(height: 24.h),
+                          _buildSectionTitle('معلومات التواصل'),
+                          SizedBox(height: 8.h),
+                          _buildContactInfoCard(),
+                          SizedBox(height: 24.h),
+                          _buildSectionTitle('الأمان'),
+                          SizedBox(height: 8.h),
+                          SecurityCard(email: widget.profile.email),
+                          SizedBox(height: 32.h),
+                          if (isLoading)
+                            const Center(child: CircularProgressIndicator())
+                          else
+                            PrimaryButton(
+                              label: 'حفظ التغيرات',
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  if (_emailChanged) {
+                                    context
+                                        .read<ProfileCubit>()
+                                        .requestEmailChange(
+                                          newEmail:
+                                              _emailController.text.trim(),
+                                        );
+                                  } else {
+                                    // No changes — just go back
+                                    Navigator.pop(context);
+                                  }
+                                }
+                              },
+                              backgroundColor: const Color(0xFF27AE60),
+                            ),
+                          SizedBox(height: 16.h),
+                          _buildCancelButton(),
+                          SizedBox(height: 20.h),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -117,41 +166,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       child: Column(
         children: [
-          CustomTextFormField(
-            labelText: 'الاسم الكامل',
-            hintText: 'ادخل الاسم الكامل',
-            controller: _nameController,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'برجاء إدخال الاسم الكامل';
-              }
-              return null;
-            },
+          ProfileInfoRow(
+            label: 'الاسم الكامل',
+            value: widget.profile.fullName,
+            icon: Icons.person_outline,
+            trailing: _buildReadOnlyBadge(),
           ),
-          SizedBox(height: 16.h),
           Divider(color: const Color(0xFFDADADA), thickness: 1.r),
           ProfileInfoRow(
             label: 'الرقم القومي',
-            value: '010123456789099',
+            value: widget.profile.nationalId,
             icon: Icons.badge_outlined,
-            trailing: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEBEBEB),
-                borderRadius: BorderRadius.circular(5.r),
-              ),
-              child: Text(
-                'غير قابل للتعديل',
-                style: TextStyle(
-                  color: const Color(0xFF707070),
-                  fontSize: 9.sp,
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
+            trailing: _buildReadOnlyBadge(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyBadge() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEBEBEB),
+        borderRadius: BorderRadius.circular(5.r),
+      ),
+      child: Text(
+        'غير قابل للتعديل',
+        style: TextStyle(
+          color: const Color(0xFF707070),
+          fontSize: 9.sp,
+          fontFamily: 'Cairo',
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
@@ -184,7 +231,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               if (value == null || value.isEmpty) {
                 return 'برجاء إدخال البريد الالكتروني';
               }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}').hasMatch(value)) {
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}')
+                  .hasMatch(value)) {
                 return 'برجاء إدخال بريد الكتروني صحيح';
               }
               return null;
@@ -205,17 +253,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           SizedBox(height: 24.h),
           Divider(color: const Color(0xFFDADADA), thickness: 1.r),
           SizedBox(height: 16.h),
-          CustomTextFormField(
-            labelText: 'رقم الهاتف',
-            hintText: 'ادخل رقم الهاتف',
-            controller: _phoneController,
-            keyboardType: TextInputType.phone,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'برجاء إدخال رقم الهاتف';
-              }
-              return null;
-            },
+          ProfileInfoRow(
+            label: 'رقم الهاتف',
+            value: widget.profile.phoneNumber,
+            icon: Icons.phone_outlined,
+            trailing: _buildReadOnlyBadge(),
           ),
         ],
       ),

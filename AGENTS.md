@@ -40,4 +40,4 @@
 - Do keep navigation style consistent (MaterialPageRoute) unless you migrate all affected flow points.
 - Do not assume Cubit/Bloc is already active; references are mostly TODO comments for future wiring.
 - Do not rely on README for architecture details; use code under `lib/` as source of truth.
-
+- **Always refer to `morourak_api_docs_updated` for the latest Backend API endpoints, models, payload formats, and roles** when implementing any data layers or network calls.

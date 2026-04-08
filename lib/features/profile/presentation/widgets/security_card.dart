@@ -3,7 +3,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../change_password_screen.dart';
 
 class SecurityCard extends StatelessWidget {
-  const SecurityCard({super.key});
+  final String email;
+
+  const SecurityCard({
+    super.key,
+    required this.email,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +17,7 @@ class SecurityCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const ChangePasswordScreen(),
+            builder: (context) => ChangePasswordScreen(email: email),
           ),
         );
       },

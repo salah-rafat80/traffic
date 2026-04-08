@@ -6,6 +6,7 @@ import '../../../data/repositories/driving_license_repository.dart';
 import '../../cubits/driving_license_cubit.dart';
 import '../../cubits/driving_license_state.dart';
 import '../medical_check/medical_check_screen.dart';
+import '../finalize/finalize_driving_license_screen.dart';
 
 class DrivingLicenseUploadDocumentsScreen extends StatelessWidget {
   const DrivingLicenseUploadDocumentsScreen({super.key});
@@ -80,7 +81,17 @@ class _DrivingLicenseUploadDocumentsContentState
               builder: (_) => MedicalCheckScreen(
                 appBarTitle: 'اصدار رخصة قيادة',
                 onNextPressed: () {
-                  // TODO: Navigate to finalize step using state.requestNumber
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider.value(
+                        value: context.read<DrivingLicenseCubit>(),
+                        child: FinalizeDrivingLicenseScreen(
+                          requestNumber: state.requestNumber,
+                        ),
+                      ),
+                    ),
+                  );
                 },
               ),
             ),

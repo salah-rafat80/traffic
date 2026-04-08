@@ -33,4 +33,27 @@ class DrivingLicenseCubit extends Cubit<DrivingLicenseState> {
       emit(DrivingLicenseFailure(message: result.error ?? 'حدث خطأ غير متوقع.'));
     }
   }
+
+  Future<void> finalizeDrivingLicense({
+    required String requestNumber,
+    required int method,
+    String? governorate,
+    String? city,
+    String? details,
+  }) async {
+    emit(DrivingLicenseLoading());
+    final result = await _repository.finalizeDrivingLicense(
+      requestNumber: requestNumber,
+      method: method,
+      governorate: governorate,
+      city: city,
+      details: details,
+    );
+
+    if (result.isSuccess && result.data != null) {
+      emit(DrivingLicenseFinalizeSuccess(license: result.data!));
+    } else {
+      emit(DrivingLicenseFailure(message: result.error ?? 'حدث خطأ غير متوقع.'));
+    }
+  }
 }

@@ -2,10 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:traffic/core/constants/colors.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/features/home/presentation/screens/home_screen.dart';
 import 'package:traffic/features/profile/presentation/profile_screen.dart';
 import 'package:traffic/features/orders/presentation/my_orders_screen.dart';
+import 'package:traffic/features/orders/presentation/cubits/my_orders_cubit.dart';
+import 'package:traffic/features/orders/data/repositories/service_requests_repository.dart';
 import 'package:traffic/features/settings/presentation/screens/settings_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -18,19 +21,35 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
+  late MyOrdersCubit _myOrdersCubit;
+  late List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _myOrdersCubit = MyOrdersCubit(ServiceRequestsRepository(ApiClient()));
+    
+    _screens = [
+      const ProfileScreen(),
+      const SettingsScreen(),
+      BlocProvider.value(
+        value: _myOrdersCubit,
+        child: const MyOrdersScreen(),
+      ),
+      const HomeScreen(),
+    ];
+
+    if (_currentIndex == 2) {
+      _myOrdersCubit.fetchMyOrders();
+    }
   }
 
-  final List<Widget> _screens = [
-    const ProfileScreen(),
-    const SettingsScreen(),
-    const MyOrdersScreen(),
-    const HomeScreen(),
-  ];
+  @override
+  void dispose() {
+    _myOrdersCubit.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +58,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: _BottomNav(
         currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+        onTap: (i) {
+          setState(() => _currentIndex = i);
+          if (i == 2) {
+            _myOrdersCubit.fetchMyOrders();
+          }
+        },
       ),
     );
   }
