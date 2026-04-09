@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
-import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
+import 'package:traffic/features/driving_license/data/models/driving_license_model.dart';
 import '../widgets/selection_option_card.dart';
 import 'delivery_method_screen.dart';
 

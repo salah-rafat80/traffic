@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/features/driving_license/domain/enums/license_status.dart';
-import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
+import 'package:traffic/features/driving_license/data/models/driving_license_model.dart';
 
 /// Renders a contextual warning banner below the licence info card.
 ///

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:traffic/core/widgets/signup_app_bar.dart';
+import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
 import 'package:traffic/features/auth/presentation/screens/otp_screen/otp_screen.dart';
+import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
 import 'widgets/signup_step1_form/signup_step1_form.dart';
 import 'widgets/signup_step2_form/signup_step2_form.dart';
 import 'widgets/signup_step3_form/signup_step3_form.dart';
@@ -57,7 +59,11 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void initState() {
     super.initState();
-    _authCubit = AuthCubit(AuthRepository());
+    final apiClient = ApiClient();
+    _authCubit = AuthCubit(
+      authRepository: AuthRepository(apiClient),
+      drivingLicenseRepository: DrivingLicenseRepository(apiClient),
+    );
     // Add listeners to Step 2 controllers for real-time validation
     _firstNameController.addListener(() => setState(() {}));
     _familyNameController.addListener(() => setState(() {}));

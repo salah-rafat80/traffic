@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_error_handler.dart';
 import '../../../../core/api/api_result.dart';
@@ -93,7 +95,19 @@ class DrivingLicenseRepository {
 
       final data = response.data;
       if (data is Map<String, dynamic>) {
-        return ApiResult.success(DrivingLicenseModel.fromJson(data));
+        final isSuccess = data['isSuccess'] as bool? ?? false;
+        if (isSuccess && data['details'] != null && data['details'] is Map) {
+          return ApiResult.success(DrivingLicenseModel.fromJson(data['details'] as Map<String, dynamic>));
+        } else if (isSuccess) {
+           return ApiResult.success(DrivingLicenseModel.fromJson(data));
+        }
+        
+        // Handle fallback if data isn't wrapped
+        if (!data.containsKey('isSuccess')) {
+           return ApiResult.success(DrivingLicenseModel.fromJson(data));
+        }
+        
+        return ApiResult.failure(data['message']?.toString() ?? 'لم يتم استلام بيانات الرخصة النهائية');
       }
 
       return ApiResult.failure('لم يتم استلام بيانات الرخصة النهائية');
@@ -102,6 +116,64 @@ class DrivingLicenseRepository {
       return ApiResult.failure(ApiErrorHandler.extractMessage(e));
     } catch (e) {
       return ApiResult.failure('حدث خطأ غير متوقع.');
+    }
+  }
+
+  /// Fetches all driving licenses for the authenticated citizen.
+  Future<ApiResult<List<DrivingLicenseModel>>> getMyLicenses() async {
+    try {
+      final response = await _apiClient.dio.get('/DrivingLicense/my-licenses');
+      
+      final data = response.data;
+
+      if (data is Map<String, dynamic>) {
+        final isSuccess = data['isSuccess'] as bool? ?? false;
+        if (isSuccess && data['details'] != null && data['details'] is List) {
+           final licenses = (data['details'] as List)
+              .map((item) => DrivingLicenseModel.fromJson(item as Map<String, dynamic>))
+              .toList();
+           return ApiResult.success(licenses);
+        }
+        return ApiResult.failure(data['message']?.toString() ?? 'حدث خطأ في استرجاع الرخص.');
+      }
+
+      if (data is List) {
+        final licenses = data
+            .map((item) => DrivingLicenseModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+        return ApiResult.success(licenses);
+      }
+      
+      return ApiResult.success([]);
+    } on DioException catch (e) {
+      ApiErrorHandler.logError('GetMyLicenses', e);
+      return ApiResult.failure(ApiErrorHandler.extractMessage(e));
+    } catch (e) {
+      return ApiResult.failure('حدث خطأ غير متوقع.');
+    }
+  }
+
+  // --- Local Storage ---
+  static const String _storageKey = 'cached_driving_licenses';
+
+  Future<void> saveLicensesLocal(List<DrivingLicenseModel> licenses) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String encoded = jsonEncode(licenses.map((l) => l.toJson()).toList());
+    await prefs.setString(_storageKey, encoded);
+  }
+
+  Future<List<DrivingLicenseModel>> getLocalLicenses() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? encoded = prefs.getString(_storageKey);
+    if (encoded == null || encoded.isEmpty) return [];
+    
+    try {
+      final List<dynamic> decoded = jsonDecode(encoded);
+      return decoded
+          .map((item) => DrivingLicenseModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      return [];
     }
   }
 }

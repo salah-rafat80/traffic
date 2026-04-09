@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 import 'package:traffic/features/auth/presentation/screens/signup_screen/widgets/signup_step1_form/widgets/next_button_widget.dart';
 import 'package:traffic/features/driving_license/presentation/screens/theory_test/theory_test_booking_screen.dart';
-import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
+import 'package:traffic/features/driving_license/data/models/driving_license_model.dart';
 import 'widgets/license_info_card.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────

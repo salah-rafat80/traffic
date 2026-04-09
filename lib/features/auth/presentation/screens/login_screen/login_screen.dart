@@ -7,9 +7,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:traffic/core/widgets/custom_appbar.dart';
 import 'package:traffic/features/auth/presentation/screens/signup_screen/signup_screen.dart';
 import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
+import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
+import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
 
 /// Pixel-perfect Login Screen with real-time validation.
 /// All sizes are responsive using flutter_screenutil.
@@ -110,7 +112,13 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => AuthCubit(AuthRepository()),
+      create: (context) {
+        final apiClient = ApiClient();
+        return AuthCubit(
+          authRepository: AuthRepository(apiClient),
+          drivingLicenseRepository: DrivingLicenseRepository(apiClient),
+        );
+      },
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(

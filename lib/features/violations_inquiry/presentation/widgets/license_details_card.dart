@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:traffic/core/widgets/Radio_dot.dart';
 import 'package:traffic/features/driving_license/domain/enums/license_status.dart';
-import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
+import 'package:traffic/features/driving_license/data/models/driving_license_model.dart';
 
 /// Card widget that displays driving license details with a radio selection.
 /// Matches the design: bordered card with green radio, license number chip,

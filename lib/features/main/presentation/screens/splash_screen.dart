@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/features/auth/presentation/screens/onboarding_screen/onboarding_screen.dart';
 import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
+import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
 
 
@@ -24,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 3));
 
     // Check authentication status
-    final authRepository = AuthRepository();
+    final authRepository = AuthRepository(ApiClient());
     final isAuthenticated = await authRepository.hasToken();
 
     if (!mounted) return;

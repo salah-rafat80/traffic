@@ -1,19 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/api/api_client.dart';
 
 class AuthRepository {
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'http://morourak.runasp.net/api/v1',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': '*/*',
-    },
-  ));
+  final ApiClient _apiClient;
+
+  AuthRepository(this._apiClient);
 
   Future<String?> login(String mobileNumber, String password) async {
     try {
-      final response = await _dio.post(
+      final response = await _apiClient.dio.post(
         '/Auth/login',
         data: {
           'mobileNumber': mobileNumber,
@@ -66,7 +63,7 @@ class AuthRepository {
     required String confirmPassword,
   }) async {
     try {
-      await _dio.post(
+      await _apiClient.dio.post(
         '/Auth/register',
         data: {
           'nationalId': nationalId,
@@ -139,7 +136,7 @@ class AuthRepository {
       debugPrint('Payload: { "email": "$email", "code": "$code" }');
       debugPrint('=======================================');
 
-      final response = await _dio.post(
+      final response = await _apiClient.dio.post(
         '/Auth/verify-otp',
         data: {
           'email': email,

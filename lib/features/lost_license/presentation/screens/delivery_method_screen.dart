@@ -6,7 +6,7 @@ import 'package:traffic/core/features/checkout/models/fees_details.dart';
 import 'package:traffic/core/features/checkout/models/order_summary.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
-import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
+import 'package:traffic/features/driving_license/data/models/driving_license_model.dart';
 import '../widgets/custom_text_form_field.dart';
 import '../widgets/selection_option_card.dart';
 import 'replacement_type_selection_screen.dart';

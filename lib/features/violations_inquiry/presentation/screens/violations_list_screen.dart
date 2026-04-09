@@ -5,7 +5,7 @@ import 'package:traffic/core/features/payment/models/payment_intent.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
-import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
+import 'package:traffic/features/driving_license/data/models/driving_license_model.dart';
 import 'package:traffic/features/violations_inquiry/data/models/violation_model.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/violation_details_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/violation_review_screen.dart';

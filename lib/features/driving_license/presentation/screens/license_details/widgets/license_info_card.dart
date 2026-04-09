@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/widgets/Radio_dot.dart';
 import 'package:traffic/core/widgets/info_row_item.dart';
-import 'package:traffic/features/violations_inquiry/data/models/license_model.dart';
+import 'package:traffic/features/driving_license/data/models/driving_license_model.dart';
 import 'license_status_badge.dart';
 
 /// A card widget that displays the full licence details in a clean, bordered

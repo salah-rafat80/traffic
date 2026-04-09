@@ -7,9 +7,11 @@ import 'package:traffic/features/auth/presentation/screens/otp_screen/widgets/ot
 import 'package:traffic/features/auth/presentation/screens/otp_screen/widgets/otp_inputs_row.dart';
 import 'package:traffic/features/auth/presentation/screens/otp_screen/widgets/otp_timer_resend.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:traffic/core/api/api_client.dart';
+import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
-import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
+import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
 import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
 
 /// OTP verification screen with three states: initial, error, and success.
@@ -30,7 +32,11 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void initState() {
     super.initState();
-    _authCubit = AuthCubit(AuthRepository());
+    final apiClient = ApiClient();
+    _authCubit = AuthCubit(
+      authRepository: AuthRepository(apiClient),
+      drivingLicenseRepository: DrivingLicenseRepository(apiClient),
+    );
     _controller = OtpController(
       email: widget.email,
       onComplete: (otp) {

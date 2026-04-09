@@ -1,18 +1,32 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/auth_repository.dart';
+import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository authRepository;
+  final DrivingLicenseRepository drivingLicenseRepository;
 
-  AuthCubit(this.authRepository) : super(AuthInitial());
+  AuthCubit({
+    required this.authRepository,
+    required this.drivingLicenseRepository,
+  }) : super(AuthInitial());
 
   Future<void> login(String mobileNumber, String password) async {
     emit(AuthLoading());
     try {
       final error = await authRepository.login(mobileNumber, password);
       if (error == null) {
-        emit(AuthLoginSuccess());
+        // Fetch and store licenses immediately after successful login
+        final result = await drivingLicenseRepository.getMyLicenses();
+        if (result.isSuccess) {
+          await drivingLicenseRepository.saveLicensesLocal(result.data!);
+          emit(AuthLoginSuccess());
+        } else {
+          // Even if license fetch fails, we logic success because the user is authenticated
+          // but we might want to log it or handle it. For now, just continue.
+          emit(AuthLoginSuccess());
+        }
       } else {
         emit(AuthFailure(message: error));
       }
