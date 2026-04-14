@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../../core/api/api_client.dart';
+import '../../../../../../core/widgets/generic_booking_screen.dart';
 import '../../../../../../core/widgets/generic_document_upload_screen.dart';
+import '../../../data/models/driving_renewal_model.dart';
 import '../../../data/repositories/driving_license_repository.dart';
+import '../../../data/repositories/driving_renewal_repository.dart';
 import '../../cubits/driving_license_cubit.dart';
 import '../../cubits/driving_license_state.dart';
+import '../medical_check/appointment_booking_screen.dart';
 import '../medical_check/medical_check_screen.dart';
 import '../finalize/finalize_driving_license_screen.dart';
 
@@ -33,10 +37,15 @@ class _DrivingLicenseUploadDocumentsContent extends StatefulWidget {
 class _DrivingLicenseUploadDocumentsContentState
     extends State<_DrivingLicenseUploadDocumentsContent> {
   late final List<DocumentItemModel> _documents;
+  late final DrivingLicenseRenewalDataHandler _bookingDataHandler;
 
   @override
   void initState() {
     super.initState();
+    final DrivingRenewalRepository bookingRepository =
+        DrivingRenewalRepository(ApiClient());
+    _bookingDataHandler = DrivingLicenseRenewalDataHandler(bookingRepository);
+
     // Initialize once to retain uploaded files during Cubit state rebuilds
     _documents = [
       DocumentItemModel(title: 'شهادة المؤهل الدراسي', isRequired: true),
@@ -69,6 +78,77 @@ class _DrivingLicenseUploadDocumentsContentState
         );
   }
 
+  Future<List<BookingSelectionOption>> _loadGovernorates() async {
+    final result = await _bookingDataHandler.fetchGovernoratesForUi();
+    if (!result.isSuccess || result.data == null) {
+      throw Exception(result.error ?? 'تعذر تحميل المحافظات.');
+    }
+
+    return result.data!
+        .map(
+          (LocationLookupModel item) =>
+              BookingSelectionOption(id: item.id, label: item.name),
+        )
+        .toList(growable: false);
+  }
+
+  Future<List<BookingSelectionOption>> _loadMedicalCenters(
+    String governorateId,
+  ) async {
+    final result = await _bookingDataHandler.fetchTrafficUnitsForUi(
+      governorateId: governorateId,
+    );
+    if (!result.isSuccess || result.data == null) {
+      throw Exception(result.error ?? 'تعذر تحميل المراكز الطبية.');
+    }
+
+    return result.data!
+        .map(
+          (LocationLookupModel item) =>
+              BookingSelectionOption(id: item.id, label: item.name),
+        )
+        .toList(growable: false);
+  }
+
+  Future<List<String>> _loadMedicalSlots(DateTime selectedDate) async {
+    final result = await _bookingDataHandler.fetchSlotsForUi(
+      date: selectedDate,
+      type: AppointmentType.medical,
+    );
+    if (!result.isSuccess || result.data == null) {
+      throw Exception(result.error ?? 'تعذر تحميل المواعيد المتاحة.');
+    }
+
+    return result.data!
+        .map((AppointmentSlotModel item) => item.displayLabel)
+        .toList(growable: false);
+  }
+
+  Future<AppointmentBookingMeta?> _submitMedicalAppointment(
+    String governorateId,
+    String secondaryId,
+    DateTime selectedDate,
+    String selectedSlot,
+  ) async {
+    final result = await _bookingDataHandler.bookAppointmentFromUi(
+      governorateId: governorateId,
+      trafficUnitId: secondaryId,
+      date: selectedDate,
+      selectedSlot: selectedSlot,
+      type: AppointmentType.medical,
+    );
+
+    if (!result.isSuccess || result.data == null) {
+      throw Exception(result.error ?? 'تعذر تأكيد الموعد.');
+    }
+
+    final AppointmentBookingResponseModel data = result.data!;
+    return AppointmentBookingMeta(
+      bookingNumber: data.serviceNumber,
+      requestNumber: data.applicationId,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<DrivingLicenseCubit, DrivingLicenseState>(
@@ -80,6 +160,10 @@ class _DrivingLicenseUploadDocumentsContentState
             MaterialPageRoute(
               builder: (_) => MedicalCheckScreen(
                 appBarTitle: 'اصدار رخصة قيادة',
+                loadGovernorates: _loadGovernorates,
+                loadMedicalCenters: _loadMedicalCenters,
+                loadSlotsForDate: _loadMedicalSlots,
+                submitAppointmentBooking: _submitMedicalAppointment,
                 onNextPressed: () {
                   Navigator.push(
                     context,
@@ -145,7 +229,7 @@ class _DrivingLicenseUploadDocumentsContentState
             ),
             if (state is DrivingLicenseLoading)
               Container(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 child: const Center(
                   child: CircularProgressIndicator(),
                 ),

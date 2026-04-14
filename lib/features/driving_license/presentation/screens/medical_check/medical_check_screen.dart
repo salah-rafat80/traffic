@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:traffic/core/widgets/generic_booking_screen.dart';
+import 'package:traffic/features/driving_license/presentation/screens/medical_check/appointment_booking_screen.dart';
 
 // ── Dummy data ─────────────────────────────────────────────────────────────────
 
@@ -23,11 +24,25 @@ class MedicalCheckScreen extends StatelessWidget {
 
   /// Callback invoked when the user taps the active "التالي" button.
   final VoidCallback onNextPressed;
+  final Future<List<BookingSelectionOption>> Function()? loadGovernorates;
+  final Future<List<BookingSelectionOption>> Function(String governorateId)?
+      loadMedicalCenters;
+  final Future<List<String>> Function(DateTime selectedDate)? loadSlotsForDate;
+  final Future<AppointmentBookingMeta?> Function(
+    String governorateId,
+    String secondaryId,
+    DateTime selectedDate,
+    String selectedSlot,
+  )? submitAppointmentBooking;
 
   const MedicalCheckScreen({
     super.key,
     required this.appBarTitle,
     required this.onNextPressed,
+    this.loadGovernorates,
+    this.loadMedicalCenters,
+    this.loadSlotsForDate,
+    this.submitAppointmentBooking,
   });
 
   @override
@@ -43,6 +58,10 @@ class MedicalCheckScreen extends StatelessWidget {
         sheetTitle: 'اختر مركز طبي',
         items: _kMedicalCenters,
       ),
+      loadGovernorates: loadGovernorates,
+      loadSecondaryOptions: loadMedicalCenters,
+      loadSlotsForDate: loadSlotsForDate,
+      submitAppointmentBooking: submitAppointmentBooking,
       onNextPressed: onNextPressed,
     );
   }

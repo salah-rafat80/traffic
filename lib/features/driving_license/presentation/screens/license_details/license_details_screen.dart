@@ -26,7 +26,13 @@ import 'widgets/warning_banner.dart';
 /// | expired, with violations | ✅      | Disabled (pay violations first)|
 /// | withdrawn            | ❌          | N/A — card is disabled        |
 class LicenseDetailsScreen extends StatefulWidget {
-  const LicenseDetailsScreen({super.key});
+  final Future<void> Function(DrivingLicenseModel selectedLicense)?
+      onNextWithSelectedLicense;
+
+  const LicenseDetailsScreen({
+    super.key,
+    this.onNextWithSelectedLicense,
+  });
 
   @override
   State<LicenseDetailsScreen> createState() => _LicenseDetailsScreenState();
@@ -36,6 +42,7 @@ class _LicenseDetailsScreenState extends State<LicenseDetailsScreen> {
   /// List of licences loaded from the repository.
   List<DrivingLicenseModel> _licenses = [];
   bool _isLoading = true;
+  bool _isSubmitting = false;
 
   /// Index of the currently selected licence, or `null` if none selected.
   int? _selectedIndex;
@@ -94,9 +101,25 @@ class _LicenseDetailsScreenState extends State<LicenseDetailsScreen> {
     setState(() => _selectedIndex = index);
   }
 
-  void _onNextPressed() {
+  Future<void> _onNextPressed() async {
     final lic = _selectedLicense;
     if (lic == null) return;
+    if (_isSubmitting) return;
+
+    final Future<void> Function(DrivingLicenseModel selectedLicense)?
+        callback = widget.onNextWithSelectedLicense;
+    if (callback != null) {
+      setState(() => _isSubmitting = true);
+      try {
+        await callback(lic);
+      } finally {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
+      }
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -115,8 +138,10 @@ class _LicenseDetailsScreenState extends State<LicenseDetailsScreen> {
         key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5F5F5),
         drawer: const AppDrawer(),
-        body: Column(
+        body: Stack(
           children: [
+            Column(
+              children: [
             // ── App bar ──────────────────────────────────────────────────────
             ServiceScreenAppBar(
               title: 'تجديد رخصة القيادة',
@@ -183,8 +208,8 @@ class _LicenseDetailsScreenState extends State<LicenseDetailsScreen> {
 
                               // ── Primary action button ─────────────────────────────────
                               NextButtonWidget(
-                                onPressed: _onNextPressed,
-                                isValid: _canProceed,
+                                onPressed: () => _onNextPressed(),
+                                isValid: _canProceed && !_isSubmitting,
                                 height: 48.h,
                               ),
 
@@ -193,6 +218,17 @@ class _LicenseDetailsScreenState extends State<LicenseDetailsScreen> {
                           ),
                         ),
             ),
+              ],
+            ),
+            if (_isSubmitting)
+              Positioned.fill(
+                child: ColoredBox(
+                  color: const Color(0x66000000),
+                  child: const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

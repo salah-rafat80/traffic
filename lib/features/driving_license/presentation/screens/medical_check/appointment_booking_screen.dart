@@ -14,10 +14,25 @@ import 'package:traffic/core/widgets/time_slot_grid.dart';
 class AppointmentResult {
   final DateTime selectedDate;
   final String selectedSlot;
+  final String? bookingNumber;
+  final String? requestNumber;
 
   const AppointmentResult({
     required this.selectedDate,
     required this.selectedSlot,
+    this.bookingNumber,
+    this.requestNumber,
+  });
+}
+
+@immutable
+class AppointmentBookingMeta {
+  final String bookingNumber;
+  final String requestNumber;
+
+  const AppointmentBookingMeta({
+    required this.bookingNumber,
+    required this.requestNumber,
   });
 }
 
@@ -35,11 +50,13 @@ class AppointmentBookingScreen extends StatefulWidget {
   /// Title displayed above the calendar, e.g. "حجز موعد الكشف الطبي" or
   /// "حجز موعد اختبار القيادة العملي".
   final String bookingHeaderTitle;
+  final Future<List<String>> Function(DateTime selectedDate)? loadSlotsForDate;
 
   const AppointmentBookingScreen({
     super.key,
     this.appBarTitle = 'اصدار رخصة قيادة',
     this.bookingHeaderTitle = 'حجز موعد الكشف الطبي',
+    this.loadSlotsForDate,
   });
 
   @override
@@ -56,8 +73,9 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
   late DateTime _targetDateTime; // month displayed by the carousel
 
   String? _selectedSlot;
+  late List<String> _slots;
 
-  static const List<String> _kSlots = [
+  static const List<String> _kFallbackSlots = [
     '09:00-10:00 Am',
     '10:00-11:00 Am',
     '11:00-12:00 Pm',
@@ -75,12 +93,66 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
     super.initState();
     _selectedDay = DateTime.now();
     _targetDateTime = DateTime.now();
+    _slots = List<String>.from(_kFallbackSlots);
+    _loadSlotsForDate(_selectedDay);
   }
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
+  Future<void> _loadSlotsForDate(DateTime selectedDate) async {
+    final Future<List<String>> Function(DateTime selectedDate)? loader =
+        widget.loadSlotsForDate;
+    if (loader == null) {
+      return;
+    }
+
+    try {
+      final List<String> loaded = await loader(selectedDate);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _slots = loaded.isEmpty ? List<String>.from(_kFallbackSlots) : loaded;
+        _selectedSlot = null;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _slots = List<String>.from(_kFallbackSlots);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _extractErrorMessage(error, 'تعذر تحميل المواعيد المتاحة حالياً.'),
+            textDirection: TextDirection.rtl,
+          ),
+        ),
+      );
+    }
+  }
+
+  String _extractErrorMessage(Object error, String fallback) {
+    final String raw = error.toString();
+    const String exceptionPrefix = 'Exception: ';
+    if (raw.startsWith(exceptionPrefix)) {
+      final String message = raw.substring(exceptionPrefix.length).trim();
+      if (message.isNotEmpty) {
+        return message;
+      }
+    }
+    if (raw.isNotEmpty) {
+      return raw;
+    }
+    return fallback;
+  }
+
   void _onConfirm() {
-    if (!_canConfirm) return;
+    if (!_canConfirm || _selectedSlot == null) {
+      return;
+    }
+
     Navigator.pop(
       context,
       AppointmentResult(
@@ -138,6 +210,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                         _selectedDay = date;
                         _selectedSlot = null; // reset slot on date change
                       });
+                      _loadSlotsForDate(date);
                     },
                     onTargetDateChanged: (date) {
                       setState(() => _targetDateTime = date);
@@ -162,7 +235,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
 
                   // ── Time slot grid ─────────────────────────────────────
                   TimeSlotGrid(
-                    slots: _kSlots,
+                    slots: _slots,
                     selectedSlot: _selectedSlot,
                     onSlotSelected: (slot) =>
                         setState(() => _selectedSlot = slot),

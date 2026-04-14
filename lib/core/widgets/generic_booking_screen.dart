@@ -52,6 +52,37 @@ class SecondaryDropdownConfig {
   });
 }
 
+@immutable
+class BookingSelectionOption {
+  final String id;
+  final String label;
+
+  const BookingSelectionOption({required this.id, required this.label});
+}
+
+@immutable
+class BookingFlowData {
+  final String selectedGovernorate;
+  final String? selectedGovernorateId;
+  final String selectedSecondary;
+  final String? selectedSecondaryId;
+  final DateTime selectedDate;
+  final String selectedSlot;
+  final String? bookingNumber;
+  final String? requestNumber;
+
+  const BookingFlowData({
+    required this.selectedGovernorate,
+    required this.selectedGovernorateId,
+    required this.selectedSecondary,
+    required this.selectedSecondaryId,
+    required this.selectedDate,
+    required this.selectedSlot,
+    required this.bookingNumber,
+    required this.requestNumber,
+  });
+}
+
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
 /// **GenericBookingScreen** — a fully reusable booking template.
@@ -96,6 +127,19 @@ class GenericBookingScreen extends StatefulWidget {
   /// `_canProceed == true`.
   final VoidCallback onNextPressed;
 
+  /// Optional richer callback that receives current booking selections.
+  final Future<void> Function(BookingFlowData data)? onNextWithBookingData;
+  final Future<List<BookingSelectionOption>> Function()? loadGovernorates;
+  final Future<List<BookingSelectionOption>> Function(String governorateId)?
+      loadSecondaryOptions;
+  final Future<List<String>> Function(DateTime selectedDate)? loadSlotsForDate;
+  final Future<AppointmentBookingMeta?> Function(
+    String governorateId,
+    String secondaryId,
+    DateTime selectedDate,
+    String selectedSlot,
+  )? submitAppointmentBooking;
+
   const GenericBookingScreen({
     super.key,
     required this.appBarTitle,
@@ -104,6 +148,11 @@ class GenericBookingScreen extends StatefulWidget {
     required this.secondaryDropdown,
     this.appointmentCardTitle,
     required this.onNextPressed,
+    this.onNextWithBookingData,
+    this.loadGovernorates,
+    this.loadSecondaryOptions,
+    this.loadSlotsForDate,
+    this.submitAppointmentBooking,
   });
 
   @override
@@ -116,7 +165,12 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   String? _selectedGovernorate;
+  String? _selectedGovernorateId;
   String? _selectedSecondary;
+  String? _selectedSecondaryId;
+
+  List<BookingSelectionOption>? _governorateOptions;
+  List<BookingSelectionOption>? _secondaryOptions;
 
   /// Set to `true` once the user confirms an appointment.
   bool _isBooked = false;
@@ -132,7 +186,8 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  void _showGovernorateSheet() {
+  Future<void> _showGovernorateSheet() async {
+    final List<BookingSelectionOption> options = await _resolveGovernorates();
     showModalBottomSheet<void>(
       context: context,
       shape: RoundedRectangleBorder(
@@ -142,21 +197,33 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
       isScrollControlled: true,
       builder: (_) => GenericListBottomSheet(
         title: 'اختر محافظتك',
-        items: kDefaultGovernorates,
+        items: options.map((BookingSelectionOption item) => item.label).toList(),
         onItemSelected: (value) {
+          final BookingSelectionOption? selected = _findOptionByLabel(
+            options,
+            value,
+          );
           setState(() {
             _selectedGovernorate = value;
+            _selectedGovernorateId = selected?.id;
             // Reset downstream when governorate changes
             _selectedSecondary = null;
+            _selectedSecondaryId = null;
             _isBooked = false;
             _bookingResult = null;
+            _secondaryOptions = null;
           });
         },
       ),
     );
   }
 
-  void _showSecondarySheet() {
+  Future<void> _showSecondarySheet() async {
+    if (_selectedGovernorate == null) {
+      return;
+    }
+
+    final List<BookingSelectionOption> options = await _resolveSecondaryOptions();
     showModalBottomSheet<void>(
       context: context,
       shape: RoundedRectangleBorder(
@@ -166,10 +233,15 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
       isScrollControlled: true,
       builder: (_) => GenericListBottomSheet(
         title: widget.secondaryDropdown.sheetTitle,
-        items: widget.secondaryDropdown.items,
+        items: options.map((BookingSelectionOption item) => item.label).toList(),
         onItemSelected: (value) {
+          final BookingSelectionOption? selected = _findOptionByLabel(
+            options,
+            value,
+          );
           setState(() {
             _selectedSecondary = value;
+            _selectedSecondaryId = selected?.id;
             // Reset booking when secondary selection changes
             _isBooked = false;
             _bookingResult = null;
@@ -186,6 +258,7 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
         builder: (_) => AppointmentBookingScreen(
           appBarTitle: widget.appBarTitle,
           bookingHeaderTitle: widget.bookingCardTitle,
+          loadSlotsForDate: widget.loadSlotsForDate,
         ),
       ),
     );
@@ -195,6 +268,92 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
         _bookingResult = result;
       });
     }
+  }
+
+  Future<void> _onNextTapped() async {
+    if (!_canProceed || _bookingResult == null) {
+      return;
+    }
+
+    AppointmentResult effectiveBookingResult = _bookingResult!;
+    final Future<AppointmentBookingMeta?> Function(
+      String governorateId,
+      String secondaryId,
+      DateTime selectedDate,
+      String selectedSlot,
+    )? submitter = widget.submitAppointmentBooking;
+
+    if (submitter != null) {
+      if (_selectedGovernorateId == null || _selectedSecondaryId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'تعذر استكمال الحجز بسبب نقص بيانات الموقع.',
+              textDirection: TextDirection.rtl,
+            ),
+          ),
+        );
+        return;
+      }
+
+      try {
+        final AppointmentBookingMeta? bookingMeta = await submitter(
+          _selectedGovernorateId!,
+          _selectedSecondaryId!,
+          effectiveBookingResult.selectedDate,
+          effectiveBookingResult.selectedSlot,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        if (bookingMeta != null) {
+          effectiveBookingResult = AppointmentResult(
+            selectedDate: effectiveBookingResult.selectedDate,
+            selectedSlot: effectiveBookingResult.selectedSlot,
+            bookingNumber: bookingMeta.bookingNumber,
+            requestNumber: bookingMeta.requestNumber,
+          );
+          setState(() {
+            _bookingResult = effectiveBookingResult;
+          });
+        }
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _extractErrorMessage(error, 'تعذر تأكيد الحجز حالياً.'),
+              textDirection: TextDirection.rtl,
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    final Future<void> Function(BookingFlowData data)? callback =
+        widget.onNextWithBookingData;
+
+    if (callback != null) {
+      final BookingFlowData data = BookingFlowData(
+        selectedGovernorate: _selectedGovernorate!,
+        selectedGovernorateId: _selectedGovernorateId,
+        selectedSecondary: _selectedSecondary!,
+        selectedSecondaryId: _selectedSecondaryId,
+        selectedDate: effectiveBookingResult.selectedDate,
+        selectedSlot: effectiveBookingResult.selectedSlot,
+        bookingNumber: effectiveBookingResult.bookingNumber,
+        requestNumber: effectiveBookingResult.requestNumber,
+      );
+      await callback(data);
+      return;
+    }
+
+    widget.onNextPressed();
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -223,6 +382,112 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
     final timePart = parts.first.trim();
     final period = slot.toLowerCase().contains('pm') ? 'مساءا' : 'صباحا';
     return '$timePart $period';
+  }
+
+  String _extractErrorMessage(Object error, String fallback) {
+    final String raw = error.toString();
+    const String exceptionPrefix = 'Exception: ';
+    if (raw.startsWith(exceptionPrefix)) {
+      final String message = raw.substring(exceptionPrefix.length).trim();
+      if (message.isNotEmpty) {
+        return message;
+      }
+    }
+    if (raw.isNotEmpty) {
+      return raw;
+    }
+    return fallback;
+  }
+
+  BookingSelectionOption? _findOptionByLabel(
+    List<BookingSelectionOption> options,
+    String label,
+  ) {
+    for (final BookingSelectionOption option in options) {
+      if (option.label == label) {
+        return option;
+      }
+    }
+    return null;
+  }
+
+  Future<List<BookingSelectionOption>> _resolveGovernorates() async {
+    if (_governorateOptions != null) {
+      return _governorateOptions!;
+    }
+
+    final Future<List<BookingSelectionOption>> Function()? loader = widget.loadGovernorates;
+    if (loader == null) {
+      _governorateOptions = kDefaultGovernorates
+          .map((String item) => BookingSelectionOption(id: item, label: item))
+          .toList(growable: false);
+      return _governorateOptions!;
+    }
+
+    try {
+      final List<BookingSelectionOption> loaded = await loader();
+      _governorateOptions = loaded.isEmpty
+          ? kDefaultGovernorates
+              .map((String item) => BookingSelectionOption(id: item, label: item))
+              .toList(growable: false)
+          : loaded;
+      return _governorateOptions!;
+    } catch (error) {
+      _governorateOptions = kDefaultGovernorates
+          .map((String item) => BookingSelectionOption(id: item, label: item))
+          .toList(growable: false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _extractErrorMessage(error, 'تعذر تحميل المحافظات حالياً.'),
+              textDirection: TextDirection.rtl,
+            ),
+          ),
+        );
+      }
+      return _governorateOptions!;
+    }
+  }
+
+  Future<List<BookingSelectionOption>> _resolveSecondaryOptions() async {
+    if (_secondaryOptions != null) {
+      return _secondaryOptions!;
+    }
+
+    final Future<List<BookingSelectionOption>> Function(String governorateId)? loader =
+        widget.loadSecondaryOptions;
+    if (loader == null || _selectedGovernorateId == null) {
+      _secondaryOptions = widget.secondaryDropdown.items
+          .map((String item) => BookingSelectionOption(id: item, label: item))
+          .toList(growable: false);
+      return _secondaryOptions!;
+    }
+
+    try {
+      final List<BookingSelectionOption> loaded = await loader(_selectedGovernorateId!);
+      _secondaryOptions = loaded.isEmpty
+          ? widget.secondaryDropdown.items
+              .map((String item) => BookingSelectionOption(id: item, label: item))
+              .toList(growable: false)
+          : loaded;
+      return _secondaryOptions!;
+    } catch (error) {
+      _secondaryOptions = widget.secondaryDropdown.items
+          .map((String item) => BookingSelectionOption(id: item, label: item))
+          .toList(growable: false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _extractErrorMessage(error, 'تعذر تحميل البيانات حالياً.'),
+              textDirection: TextDirection.rtl,
+            ),
+          ),
+        );
+      }
+      return _secondaryOptions!;
+    }
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -308,8 +573,8 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
                         title: widget.appointmentCardTitle,
                         date: _formatDate(_bookingResult!.selectedDate),
                         time: _formatTime(_bookingResult!.selectedSlot),
-                        bookingNumber: '10',
-                        requestNumber: '13456670',
+                        bookingNumber: _bookingResult!.bookingNumber ?? '10',
+                        requestNumber: _bookingResult!.requestNumber ?? '13456670',
                       ),
                     ],
 
@@ -324,7 +589,7 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
               padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
               child: PrimaryButton(
                 label: 'التالي',
-                onPressed: _canProceed ? widget.onNextPressed : null,
+                onPressed: _canProceed ? _onNextTapped : null,
                 height: 48.h,
               ),
             ),
