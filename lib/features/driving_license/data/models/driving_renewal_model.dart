@@ -218,6 +218,105 @@ class RenewalResponseModel {
   }
 }
 
+/// Address details for home delivery finalization.
+@immutable
+class FinalizeRenewalAddressModel {
+  final String governorate;
+  final String city;
+  final String details;
+
+  const FinalizeRenewalAddressModel({
+    required this.governorate,
+    required this.city,
+    required this.details,
+  });
+
+  Map<String, Object?> toJson() {
+    return <String, Object?>{
+      'governorate': governorate,
+      'city': city,
+      'details': details,
+    };
+  }
+}
+
+/// Request payload for `POST /DrivingLicense/finalize-renewal/{requestNumber}`.
+///
+/// `method`: 1 = TrafficUnit pickup, 2 = HomeDelivery.
+/// `address`: required when method == 2.
+@immutable
+class FinalizeRenewalRequestModel {
+  final int method;
+  final FinalizeRenewalAddressModel? address;
+
+  const FinalizeRenewalRequestModel({
+    required this.method,
+    this.address,
+  });
+
+  Map<String, Object?> toJson() {
+    final Map<String, Object?> json = <String, Object?>{
+      'method': method,
+    };
+    if (address != null) {
+      json['address'] = address!.toJson();
+    }
+    return json;
+  }
+}
+
+/// Response model for `POST /DrivingLicense/finalize-renewal/{requestNumber}`.
+///
+/// Maps the full license object returned after a successful finalization.
+@immutable
+class FinalizeRenewalResponseModel {
+  final int id;
+  final String drivingLicenseNumber;
+  final String category;
+  final String governorate;
+  final String licensingUnit;
+  final String issueDate;
+  final String expiryDate;
+  final String status;
+  final String citizenName;
+  final String? deliveryMethod;
+
+  const FinalizeRenewalResponseModel({
+    required this.id,
+    required this.drivingLicenseNumber,
+    required this.category,
+    required this.governorate,
+    required this.licensingUnit,
+    required this.issueDate,
+    required this.expiryDate,
+    required this.status,
+    required this.citizenName,
+    this.deliveryMethod,
+  });
+
+  factory FinalizeRenewalResponseModel.fromJson(Map<String, Object?> json) {
+    String? deliveryMethod;
+    final Object? rawDelivery = json['delivery'];
+    if (rawDelivery is Map<String, Object?>) {
+      deliveryMethod = rawDelivery['method']?.toString();
+    }
+
+    return FinalizeRenewalResponseModel(
+      id: json['id'] is int ? json['id']! as int : 0,
+      drivingLicenseNumber:
+          (json['drivingLicenseNumber'] ?? '').toString(),
+      category: (json['category'] ?? '').toString(),
+      governorate: (json['governorate'] ?? '').toString(),
+      licensingUnit: (json['licensingUnit'] ?? '').toString(),
+      issueDate: (json['issueDate'] ?? '').toString(),
+      expiryDate: (json['expiryDate'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+      citizenName: (json['citizenName'] ?? '').toString(),
+      deliveryMethod: deliveryMethod,
+    );
+  }
+}
+
 /// Field flags for contract mismatches (UI-only and API-only fields).
 class RenewalFieldMappingReport {
   static const List<String> uiFieldsWithoutApiMapping = <String>[
@@ -230,27 +329,11 @@ class RenewalFieldMappingReport {
 
   static const List<String> apiRequestFieldsWithoutUiSource = <String>[
     'NewCategory',
-    'method',
-    'address.governorate',
-    'address.city',
-    'address.details',
   ];
 
   static const List<String> apiResponseFieldsWithoutUiConsumer = <String>[
     'id',
-    'drivingLicenseNumber',
     'currentCategory',
     'requestedCategory',
-    'status',
-    'category',
-    'governorate',
-    'licensingUnit',
-    'issueDate',
-    'expiryDate',
-    'citizenName',
-    'delivery.method',
-    'delivery.address.governorate',
-    'delivery.address.city',
-    'delivery.address.details',
   ];
 }

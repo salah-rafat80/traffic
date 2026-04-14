@@ -230,6 +230,80 @@ class DrivingRenewalRepository {
     return const RenewalResponseModel(requestNumber: '');
   }
 
+  Future<ApiResult<FinalizeRenewalResponseModel>> finalizeRenewal({
+    required String requestNumber,
+    required FinalizeRenewalRequestModel request,
+  }) async {
+    try {
+      final Response<Object?> response = await _apiClient.dio.post<Object?>(
+        '/DrivingLicense/finalize-renewal/$requestNumber',
+        data: request.toJson(),
+      );
+
+      final FinalizeRenewalResponseModel parsed =
+          _parseFinalizeRenewalResponse(response.data);
+      if (parsed.drivingLicenseNumber.isEmpty) {
+        return ApiResult<FinalizeRenewalResponseModel>.failure(
+          'لم يتم استلام بيانات الرخصة المجددة من الخادم.',
+        );
+      }
+
+      return ApiResult<FinalizeRenewalResponseModel>.success(parsed);
+    } on DioException catch (error) {
+      ApiErrorHandler.logError('FinalizeRenewal', error);
+      return ApiResult<FinalizeRenewalResponseModel>.failure(
+        _mapFinalizeRenewalError(error),
+      );
+    } catch (_) {
+      return ApiResult<FinalizeRenewalResponseModel>.failure(
+        'حدث خطأ غير متوقع.',
+      );
+    }
+  }
+
+  FinalizeRenewalResponseModel _parseFinalizeRenewalResponse(Object? rawData) {
+    if (rawData is Map<String, Object?>) {
+      if (rawData['details'] is Map<String, Object?>) {
+        return FinalizeRenewalResponseModel.fromJson(
+          rawData['details']! as Map<String, Object?>,
+        );
+      }
+      return FinalizeRenewalResponseModel.fromJson(rawData);
+    }
+
+    return const FinalizeRenewalResponseModel(
+      id: 0,
+      drivingLicenseNumber: '',
+      category: '',
+      governorate: '',
+      licensingUnit: '',
+      issueDate: '',
+      expiryDate: '',
+      status: '',
+      citizenName: '',
+    );
+  }
+
+  String _mapFinalizeRenewalError(DioException error) {
+    final int? statusCode = error.response?.statusCode;
+    if (statusCode == null) {
+      return ApiErrorHandler.extractMessage(error);
+    }
+
+    const Map<int, String> statusMessages = <int, String>{
+      400: 'بيانات استكمال التجديد غير صحيحة أو ناقصة.',
+      401: 'يجب تسجيل الدخول لاستكمال طلب التجديد.',
+      403: 'ليس لديك صلاحية لاستكمال خدمة تجديد رخصة القيادة.',
+      404: 'لم يتم العثور على طلب التجديد المطلوب.',
+      500: 'حدث خطأ في الخادم أثناء استكمال طلب التجديد.',
+    };
+
+    final String fallback = statusMessages[statusCode] ??
+        'فشل استكمال طلب التجديد. (HTTP $statusCode)';
+
+    return ApiErrorHandler.extractMessage(error, fallback: fallback);
+  }
+
   String _mapRenewalError(DioException error) {
     final int? statusCode = error.response?.statusCode;
     if (statusCode == null) {
@@ -469,6 +543,33 @@ class DrivingLicenseRenewalDataHandler {
     );
 
     return _repository.submitRenewalRequest(request: request);
+  }
+
+  Future<ApiResult<FinalizeRenewalResponseModel>> finalizeRenewalFromUi({
+    required String requestNumber,
+    required int method,
+    String? governorate,
+    String? city,
+    String? details,
+  }) {
+    FinalizeRenewalAddressModel? address;
+    if (method == 2 && governorate != null && city != null && details != null) {
+      address = FinalizeRenewalAddressModel(
+        governorate: governorate,
+        city: city,
+        details: details,
+      );
+    }
+
+    final FinalizeRenewalRequestModel request = FinalizeRenewalRequestModel(
+      method: method,
+      address: address,
+    );
+
+    return _repository.finalizeRenewal(
+      requestNumber: requestNumber,
+      request: request,
+    );
   }
 
   String _formatDate(DateTime date) {

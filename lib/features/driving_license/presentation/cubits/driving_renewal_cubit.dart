@@ -27,6 +27,16 @@ class DrivingRenewalFailure extends DrivingRenewalState {
   const DrivingRenewalFailure({required this.message});
 }
 
+class DrivingRenewalFinalizeLoading extends DrivingRenewalState {
+  const DrivingRenewalFinalizeLoading();
+}
+
+class DrivingRenewalFinalizeSuccess extends DrivingRenewalState {
+  final FinalizeRenewalResponseModel response;
+
+  const DrivingRenewalFinalizeSuccess({required this.response});
+}
+
 class DrivingRenewalCubit extends Cubit<DrivingRenewalState> {
   final DrivingLicenseRenewalDataHandler _dataHandler;
 
@@ -67,8 +77,36 @@ class DrivingRenewalCubit extends Cubit<DrivingRenewalState> {
     );
   }
 
+  Future<void> finalizeRenewal({
+    required String requestNumber,
+    required int method,
+    String? governorate,
+    String? city,
+    String? details,
+  }) async {
+    emit(const DrivingRenewalFinalizeLoading());
+
+    final result = await _dataHandler.finalizeRenewalFromUi(
+      requestNumber: requestNumber,
+      method: method,
+      governorate: governorate,
+      city: city,
+      details: details,
+    );
+
+    if (result.isSuccess && result.data != null) {
+      emit(DrivingRenewalFinalizeSuccess(response: result.data!));
+      return;
+    }
+
+    emit(
+      DrivingRenewalFailure(
+        message: result.error ?? 'حدث خطأ غير متوقع.',
+      ),
+    );
+  }
+
   void reset() {
     emit(const DrivingRenewalInitial());
   }
 }
-
