@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/constants/colors.dart';
-import '../../../../../core/constants/spacing.dart';
+import '../../../../../core/features/checkout/generic_order_review_screen.dart';
+import '../../../../../core/features/checkout/models/applicant_details.dart';
+import '../../../../../core/features/checkout/models/fees_details.dart';
+import '../../../../../core/features/checkout/models/order_summary.dart';
 import '../../../../../core/widgets/app_drawer.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../../../../core/widgets/service_screen_appbar.dart';
@@ -27,14 +30,15 @@ class FinalizeDrivingLicenseScreen extends StatefulWidget {
 class _FinalizeDrivingLicenseScreenState
     extends State<FinalizeDrivingLicenseScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+
   // 1: TrafficUnit (pickup), 2: HomeDelivery (delivery)
   int? _deliveryMethod;
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _governorateController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
-  final TextEditingController _addressDetailsController = TextEditingController();
+  final TextEditingController _addressDetailsController =
+      TextEditingController();
 
   @override
   void dispose() {
@@ -52,10 +56,79 @@ class _FinalizeDrivingLicenseScreenState
     context.read<DrivingLicenseCubit>().finalizeDrivingLicense(
           requestNumber: widget.requestNumber,
           method: _deliveryMethod ?? 1,
-          governorate: _deliveryMethod == 2 ? _governorateController.text : null,
-          city: _deliveryMethod == 2 ? _cityController.text : null,
-          details: _deliveryMethod == 2 ? _addressDetailsController.text : null,
+          governorate:
+              _deliveryMethod == 2 ? _governorateController.text.trim() : null,
+          city: _deliveryMethod == 2 ? _cityController.text.trim() : null,
+          details: _deliveryMethod == 2
+              ? _addressDetailsController.text.trim()
+              : null,
         );
+  }
+
+  void _navigateToOrderReview(DrivingLicenseFinalizeSuccess state) {
+    final applicant = ApplicantDetails(
+      name: state.profile.fullName,
+      nationalId: state.profile.nationalId,
+      phone: state.profile.phoneNumber,
+      email: state.profile.email,
+    );
+
+    final String paymentMethodLabel = _deliveryMethod == 2
+        ? 'التوصيل للعنوان'
+        : 'الاستلام من وحدة المرور';
+
+    // Prefer requestNumber from the API response (may differ from the one we sent).
+    final String orderId = state.response.requestNumber.trim().isNotEmpty
+        ? state.response.requestNumber
+        : widget.requestNumber;
+
+    final orderSummary = OrderSummary(
+      orderType: 'إصدار رخصة قيادة',
+      paymentMethod: paymentMethodLabel,
+      orderId: orderId,
+    );
+
+    // Use real fees returned by the API.
+    final feesPayload = state.response.fees;
+    final List<FeeItem> items = <FeeItem>[
+      FeeItem(
+        label: 'الرسوم الأساسية',
+        amount: _formatCurrency(feesPayload?.baseFee ?? 0),
+      ),
+    ];
+
+    if ((feesPayload?.deliveryFee ?? 0) > 0) {
+      items.add(FeeItem(
+        label: 'رسوم التوصيل',
+        amount: _formatCurrency(feesPayload!.deliveryFee),
+      ));
+    }
+
+    final fees = FeesDetails(
+      items: items,
+      total: _formatCurrency(feesPayload?.totalAmount ?? 0),
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GenericOrderReviewScreen(
+          appBarTitle: 'إصدار رخصة قيادة',
+          applicantDetails: applicant,
+          orderSummary: orderSummary,
+          feesDetails: fees,
+          serviceRequestNumber: orderId,
+          paymentAmountOverride: feesPayload?.totalAmount ?? 0,
+        ),
+      ),
+    );
+  }
+
+  String _formatCurrency(double amount) {
+    if (amount == amount.truncateToDouble()) {
+      return '${amount.toInt()} جنية مصري';
+    }
+    return '$amount جنية مصري';
   }
 
   String? _validateGovernorate(String? value) {
@@ -93,29 +166,31 @@ class _FinalizeDrivingLicenseScreenState
         body: BlocConsumer<DrivingLicenseCubit, DrivingLicenseState>(
           listener: (context, state) {
             if (state is DrivingLicenseFinalizeSuccess) {
-              _showSuccessDialog(context, state.license.drivingLicenseNumber);
+              _navigateToOrderReview(state);
             } else if (state is DrivingLicenseFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message, textDirection: TextDirection.rtl),
+                  content: Text(state.message,
+                      textDirection: TextDirection.rtl),
                   backgroundColor: AppColors.error,
                 ),
               );
             }
           },
           builder: (context, state) {
-            final bool isLoading = state is DrivingLicenseLoading;
+            final bool isLoading = state is DrivingLicenseFinalizeLoading;
 
             return Column(
               children: [
                 ServiceScreenAppBar(
                   title: 'استكمال الطلب',
-                  onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                  onMenuPressed: () =>
+                      _scaffoldKey.currentState?.openDrawer(),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 16.w, vertical: 16.h),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -137,7 +212,8 @@ class _FinalizeDrivingLicenseScreenState
                             subtitle:
                                 'استلم الرخصة شخصيًا من وحدة المرور التي تم تسجيلها في بياناتك',
                             isSelected: _deliveryMethod == 1,
-                            onTap: () => setState(() => _deliveryMethod = 1),
+                            onTap: () =>
+                                setState(() => _deliveryMethod = 1),
                             icon: Icon(
                               Icons.account_balance_outlined,
                               color: const Color(0xFF27AE60),
@@ -150,7 +226,8 @@ class _FinalizeDrivingLicenseScreenState
                             subtitle:
                                 'سيتم توصيل رخصتك الجديدة للعنوان الذي تحدده, يرجى التأكد من صحة العنوان لتجنب أي تأخير.',
                             isSelected: _deliveryMethod == 2,
-                            onTap: () => setState(() => _deliveryMethod = 2),
+                            onTap: () =>
+                                setState(() => _deliveryMethod = 2),
                             icon: Icon(
                               Icons.home_outlined,
                               color: const Color(0xFF27AE60),
@@ -162,7 +239,8 @@ class _FinalizeDrivingLicenseScreenState
                             curve: Curves.easeInOut,
                             child: isDelivery
                                 ? Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
                                     children: [
                                       SizedBox(height: 20.h),
                                       CustomTextFormField(
@@ -182,11 +260,13 @@ class _FinalizeDrivingLicenseScreenState
                                       CustomTextFormField(
                                         labelText: 'تفاصيل إضافية للعنوان',
                                         hintText: 'اكتب تفاصيل العنوان....',
-                                        controller: _addressDetailsController,
+                                        controller:
+                                            _addressDetailsController,
                                         validator: _validateAddressDetails,
                                         minLines: 3,
                                         maxLines: 5,
-                                        keyboardType: TextInputType.multiline,
+                                        keyboardType:
+                                            TextInputType.multiline,
                                       ),
                                       SizedBox(height: 8.h),
                                     ],
@@ -215,66 +295,6 @@ class _FinalizeDrivingLicenseScreenState
             );
           },
         ),
-      ),
-    );
-  }
-
-  void _showSuccessDialog(BuildContext context, String licenseNumber) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
-        title: Text(
-          'تم إصدار الرخصة بنجاح',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Tajawal',
-              fontSize: 20.sp),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle_outline,
-                color: AppColors.primary, size: 64.w),
-            SizedBox(height: Insets.x16.h),
-            Text(
-              'رقم الرخصة: $licenseNumber',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Tajawal',
-                  fontSize: 16.sp),
-            ),
-            SizedBox(height: Insets.x12.h),
-            Text(
-              'تم تفعيل رخصة القيادة الخاصة بك. يمكنك عرضها من خلال شاشة التراخيص.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontFamily: 'Tajawal',
-                  fontSize: 14.sp),
-            ),
-          ],
-        ),
-        actions: [
-          Center(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: 10.h),
-              child: SizedBox(
-                width: 150.w,
-                child: PrimaryButton(
-                  label: 'العودة للرئيسية',
-                  onPressed: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  },
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

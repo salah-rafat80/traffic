@@ -42,6 +42,12 @@ class GenericOrderReviewScreen extends StatefulWidget {
   /// Defaults to [Navigator.popUntil] back to the first route when null.
   final VoidCallback? onSubmitSuccess;
 
+  /// Service request number to be passed to the payment flow.
+  final String? serviceRequestNumber;
+
+  /// Explicit amount used for payment when available from API response.
+  final double? paymentAmountOverride;
+
   const GenericOrderReviewScreen({
     super.key,
     required this.appBarTitle,
@@ -51,6 +57,8 @@ class GenericOrderReviewScreen extends StatefulWidget {
     required this.feesDetails,
     this.showEditApplicant = true,
     this.onSubmitSuccess,
+    this.serviceRequestNumber,
+    this.paymentAmountOverride,
   });
 
   @override
@@ -89,12 +97,17 @@ class _GenericOrderReviewScreenState extends State<GenericOrderReviewScreen> {
   // ── Submission logic ──────────────────────────────────────────────────────
 
   void _handleSubmit() {
-    // Extract the numeric amount from the total string
-    final String amountStr = widget.feesDetails.total.replaceAll(
-      RegExp(r'[^0-9.]'),
-      '',
-    );
-    final double amount = double.tryParse(amountStr) ?? 0.0;
+    final double amount;
+    if (widget.paymentAmountOverride != null) {
+      amount = widget.paymentAmountOverride!;
+    } else {
+      // Fallback for existing callers that only provide formatted fee text.
+      final String amountStr = widget.feesDetails.total.replaceAll(
+        RegExp(r'[^0-9.]'),
+        '',
+      );
+      amount = double.tryParse(amountStr) ?? 0.0;
+    }
 
     Navigator.push(
       context,
@@ -103,8 +116,8 @@ class _GenericOrderReviewScreenState extends State<GenericOrderReviewScreen> {
           paymentIntent: PaymentIntent(
             orderType: widget.orderSummary.orderType,
             amount: amount,
-            currency:
-                'جنية مصري', // Could also be extracted or parameterized later
+            currency: 'جنية مصري',
+            serviceRequestNumber: widget.serviceRequestNumber,
           ),
         ),
       ),

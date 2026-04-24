@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/api/api_client.dart';
+import '../../../../core/api/profile_cache.dart';
 
 class AuthRepository {
   final ApiClient _apiClient;
@@ -189,6 +190,7 @@ class AuthRepository {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    await ProfileCache().clearProfile();
   }
 }
 

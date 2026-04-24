@@ -28,6 +28,9 @@ class PrimaryButton extends StatelessWidget {
   /// Optional custom font size (defaults to 17.sp)
   final double? fontSize;
 
+  /// Whether the button is currently in a loading state
+  final bool isLoading;
+
   const PrimaryButton({
     super.key,
     required this.label,
@@ -38,6 +41,7 @@ class PrimaryButton extends StatelessWidget {
     this.disabledTextColor,
     this.height,
     this.fontSize,
+    this.isLoading = false,
   });
 
   @override
@@ -51,7 +55,7 @@ class PrimaryButton extends StatelessWidget {
         : (disabledTextColor ?? Colors.white70);
 
     return InkWell(
-      onTap: onPressed,
+      onTap: isLoading ? null : onPressed,
       borderRadius: BorderRadius.circular(12.r),
       child: Container(
         width: double.infinity,
@@ -61,18 +65,27 @@ class PrimaryButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: fontSize ?? 18.sp,
-                fontWeight: FontWeight.w600,
-                color: currentTextColor,
-              ),
-            ),
-          ),
+          child: isLoading 
+              ? SizedBox(
+                  width: 24.r,
+                  height: 24.r,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3.w,
+                    valueColor: AlwaysStoppedAnimation<Color>(currentTextColor),
+                  ),
+                )
+              : FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: fontSize ?? 18.sp,
+                      fontWeight: FontWeight.w600,
+                      color: currentTextColor,
+                    ),
+                  ),
+                ),
         ),
       ),
     );

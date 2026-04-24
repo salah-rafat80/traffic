@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/constants/colors.dart';
-import 'package:traffic/core/constants/spacing.dart';
 import 'package:traffic/core/features/checkout/generic_order_review_screen.dart';
 import 'package:traffic/core/features/checkout/models/applicant_details.dart';
 import 'package:traffic/core/features/checkout/models/fees_details.dart';
@@ -10,7 +9,15 @@ import 'package:traffic/core/features/checkout/models/order_summary.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 import 'package:traffic/features/driving_license/data/models/driving_license_model.dart';
+import 'package:traffic/features/driving_license/data/models/driving_renewal_model.dart';
 import 'package:traffic/features/driving_license/presentation/cubits/driving_renewal_cubit.dart';
+import 'package:traffic/features/profile/data/models/profile_model.dart';
+import 'package:traffic/core/api/api_client.dart';
+import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
+import 'package:traffic/features/driving_license/presentation/cubits/driving_replacement_cubit.dart';
+import 'package:traffic/features/driving_license/presentation/cubits/driving_replacement_state.dart';
+import 'package:traffic/features/driving_license/presentation/cubits/driving_license_cubit.dart';
+import 'package:traffic/features/driving_license/presentation/cubits/driving_license_state.dart';
 import '../widgets/custom_text_form_field.dart';
 import '../widgets/selection_option_card.dart';
 import 'replacement_type_selection_screen.dart';
@@ -47,15 +54,17 @@ class DeliveryMethodScreen extends StatefulWidget {
   final ReplacementType? replacementType;
 
   /// When non-null, this screen operates in **renewal finalize** mode.
-  /// The value is the request number (e.g. "DR-800") returned from the
-  /// initial renewal-request API call.
   final String? renewalRequestNumber;
+
+  /// When non-null, this screen operates in **issuance finalize** mode.
+  final String? issuanceRequestNumber;
 
   const DeliveryMethodScreen({
     super.key,
     this.license,
     this.replacementType,
     this.renewalRequestNumber,
+    this.issuanceRequestNumber,
   });
 
   /// Named constructor for the lost/damaged replacement flow.
@@ -63,16 +72,27 @@ class DeliveryMethodScreen extends StatefulWidget {
     super.key,
     required DrivingLicenseModel this.license,
     required ReplacementType this.replacementType,
-  }) : renewalRequestNumber = null;
+  }) : renewalRequestNumber = null,
+       issuanceRequestNumber = null;
 
   /// Named constructor for the renewal finalize flow.
   const DeliveryMethodScreen.renewalFinalize({
     super.key,
     required String this.renewalRequestNumber,
-  })  : license = null,
-        replacementType = null;
+  }) : license = null,
+       replacementType = null,
+       issuanceRequestNumber = null;
+
+  /// Named constructor for the first-time issuance finalize flow.
+  const DeliveryMethodScreen.issuanceFinalize({
+    super.key,
+    required String this.issuanceRequestNumber,
+  }) : license = null,
+       replacementType = null,
+       renewalRequestNumber = null;
 
   bool get _isRenewalFinalizeMode => renewalRequestNumber != null;
+  bool get _isIssuanceFinalizeMode => issuanceRequestNumber != null;
 
   @override
   State<DeliveryMethodScreen> createState() => _DeliveryMethodScreenState();
@@ -80,6 +100,8 @@ class DeliveryMethodScreen extends StatefulWidget {
 
 class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
   // ── State ─────────────────────────────────────────────────────────────────
+
+  DrivingReplacementCubit? _replacementCubit;
 
   /// Currently selected delivery method; `null` until the user picks one.
   DeliveryMethod? selectedMethod;
@@ -96,7 +118,18 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   @override
+  void initState() {
+    super.initState();
+    if (!widget._isRenewalFinalizeMode) {
+      _replacementCubit = DrivingReplacementCubit(
+        DrivingLicenseRepository(ApiClient()),
+      );
+    }
+  }
+
+  @override
   void dispose() {
+    _replacementCubit?.close();
     _governorateController.dispose();
     _cityController.dispose();
     _addressDetailsController.dispose();
@@ -126,19 +159,34 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
     if (widget._isRenewalFinalizeMode) {
       final int method = selectedMethod == DeliveryMethod.delivery ? 2 : 1;
       context.read<DrivingRenewalCubit>().finalizeRenewal(
-            requestNumber: widget.renewalRequestNumber!,
-            method: method,
-            governorate:
-                method == 2 ? _governorateController.text.trim() : null,
-            city: method == 2 ? _cityController.text.trim() : null,
-            details:
-                method == 2 ? _addressDetailsController.text.trim() : null,
-          );
+        requestNumber: widget.renewalRequestNumber!,
+        method: method,
+        governorate: method == 2 ? _governorateController.text.trim() : null,
+        city: method == 2 ? _cityController.text.trim() : null,
+        details: method == 2 ? _addressDetailsController.text.trim() : null,
+      );
       return;
     }
 
     // ── Original replacement flow ─────────────────────────────────────────
-    // Applicant details are currently mocked (no auth layer yet).
+    if (widget.license == null || widget.replacementType == null) return;
+
+    final int method = selectedMethod == DeliveryMethod.delivery ? 2 : 1;
+    final String repType = widget.replacementType == ReplacementType.lost
+        ? "Lost"
+        : "Damaged";
+
+    _replacementCubit?.issueReplacement(
+      licenseNumber: widget.license!.licenseNumber,
+      replacementType: repType,
+      method: method,
+      governorate: method == 2 ? _governorateController.text.trim() : null,
+      city: method == 2 ? _cityController.text.trim() : null,
+      details: method == 2 ? _addressDetailsController.text.trim() : null,
+    );
+  }
+
+  void _navigateToOrderReview(DrivingReplacementSuccess state) {
     const applicant = ApplicantDetails(
       name: 'اميرة عصام حامد',
       nationalId: '010123456789099',
@@ -146,16 +194,13 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
       email: 'amirabadreldeen7@icloud.com',
     );
 
-    // Determine the payment / delivery label from the user's current choice.
     final String paymentMethodLabel = selectedMethod == DeliveryMethod.delivery
         ? 'التوصيل للعنوان'
         : 'الاستلام من وحدة المرور';
 
-    // Derive the order-type label from the replacement type.
-    final String orderTypeLabel =
-        widget.replacementType == ReplacementType.lost
-            ? 'بدل فاقد رخصة قيادة'
-            : 'بدل تالف رخصة قيادة';
+    final String orderTypeLabel = widget.replacementType == ReplacementType.lost
+        ? 'بدل فاقد رخصة قيادة'
+        : 'بدل تالف رخصة قيادة';
 
     final orderSummary = OrderSummary(
       orderType: orderTypeLabel,
@@ -163,14 +208,21 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
       orderId: widget.license!.licenseNumber,
     );
 
-    const fees = FeesDetails(
-      items: [
-        FeeItem(label: 'رسوم اصدار الرخصة', amount: '280 جنيه مصري'),
-        FeeItem(label: 'رسوم شحن الرخصة', amount: '80 جنيه مصري'),
-        FeeItem(label: 'رسوم الفحص', amount: '80 جنيه مصري'),
-      ],
-      total: '440 جنيه مصري',
-    );
+    final double baseFee = state.response.fees?.baseFee ?? 0;
+    final double deliveryFee = state.response.fees?.deliveryFee ?? 0;
+    final double totalAmount = state.response.fees?.totalAmount ?? 0;
+
+    final List<FeeItem> items = [
+      FeeItem(label: 'الرسوم الأساسية', amount: '$baseFee جنية مصري'),
+    ];
+
+    if (selectedMethod == DeliveryMethod.delivery) {
+      items.add(
+        FeeItem(label: 'رسوم التوصيل', amount: '$deliveryFee جنية مصري'),
+      );
+    }
+
+    final fees = FeesDetails(items: items, total: '$totalAmount جنية مصري');
 
     Navigator.push(
       context,
@@ -180,9 +232,86 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
           applicantDetails: applicant,
           orderSummary: orderSummary,
           feesDetails: fees,
+          serviceRequestNumber: state.response.requestNumber,
         ),
       ),
     );
+  }
+
+  void _navigateToRenewalOrderReview(
+    FinalizeRenewalResponseModel response,
+    ProfileModel profile,
+  ) {
+    final applicant = ApplicantDetails(
+      name: profile.fullName,
+      nationalId: profile.nationalId,
+      phone: profile.phoneNumber,
+      email: profile.email,
+    );
+
+    final String paymentMethodLabel = selectedMethod == DeliveryMethod.delivery
+        ? 'التوصيل للعنوان'
+        : 'الاستلام من وحدة المرور';
+
+    final String orderId = response.requestNumber.trim().isNotEmpty
+        ? response.requestNumber
+        : widget.renewalRequestNumber ?? '';
+
+    final orderSummary = OrderSummary(
+      orderType: 'تجديد رخصة قيادة',
+      paymentMethod: paymentMethodLabel,
+      orderId: orderId,
+    );
+
+    final FinalizeRenewalFeesModel feesPayload =
+        response.fees ??
+        const FinalizeRenewalFeesModel(
+          baseFee: 0,
+          deliveryFee: 0,
+          totalAmount: 0,
+        );
+
+    final List<FeeItem> items = <FeeItem>[
+      FeeItem(
+        label: 'الرسوم الأساسية',
+        amount: _formatCurrency(feesPayload.baseFee),
+      ),
+    ];
+
+    if (feesPayload.deliveryFee > 0) {
+      items.add(
+        FeeItem(
+          label: 'رسوم التوصيل',
+          amount: _formatCurrency(feesPayload.deliveryFee),
+        ),
+      );
+    }
+
+    final fees = FeesDetails(
+      items: items,
+      total: _formatCurrency(feesPayload.totalAmount),
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GenericOrderReviewScreen(
+          appBarTitle: 'تجديد رخصة قيادة',
+          applicantDetails: applicant,
+          orderSummary: orderSummary,
+          feesDetails: fees,
+          serviceRequestNumber: orderId,
+          paymentAmountOverride: feesPayload.totalAmount,
+        ),
+      ),
+    );
+  }
+
+  String _formatCurrency(double amount) {
+    if (amount == amount.truncateToDouble()) {
+      return '${amount.toInt()} جنية مصري';
+    }
+    return '$amount جنية مصري';
   }
 
   // ── Validators ────────────────────────────────────────────────────────────
@@ -312,28 +441,44 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
       ),
     );
 
-    // Wrap with BlocListener only in renewal finalize mode.
+    // Wrap with BlocListener based on mode
     if (widget._isRenewalFinalizeMode) {
       body = BlocListener<DrivingRenewalCubit, DrivingRenewalState>(
         listener: (BuildContext ctx, DrivingRenewalState state) {
           if (state is DrivingRenewalFinalizeSuccess) {
-            _showRenewalSuccessDialog(
-              ctx,
-              state.response.drivingLicenseNumber,
-            );
+            _navigateToRenewalOrderReview(state.response, state.profile);
           } else if (state is DrivingRenewalFailure) {
             ScaffoldMessenger.of(ctx).showSnackBar(
               SnackBar(
-                content: Text(
-                  state.message,
-                  textDirection: TextDirection.rtl,
-                ),
+                content: Text(state.message, textDirection: TextDirection.rtl),
                 backgroundColor: AppColors.error,
               ),
             );
           }
         },
         child: body,
+      );
+    } else if (_replacementCubit != null) {
+      body = BlocProvider.value(
+        value: _replacementCubit!,
+        child: BlocListener<DrivingReplacementCubit, DrivingReplacementState>(
+          listener: (ctx, state) {
+            if (state is DrivingReplacementSuccess) {
+              _navigateToOrderReview(state);
+            } else if (state is DrivingReplacementFailure) {
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    state.errorMessage,
+                    textDirection: TextDirection.rtl,
+                  ),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            }
+          },
+          child: body,
+        ),
       );
     }
 
@@ -348,7 +493,23 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           return PrimaryButton(
-            label: 'إنهاء وتجديد الرخصة',
+            label: 'التالي',
+            onPressed: _isButtonEnabled ? _onNextPressed : null,
+            height: 48.h,
+            backgroundColor: const Color(0xFF27AE60),
+            fontSize: 18.sp,
+          );
+        },
+      );
+    } else if (_replacementCubit != null) {
+      return BlocBuilder<DrivingReplacementCubit, DrivingReplacementState>(
+        bloc: _replacementCubit,
+        builder: (ctx, state) {
+          if (state is DrivingReplacementLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return PrimaryButton(
+            label: 'التالي',
             onPressed: _isButtonEnabled ? _onNextPressed : null,
             height: 48.h,
             backgroundColor: const Color(0xFF27AE60),
@@ -364,74 +525,6 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
       height: 48.h,
       backgroundColor: const Color(0xFF27AE60),
       fontSize: 18.sp,
-    );
-  }
-
-  void _showRenewalSuccessDialog(BuildContext context, String licenseNumber) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.r),
-        ),
-        title: Text(
-          'تم تجديد الرخصة بنجاح',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Tajawal',
-            fontSize: 20.sp,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              color: AppColors.primary,
-              size: 64.w,
-            ),
-            SizedBox(height: Insets.x16.h),
-            Text(
-              'رقم الرخصة: $licenseNumber',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Tajawal',
-                fontSize: 16.sp,
-              ),
-            ),
-            SizedBox(height: Insets.x12.h),
-            Text(
-              'تم تجديد رخصة القيادة الخاصة بك بنجاح. يمكنك متابعة حالتها من خلال طلباتي.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontFamily: 'Tajawal',
-                fontSize: 14.sp,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Center(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: 10.h),
-              child: SizedBox(
-                width: 150.w,
-                child: PrimaryButton(
-                  label: 'العودة للرئيسية',
-                  onPressed: () {
-                    Navigator.of(context)
-                        .popUntil((Route<Object?> route) => route.isFirst);
-                  },
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

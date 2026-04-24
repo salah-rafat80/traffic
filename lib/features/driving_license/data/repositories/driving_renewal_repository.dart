@@ -140,6 +140,7 @@ class DrivingRenewalRepository {
           serviceTypeOverride: candidate,
           date: request.date,
           startTime: request.startTime,
+          requestNumber: request.requestNumber,
         );
 
         final Response<Object?> retryResponse = await _apiClient.dio.post<Object?>(
@@ -242,9 +243,11 @@ class DrivingRenewalRepository {
 
       final FinalizeRenewalResponseModel parsed =
           _parseFinalizeRenewalResponse(response.data);
-      if (parsed.drivingLicenseNumber.isEmpty) {
+      final bool hasRequestNumber = parsed.requestNumber.trim().isNotEmpty;
+      final bool hasLicenseNumber = parsed.drivingLicenseNumber.trim().isNotEmpty;
+      if (!hasRequestNumber && !hasLicenseNumber) {
         return ApiResult<FinalizeRenewalResponseModel>.failure(
-          'لم يتم استلام بيانات الرخصة المجددة من الخادم.',
+          'لم يتم استلام بيانات الطلب بعد استكمال التجديد من الخادم.',
         );
       }
 
@@ -273,6 +276,7 @@ class DrivingRenewalRepository {
 
     return const FinalizeRenewalResponseModel(
       id: 0,
+      requestNumber: '',
       drivingLicenseNumber: '',
       category: '',
       governorate: '',
@@ -523,6 +527,7 @@ class DrivingLicenseRenewalDataHandler {
     required DateTime date,
     required String selectedSlot,
     required AppointmentType type,
+    String? requestNumber,
   }) {
     final AppointmentBookingRequestModel request = AppointmentBookingRequestModel(
       governorateId: governorateId,
@@ -530,6 +535,7 @@ class DrivingLicenseRenewalDataHandler {
       type: type,
       date: _formatDate(date),
       startTime: _extractStartTime(selectedSlot),
+      requestNumber: requestNumber,
     );
 
     return _repository.bookAppointment(request: request);

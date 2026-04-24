@@ -8,7 +8,11 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/service_screen_appbar.dart';
 import '../../driving_license/data/repositories/driving_renewal_repository.dart';
 import '../../driving_license/presentation/cubits/driving_renewal_cubit.dart';
+import '../../driving_license/presentation/cubits/driving_license_cubit.dart';
+import '../../driving_license/data/repositories/driving_license_repository.dart';
+import '../../driving_license/presentation/screens/finalize/finalize_driving_license_screen.dart';
 import '../../lost_license/presentation/screens/delivery_method_screen.dart';
+import '../../profile/data/repositories/profile_repository.dart';
 import '../domain/entities/order_model.dart';
 import 'widgets/order_status_timeline.dart';
 import 'widgets/order_summary_header_card.dart';
@@ -32,8 +36,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   /// Returns true when this order is an approved driving license renewal
   /// that the user can finalize (choose delivery method).
   bool get _showFinalizeButton {
-    final bool isRenewal = widget.order.title.contains('تجديد رخصة') ||
-        widget.order.title.contains('تجديد رخصة قيادة');
+    final bool isSupportedProcedure = widget.order.title.contains('تجديد رخصة') ||
+        widget.order.title.contains('تجديد رخصة قيادة') || 
+        widget.order.title.contains('إصدار رخصة قيادة');
 
     // Show the button when the order was accepted/approved but not yet
     // completed. "pending" and "needsData" are the typical states where
@@ -41,27 +46,71 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     final bool isActionable = widget.order.status == OrderStatus.pending ||
         widget.order.status == OrderStatus.needsData;
 
-    return isRenewal && isActionable;
+    return isSupportedProcedure && isActionable;
   }
 
   void _onFinalizePressed() {
-    final ApiClient apiClient = context.read<ApiClient>();
-    final DrivingRenewalRepository repository =
-        DrivingRenewalRepository(apiClient);
-    final DrivingLicenseRenewalDataHandler dataHandler =
-        DrivingLicenseRenewalDataHandler(repository);
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BlocProvider<DrivingRenewalCubit>(
-          create: (_) => DrivingRenewalCubit(dataHandler: dataHandler),
-          child: DeliveryMethodScreen.renewalFinalize(
-            renewalRequestNumber: widget.order.id,
+    final String requestNumber = widget.order.id.trim();
+    if (requestNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تعذر استكمال الطلب: رقم الطلب غير متاح.',
+            textDirection: TextDirection.rtl,
           ),
         ),
-      ),
-    );
+      );
+      return;
+    }
+
+    final ApiClient apiClient = ApiClient();
+    final String title = widget.order.title;
+
+    if (title.contains('إصدار رخصة قيادة')) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BlocProvider<DrivingLicenseCubit>(
+            create: (_) => DrivingLicenseCubit(
+              repository: DrivingLicenseRepository(apiClient),
+              profileRepository: ProfileRepository(apiClient),
+            ),
+            child: FinalizeDrivingLicenseScreen(
+              requestNumber: requestNumber,
+            ),
+          ),
+        ),
+      );
+    } else if (title.contains('تجديد رخصة')) {
+      final DrivingRenewalRepository repository =
+          DrivingRenewalRepository(apiClient);
+      final DrivingLicenseRenewalDataHandler dataHandler =
+          DrivingLicenseRenewalDataHandler(repository);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BlocProvider<DrivingRenewalCubit>(
+            create: (_) => DrivingRenewalCubit(
+              dataHandler: dataHandler,
+              profileRepository: ProfileRepository(apiClient),
+            ),
+            child: DeliveryMethodScreen.renewalFinalize(
+              renewalRequestNumber: requestNumber,
+            ),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'لم يتم دعم استكمال هذه الخدمة بعد.',
+            textDirection: TextDirection.rtl,
+          ),
+        ),
+      );
+    }
   }
 
   @override

@@ -56,12 +56,14 @@ class GenericDocumentUploadScreen extends StatefulWidget {
   });
 
   @override
-  State<GenericDocumentUploadScreen> createState() => _GenericDocumentUploadScreenState();
+  State<GenericDocumentUploadScreen> createState() =>
+      _GenericDocumentUploadScreenState();
 }
 
-class _GenericDocumentUploadScreenState extends State<GenericDocumentUploadScreen> {
+class _GenericDocumentUploadScreenState
+    extends State<GenericDocumentUploadScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+
   // Stores selected string for each dropdown title
   final Map<String, String?> _selectedDropdowns = {};
 
@@ -71,7 +73,9 @@ class _GenericDocumentUploadScreenState extends State<GenericDocumentUploadScree
         if (_selectedDropdowns[dp.title] == null) return false;
       }
     }
-    return widget.documents.where((d) => d.isRequired).every((d) => d.isUploaded);
+    return widget.documents
+        .where((d) => d.isRequired)
+        .every((d) => d.isUploaded);
   }
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -189,26 +193,28 @@ class _GenericDocumentUploadScreenState extends State<GenericDocumentUploadScree
                   SizedBox(height: 16.h),
 
                   if (widget.dropdowns != null)
-                    ...widget.dropdowns!.expand((dropdown) => [
-                          Text(
-                            dropdown.title,
-                            textAlign: TextAlign.right,
-                            textDirection: TextDirection.rtl,
-                            style: TextStyle(
-                              color: const Color(0xFF222222),
-                              fontSize: 16.sp,
-                              fontFamily: 'Tajawal',
-                              fontWeight: FontWeight.w500,
-                            ),
+                    ...widget.dropdowns!.expand(
+                      (dropdown) => [
+                        Text(
+                          dropdown.title,
+                          textAlign: TextAlign.right,
+                          textDirection: TextDirection.rtl,
+                          style: TextStyle(
+                            color: const Color(0xFF222222),
+                            fontSize: 16.sp,
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.w500,
                           ),
-                          SizedBox(height: 8.h),
-                          _CategoryPickerField(
-                            selectedValue: _selectedDropdowns[dropdown.title],
-                            hint: dropdown.hint,
-                            onTap: () => _openGenericSheet(dropdown),
-                          ),
-                          SizedBox(height: 16.h),
-                        ]),
+                        ),
+                        SizedBox(height: 8.h),
+                        _CategoryPickerField(
+                          selectedValue: _selectedDropdowns[dropdown.title],
+                          hint: dropdown.hint,
+                          onTap: () => _openGenericSheet(dropdown),
+                        ),
+                        SizedBox(height: 16.h),
+                      ],
+                    ),
 
                   ...List.generate(widget.documents.length, (i) {
                     final doc = widget.documents[i];
@@ -228,8 +234,10 @@ class _GenericDocumentUploadScreenState extends State<GenericDocumentUploadScree
 
                   SizedBox(height: 8.h),
                   PrimaryButton(
-                    onPressed: _canProceed 
-                        ? () => widget.onNextPressed(_selectedDropdowns.cast<String, String>()) 
+                    onPressed: _canProceed
+                        ? () => widget.onNextPressed(
+                            _selectedDropdowns.cast<String, String>(),
+                          )
                         : null,
                     label: 'التالي',
                     height: 48.h,

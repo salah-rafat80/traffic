@@ -17,11 +17,11 @@ class ProfileRepository {
 
       if (data is Map<String, dynamic>) {
         final profileResponse = ProfileResponse.fromJson(data);
-        
+
         if (profileResponse.isSuccess && profileResponse.details != null) {
           return ApiResult.success(profileResponse.details!);
         }
-        
+
         return ApiResult.failure(profileResponse.message ?? 'لم يتم استلام بيانات الملف الشخصي');
       }
 

@@ -15,6 +15,7 @@ import 'package:traffic/features/driving_license/presentation/screens/license_de
 import 'package:traffic/features/driving_license/presentation/screens/terms_and_conditions/terms_and_conditions_screen.dart';
 import 'package:traffic/features/driving_license/presentation/screens/theory_test/theory_test_booking_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/select_license_screen.dart';
+import 'package:traffic/features/profile/data/repositories/profile_repository.dart';
 
 import '../../../lost_license/presentation/screens/lost_license_selection_screen.dart';
 import '../widgets/completion_warning_dialog.dart';
@@ -34,11 +35,13 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
   @override
   void initState() {
     super.initState();
+    final ApiClient apiClient = ApiClient();
     final DrivingRenewalRepository renewalRepository =
-        DrivingRenewalRepository(ApiClient());
+        DrivingRenewalRepository(apiClient);
     _renewalDataHandler = DrivingLicenseRenewalDataHandler(renewalRepository);
     _drivingRenewalCubit = DrivingRenewalCubit(
       dataHandler: _renewalDataHandler,
+      profileRepository: ProfileRepository(apiClient),
     );
   }
 
@@ -74,8 +77,27 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
   Future<void> _submitRenewalAfterLicenseSelection(
     DrivingLicenseModel selectedLicense,
   ) async {
+    final String selectedLicenseNumber = selectedLicense.drivingLicenseNumber
+        .trim();
+    if (selectedLicenseNumber.isEmpty) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تعذر تحديد رقم الرخصة المختارة.',
+            textDirection: TextDirection.rtl,
+          ),
+        ),
+      );
+      return;
+    }
+
     await _drivingRenewalCubit.submitRenewalRequestFromUi(
       isTermsAccepted: true,
+      selectedLicenseNumber: selectedLicenseNumber,
       selectedGovernorate: selectedLicense.governorate,
       selectedTrafficUnit: selectedLicense.licensingUnit,
       selectedAppointmentDate: null,

@@ -6,11 +6,7 @@ class OrderItemCard extends StatelessWidget {
   final OrderModel order;
   final VoidCallback onTap;
 
-  const OrderItemCard({
-    super.key,
-    required this.order,
-    required this.onTap,
-  });
+  const OrderItemCard({super.key, required this.order, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +75,11 @@ class OrderItemCard extends StatelessWidget {
                 ],
               ),
             ),
-            Divider(color: const Color(0xFFDADADA), thickness: 1.r, height: 1.r),
+            Divider(
+              color: const Color(0xFFDADADA),
+              thickness: 1.r,
+              height: 1.r,
+            ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               child: Row(

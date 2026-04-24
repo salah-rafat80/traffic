@@ -47,6 +47,10 @@ dependencies:
   dio: ^5.9.2
   shared_preferences: ^2.5.3
   flutter_bloc: ^9.1.1
+  url_launcher: ^6.3.2
+  app_links: ^6.4.1
+  flutter_custom_tabs: ^2.5.0
+  flutter_inappwebview: ^6.1.5
 
 dev_dependencies:
   flutter_test:

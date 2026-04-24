@@ -36,6 +36,8 @@ class GenericTermsScreen extends StatefulWidget {
   final String? disclaimer; // Optional secondary lighter text
   final List<TermsSection> termsData;
   final VoidCallback onNextPressed;
+  final bool isLoading;
+  final String buttonLabel;
 
   const GenericTermsScreen({
     super.key,
@@ -44,6 +46,8 @@ class GenericTermsScreen extends StatefulWidget {
     this.disclaimer,
     required this.termsData,
     required this.onNextPressed,
+    this.isLoading = false,
+    this.buttonLabel = 'التالي',
   });
 
   @override
@@ -168,6 +172,8 @@ class _GenericTermsScreenState extends State<GenericTermsScreen> {
                     onPressed: widget.onNextPressed,
                     isValid: _isAgreed,
                     height: 48.h,
+                    isLoading: widget.isLoading,
+                    label: widget.buttonLabel,
                   ),
 
                   SizedBox(height: 24.h),

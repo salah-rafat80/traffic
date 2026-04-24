@@ -79,6 +79,9 @@ class AppointmentBookingRequestModel {
   final String? serviceTypeOverride;
   final String date;
   final String startTime;
+  /// The service request number returned from upload-documents (e.g. "LR-202612345").
+  /// Required by the API to link the appointment to an active service application.
+  final String? requestNumber;
 
   const AppointmentBookingRequestModel({
     required this.governorateId,
@@ -87,10 +90,11 @@ class AppointmentBookingRequestModel {
     this.serviceTypeOverride,
     required this.date,
     required this.startTime,
+    this.requestNumber,
   });
 
   Map<String, Object?> toJson() {
-    return <String, Object?>{
+    final Map<String, Object?> body = <String, Object?>{
       'governorateId': governorateId,
       'trafficUnitId': trafficUnitId,
       'GovernorateId': governorateId,
@@ -101,6 +105,11 @@ class AppointmentBookingRequestModel {
       'time': startTime,
       'startTime': startTime,
     };
+    if (requestNumber != null && requestNumber!.isNotEmpty) {
+      body['requestNumber'] = requestNumber;
+      body['RequestNumber'] = requestNumber;
+    }
+    return body;
   }
 }
 
@@ -141,6 +150,7 @@ class AppointmentBookingResponseModel {
 @immutable
 class RenewalUiSnapshot {
   final bool isTermsAccepted;
+  final String selectedLicenseNumber;
   final String? selectedGovernorate;
   final String? selectedTrafficUnit;
   final DateTime? selectedAppointmentDate;
@@ -148,6 +158,7 @@ class RenewalUiSnapshot {
 
   const RenewalUiSnapshot({
     required this.isTermsAccepted,
+    required this.selectedLicenseNumber,
     required this.selectedGovernorate,
     required this.selectedTrafficUnit,
     required this.selectedAppointmentDate,
@@ -157,40 +168,47 @@ class RenewalUiSnapshot {
 
 /// Renewal request payload model.
 ///
-/// Based on the strict overlap rule (UI fields ∩ API request fields), the
-/// current renewal UI does not provide any request body field consumed by
+/// Mapped to `multipart/form-data` fields expected by
 /// `POST /DrivingLicense/renewal-request`.
 @immutable
 class RenewalRequestModel {
-  const RenewalRequestModel();
+  final String licenseNumber;
+  final String? newCategory;
+
+  const RenewalRequestModel({
+    required this.licenseNumber,
+    this.newCategory,
+  });
 
   factory RenewalRequestModel.fromUiSnapshot({
     required RenewalUiSnapshot snapshot,
   }) {
-    final bool hasAnyUiValue =
-        snapshot.isTermsAccepted ||
-        snapshot.selectedGovernorate != null ||
-        snapshot.selectedTrafficUnit != null ||
-        snapshot.selectedAppointmentDate != null ||
-        snapshot.selectedAppointmentSlot != null;
-
-    if (hasAnyUiValue) {
-      return const RenewalRequestModel();
-    }
-
-    return const RenewalRequestModel();
+    return RenewalRequestModel(
+      licenseNumber: snapshot.selectedLicenseNumber.trim(),
+    );
   }
 
   factory RenewalRequestModel.fromJson(Map<String, Object?> json) {
-    if (json.isNotEmpty) {
-      return const RenewalRequestModel();
-    }
-
-    return const RenewalRequestModel();
+    return RenewalRequestModel(
+      licenseNumber: (json['LicenseNumber'] ??
+              json['licenseNumber'] ??
+              json['drivingLicenseNumber'] ??
+              '')
+          .toString(),
+      newCategory: json['NewCategory']?.toString(),
+    );
   }
 
   Map<String, Object?> toJson() {
-    return <String, Object?>{};
+    final Map<String, Object?> json = <String, Object?>{
+      'LicenseNumber': licenseNumber,
+    };
+
+    if (newCategory != null && newCategory!.trim().isNotEmpty) {
+      json['NewCategory'] = newCategory!.trim();
+    }
+
+    return json;
   }
 }
 
@@ -269,8 +287,30 @@ class FinalizeRenewalRequestModel {
 ///
 /// Maps the full license object returned after a successful finalization.
 @immutable
+class FinalizeRenewalFeesModel {
+  final double baseFee;
+  final double deliveryFee;
+  final double totalAmount;
+
+  const FinalizeRenewalFeesModel({
+    required this.baseFee,
+    required this.deliveryFee,
+    required this.totalAmount,
+  });
+
+  factory FinalizeRenewalFeesModel.fromJson(Map<String, Object?> json) {
+    return FinalizeRenewalFeesModel(
+      baseFee: (json['baseFee'] as num? ?? 0).toDouble(),
+      deliveryFee: (json['deliveryFee'] as num? ?? 0).toDouble(),
+      totalAmount: (json['totalAmount'] as num? ?? 0).toDouble(),
+    );
+  }
+}
+
+@immutable
 class FinalizeRenewalResponseModel {
   final int id;
+  final String requestNumber;
   final String drivingLicenseNumber;
   final String category;
   final String governorate;
@@ -280,9 +320,11 @@ class FinalizeRenewalResponseModel {
   final String status;
   final String citizenName;
   final String? deliveryMethod;
+  final FinalizeRenewalFeesModel? fees;
 
   const FinalizeRenewalResponseModel({
     required this.id,
+    required this.requestNumber,
     required this.drivingLicenseNumber,
     required this.category,
     required this.governorate,
@@ -292,17 +334,26 @@ class FinalizeRenewalResponseModel {
     required this.status,
     required this.citizenName,
     this.deliveryMethod,
+    this.fees,
   });
 
   factory FinalizeRenewalResponseModel.fromJson(Map<String, Object?> json) {
     String? deliveryMethod;
+    FinalizeRenewalFeesModel? fees;
+
     final Object? rawDelivery = json['delivery'];
     if (rawDelivery is Map<String, Object?>) {
       deliveryMethod = rawDelivery['method']?.toString();
     }
 
+    final Object? rawFees = json['fees'];
+    if (rawFees is Map<String, Object?>) {
+      fees = FinalizeRenewalFeesModel.fromJson(rawFees);
+    }
+
     return FinalizeRenewalResponseModel(
       id: json['id'] is int ? json['id']! as int : 0,
+      requestNumber: (json['requestNumber'] ?? '').toString(),
       drivingLicenseNumber:
           (json['drivingLicenseNumber'] ?? '').toString(),
       category: (json['category'] ?? '').toString(),
@@ -313,6 +364,7 @@ class FinalizeRenewalResponseModel {
       status: (json['status'] ?? '').toString(),
       citizenName: (json['citizenName'] ?? '').toString(),
       deliveryMethod: deliveryMethod,
+      fees: fees,
     );
   }
 }

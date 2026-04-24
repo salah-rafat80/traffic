@@ -1,185 +1,167 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../../core/api/api_client.dart';
-import '../../../../../../core/widgets/generic_booking_screen.dart';
 import '../../../../../../core/widgets/generic_document_upload_screen.dart';
-import '../../../data/models/driving_renewal_model.dart';
 import '../../../data/repositories/driving_license_repository.dart';
-import '../../../data/repositories/driving_renewal_repository.dart';
+import 'package:traffic/features/orders/presentation/cubits/my_orders_cubit.dart';
+import 'package:traffic/features/profile/data/repositories/profile_repository.dart';
 import '../../cubits/driving_license_cubit.dart';
 import '../../cubits/driving_license_state.dart';
-import '../medical_check/appointment_booking_screen.dart';
 import '../medical_check/medical_check_screen.dart';
-import '../finalize/finalize_driving_license_screen.dart';
+import '../practical_test/practical_test_booking_screen.dart';
+import 'widgets/first_license_booking_helper.dart';
 
 class DrivingLicenseUploadDocumentsScreen extends StatelessWidget {
   const DrivingLicenseUploadDocumentsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final ApiClient apiClient = ApiClient();
     return BlocProvider(
       create: (_) => DrivingLicenseCubit(
-        DrivingLicenseRepository(ApiClient()),
+        repository: DrivingLicenseRepository(apiClient),
+        profileRepository: ProfileRepository(apiClient),
       ),
-      child: const _DrivingLicenseUploadDocumentsContent(),
+      child: const _UploadContent(),
     );
   }
 }
 
-class _DrivingLicenseUploadDocumentsContent extends StatefulWidget {
-  const _DrivingLicenseUploadDocumentsContent();
+class _UploadContent extends StatefulWidget {
+  const _UploadContent();
 
   @override
-  State<_DrivingLicenseUploadDocumentsContent> createState() =>
-      _DrivingLicenseUploadDocumentsContentState();
+  State<_UploadContent> createState() => _UploadContentState();
 }
 
-class _DrivingLicenseUploadDocumentsContentState
-    extends State<_DrivingLicenseUploadDocumentsContent> {
+class _UploadContentState extends State<_UploadContent> {
   late final List<DocumentItemModel> _documents;
-  late final DrivingLicenseRenewalDataHandler _bookingDataHandler;
+  final FirstLicenseBookingHelper _booking = FirstLicenseBookingHelper();
 
   @override
   void initState() {
     super.initState();
-    final DrivingRenewalRepository bookingRepository =
-        DrivingRenewalRepository(ApiClient());
-    _bookingDataHandler = DrivingLicenseRenewalDataHandler(bookingRepository);
-
-    // Initialize once to retain uploaded files during Cubit state rebuilds
     _documents = [
       DocumentItemModel(title: 'شهادة المؤهل الدراسي', isRequired: true),
       DocumentItemModel(title: 'صور شخصية حديثة', isRequired: true),
-      DocumentItemModel(title: 'صورة البطاقة الشخصية (وجه + ظهر)', isRequired: true),
+      DocumentItemModel(
+        title: 'صورة البطاقة الشخصية (وجه + ظهر)',
+        isRequired: true,
+      ),
       DocumentItemModel(title: 'إثبات محل الإقامة', isRequired: false),
       DocumentItemModel(title: 'شهادة طبية', isRequired: false),
     ];
   }
 
-  void _onProceed(Map<String, String> selectedDropdowns) {
-    final personalPhoto = _documents.firstWhere((d) => d.title == 'صور شخصية حديثة').filePath;
-    final idCard = _documents.firstWhere((d) => d.title == 'صورة البطاقة الشخصية (وجه + ظهر)').filePath;
-    final educationalCertificate = _documents.firstWhere((d) => d.title == 'شهادة المؤهل الدراسي').filePath;
-    final residenceProof = _documents.firstWhere((d) => d.title == 'إثبات محل الإقامة').filePath;
+  String? _getFilePath(String title) =>
+      _documents.firstWhere((d) => d.title == title).filePath;
 
-    if (personalPhoto == null || idCard == null || educationalCertificate == null) {
-      // the generic screen validater should catch this but just in case
+  void _onProceed(Map<String, String> selectedDropdowns) {
+    final personalPhoto = _getFilePath('صور شخصية حديثة');
+    final idCard = _getFilePath('صورة البطاقة الشخصية (وجه + ظهر)');
+    final educationalCert = _getFilePath('شهادة المؤهل الدراسي');
+
+    if (personalPhoto == null || idCard == null || educationalCert == null) {
       return;
     }
 
     context.read<DrivingLicenseCubit>().uploadDocuments(
-          category: selectedDropdowns['فئة الرخصة'] ?? '',
-          governorate: selectedDropdowns['المحافظة'] ?? '',
-          licensingUnit: selectedDropdowns['وحدة المرور'] ?? '',
-          personalPhotoPath: personalPhoto,
-          idCardPath: idCard,
-          educationalCertificatePath: educationalCertificate,
-          residenceProofPath: residenceProof,
-        );
-  }
-
-  Future<List<BookingSelectionOption>> _loadGovernorates() async {
-    final result = await _bookingDataHandler.fetchGovernoratesForUi();
-    if (!result.isSuccess || result.data == null) {
-      throw Exception(result.error ?? 'تعذر تحميل المحافظات.');
-    }
-
-    return result.data!
-        .map(
-          (LocationLookupModel item) =>
-              BookingSelectionOption(id: item.id, label: item.name),
-        )
-        .toList(growable: false);
-  }
-
-  Future<List<BookingSelectionOption>> _loadMedicalCenters(
-    String governorateId,
-  ) async {
-    final result = await _bookingDataHandler.fetchTrafficUnitsForUi(
-      governorateId: governorateId,
-    );
-    if (!result.isSuccess || result.data == null) {
-      throw Exception(result.error ?? 'تعذر تحميل المراكز الطبية.');
-    }
-
-    return result.data!
-        .map(
-          (LocationLookupModel item) =>
-              BookingSelectionOption(id: item.id, label: item.name),
-        )
-        .toList(growable: false);
-  }
-
-  Future<List<String>> _loadMedicalSlots(DateTime selectedDate) async {
-    final result = await _bookingDataHandler.fetchSlotsForUi(
-      date: selectedDate,
-      type: AppointmentType.medical,
-    );
-    if (!result.isSuccess || result.data == null) {
-      throw Exception(result.error ?? 'تعذر تحميل المواعيد المتاحة.');
-    }
-
-    return result.data!
-        .map((AppointmentSlotModel item) => item.displayLabel)
-        .toList(growable: false);
-  }
-
-  Future<AppointmentBookingMeta?> _submitMedicalAppointment(
-    String governorateId,
-    String secondaryId,
-    DateTime selectedDate,
-    String selectedSlot,
-  ) async {
-    final result = await _bookingDataHandler.bookAppointmentFromUi(
-      governorateId: governorateId,
-      trafficUnitId: secondaryId,
-      date: selectedDate,
-      selectedSlot: selectedSlot,
-      type: AppointmentType.medical,
-    );
-
-    if (!result.isSuccess || result.data == null) {
-      throw Exception(result.error ?? 'تعذر تأكيد الموعد.');
-    }
-
-    final AppointmentBookingResponseModel data = result.data!;
-    return AppointmentBookingMeta(
-      bookingNumber: data.serviceNumber,
-      requestNumber: data.applicationId,
+      category: selectedDropdowns['فئة الرخصة'] ?? '',
+      personalPhotoPath: personalPhoto,
+      idCardPath: idCard,
+      educationalCertificatePath: educationalCert,
+      residenceProofPath: _getFilePath('إثبات محل الإقامة'),
+      medicalCertificatePath: _getFilePath('شهادة طبية'),
     );
   }
+
+  // ── Navigation chain ─────────────────────────────────────────────────────
+
+  void _goToMedical(BuildContext ctx, String requestNumber) {
+    Navigator.push(
+      ctx,
+      MaterialPageRoute(
+        builder: (_) => MedicalCheckScreen(
+          appBarTitle: 'اصدار رخصة قيادة',
+          loadGovernorates: _booking.loadGovernorates,
+          loadMedicalCenters: _booking.loadTrafficUnits,
+          loadSlotsForDate: _booking.loadMedicalSlots,
+          submitAppointmentBooking: (
+            String govId,
+            String unitId,
+            DateTime date,
+            String slot,
+          ) =>
+              _booking.submitMedicalAppointment(govId, unitId, date, slot, requestNumber),
+          // Medical done → go directly to Practical (no Theory Test step)
+          onNextPressed: () => _goToPractical(ctx, requestNumber),
+        ),
+      ),
+    );
+  }
+
+  void _goToPractical(BuildContext ctx, String requestNumber) {
+    Navigator.push(
+      ctx,
+      MaterialPageRoute(
+        builder: (_) => PracticalTestBookingScreen(
+          appBarTitle: 'اصدار رخصة قيادة',
+          loadGovernorates: _booking.loadGovernorates,
+          loadTrafficUnits: _booking.loadTrafficUnits,
+          loadSlotsForDate: _booking.loadDrivingSlots,
+          submitAppointmentBooking: (
+            String govId,
+            String unitId,
+            DateTime date,
+            String slot,
+          ) =>
+              _booking.submitDrivingAppointment(govId, unitId, date, slot, requestNumber),
+          onNextWithBookingData: (_) => _goToOrders(ctx),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _goToOrders(BuildContext ctx) async {
+    // Refresh the Orders cubit if it is in scope (provided by MainNavigationScreen)
+    try {
+      ctx.read<MyOrdersCubit>().fetchMyOrders();
+    } catch (_) {
+      // MyOrdersCubit may not be in scope here; orders will refresh on tab tap
+    }
+    Navigator.of(ctx).popUntil((route) => route.isFirst);
+    if (ctx.mounted) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تم تقديم طلبك بنجاح! يمكنك متابعة حالته من قسم "طلباتي".',
+            textDirection: TextDirection.rtl,
+          ),
+          backgroundColor: Color(0xFF27AE60),
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  /// Persists the [requestNumber] returned from upload-documents so it can be
+  /// retrieved later from the Tracking / Orders screen for finalization.
+  Future<void> _saveRequestNumber(String requestNumber) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('first_license_request_number', requestNumber);
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<DrivingLicenseCubit, DrivingLicenseState>(
       listener: (context, state) {
         if (state is DrivingLicenseUploadSuccess) {
-          // Pass the generated requestNumber through the rest of the flow
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => MedicalCheckScreen(
-                appBarTitle: 'اصدار رخصة قيادة',
-                loadGovernorates: _loadGovernorates,
-                loadMedicalCenters: _loadMedicalCenters,
-                loadSlotsForDate: _loadMedicalSlots,
-                submitAppointmentBooking: _submitMedicalAppointment,
-                onNextPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => BlocProvider.value(
-                        value: context.read<DrivingLicenseCubit>(),
-                        child: FinalizeDrivingLicenseScreen(
-                          requestNumber: state.requestNumber,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
+          // Persist the request number for later use on the Tracking screen
+          _saveRequestNumber(state.requestNumber);
+          _goToMedical(context, state.requestNumber);
         } else if (state is DrivingLicenseFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -201,16 +183,6 @@ class _DrivingLicenseUploadDocumentsContentState
                   'يرجى رفع المستندات التالية لإتمام إجراءات إصدار رخصة قيادة. يجب أن تكون الصور واضحة ومقروءة.',
               dropdowns: const [
                 DropdownConfig(
-                  title: 'المحافظة',
-                  hint: 'اختر المحافظة',
-                  options: ['القاهرة', 'الجيزة', 'الإسكندرية'],
-                ),
-                DropdownConfig(
-                  title: 'وحدة المرور',
-                  hint: 'اختر وحدة المرور',
-                  options: ['مدينة نصر', 'التجمع الخامس', 'الدقي'],
-                ),
-                DropdownConfig(
                   title: 'فئة الرخصة',
                   hint: 'اختر فئة الرخصة',
                   options: [
@@ -230,9 +202,7 @@ class _DrivingLicenseUploadDocumentsContentState
             if (state is DrivingLicenseLoading)
               Container(
                 color: Colors.black.withValues(alpha: 0.3),
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: const Center(child: CircularProgressIndicator()),
               ),
           ],
         );

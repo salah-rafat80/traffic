@@ -2,6 +2,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/models/driving_renewal_model.dart';
 import '../../data/repositories/driving_renewal_repository.dart';
+import '../../../profile/data/models/profile_model.dart';
+import '../../../profile/data/repositories/profile_repository.dart';
+import '../../../../core/api/profile_cache.dart';
 
 abstract class DrivingRenewalState {
   const DrivingRenewalState();
@@ -33,19 +36,28 @@ class DrivingRenewalFinalizeLoading extends DrivingRenewalState {
 
 class DrivingRenewalFinalizeSuccess extends DrivingRenewalState {
   final FinalizeRenewalResponseModel response;
+  final ProfileModel profile;
 
-  const DrivingRenewalFinalizeSuccess({required this.response});
+  const DrivingRenewalFinalizeSuccess({
+    required this.response,
+    required this.profile,
+  });
 }
 
 class DrivingRenewalCubit extends Cubit<DrivingRenewalState> {
   final DrivingLicenseRenewalDataHandler _dataHandler;
+  final ProfileRepository _profileRepository;
 
-  DrivingRenewalCubit({required DrivingLicenseRenewalDataHandler dataHandler})
-      : _dataHandler = dataHandler,
+  DrivingRenewalCubit({
+    required DrivingLicenseRenewalDataHandler dataHandler,
+    required ProfileRepository profileRepository,
+  })  : _dataHandler = dataHandler,
+        _profileRepository = profileRepository,
         super(const DrivingRenewalInitial());
 
   Future<void> submitRenewalRequestFromUi({
     required bool isTermsAccepted,
+    required String selectedLicenseNumber,
     required String? selectedGovernorate,
     required String? selectedTrafficUnit,
     required DateTime? selectedAppointmentDate,
@@ -55,6 +67,7 @@ class DrivingRenewalCubit extends Cubit<DrivingRenewalState> {
 
     final RenewalUiSnapshot uiSnapshot = RenewalUiSnapshot(
       isTermsAccepted: isTermsAccepted,
+      selectedLicenseNumber: selectedLicenseNumber,
       selectedGovernorate: selectedGovernorate,
       selectedTrafficUnit: selectedTrafficUnit,
       selectedAppointmentDate: selectedAppointmentDate,
@@ -86,6 +99,7 @@ class DrivingRenewalCubit extends Cubit<DrivingRenewalState> {
   }) async {
     emit(const DrivingRenewalFinalizeLoading());
 
+    // 1. Finalize the renewal request
     final result = await _dataHandler.finalizeRenewalFromUi(
       requestNumber: requestNumber,
       method: method,
@@ -95,8 +109,26 @@ class DrivingRenewalCubit extends Cubit<DrivingRenewalState> {
     );
 
     if (result.isSuccess && result.data != null) {
-      emit(DrivingRenewalFinalizeSuccess(response: result.data!));
-      return;
+      // 2. Fetch user profile data
+      final profileResult = await _profileRepository.getProfile();
+
+      if (profileResult.isSuccess && profileResult.data != null) {
+        final profile = profileResult.data!;
+
+        // 3. Cache profile locally
+        await ProfileCache().saveProfile(profile);
+
+        emit(DrivingRenewalFinalizeSuccess(
+          response: result.data!,
+          profile: profile,
+        ));
+        return;
+      } else {
+        emit(DrivingRenewalFailure(
+          message: profileResult.error ?? 'فشل استلام بيانات الملف الشخصي.',
+        ));
+        return;
+      }
     }
 
     emit(
