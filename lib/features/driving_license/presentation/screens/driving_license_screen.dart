@@ -14,6 +14,7 @@ import 'package:traffic/features/driving_license/presentation/screens/medical_ch
 import 'package:traffic/features/driving_license/presentation/screens/license_details/license_details_screen.dart';
 import 'package:traffic/features/driving_license/presentation/screens/terms_and_conditions/terms_and_conditions_screen.dart';
 import 'package:traffic/features/driving_license/presentation/screens/theory_test/theory_test_booking_screen.dart';
+import 'package:traffic/features/driving_license/presentation/screens/practical_test/practical_test_booking_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/select_license_screen.dart';
 import 'package:traffic/features/profile/data/repositories/profile_repository.dart';
 
@@ -112,24 +113,24 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
     if (state is DrivingRenewalSuccess) {
       final String requestNumber = state.response.requestNumber;
 
-      Navigator.push(
+      final BookingFlowData? bookingData = await Navigator.push<BookingFlowData>(
         context,
         MaterialPageRoute(
-          builder: (_) => TheoryTestBookingScreen(
+          builder: (_) => PracticalTestBookingScreen(
             appBarTitle: 'تجديد رخصة القيادة',
-            onPracticalNextWithBookingData: (BookingFlowData bookingData) {
-              return _completeRenewalAfterBooking(
-                bookingData: bookingData,
-                renewalRequestNumber: requestNumber,
-              );
-            },
             loadGovernorates: _loadGovernorates,
             loadTrafficUnits: _loadTrafficUnits,
             loadSlotsForDate: _loadDrivingSlots,
-            submitAppointmentBooking: _submitDrivingAppointment,
           ),
         ),
       );
+
+      if (bookingData != null && mounted) {
+        await _completeRenewalAfterBooking(
+          bookingData: bookingData,
+          renewalRequestNumber: requestNumber,
+        );
+      }
       return;
     }
 
@@ -223,6 +224,8 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
     return AppointmentBookingMeta(
       bookingNumber: data.serviceNumber,
       requestNumber: data.applicationId,
+      trafficUnitAddress: data.trafficUnitAddress,
+      workingHours: data.workingHours,
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:traffic/core/widgets/generic_booking_screen.dart';
+import 'package:traffic/features/driving_license/data/models/driving_renewal_model.dart';
 import 'package:traffic/features/driving_license/presentation/screens/medical_check/appointment_booking_screen.dart';
 import 'package:traffic/features/driving_license/presentation/widgets/completion_warning_dialog.dart';
 
@@ -23,32 +24,19 @@ class PracticalTestBookingScreen extends StatelessWidget {
   /// The app bar title for this screen (e.g. "تجديد رخصة القيادة").
   final String appBarTitle;
 
-  /// Optional override for the "التالي" callback. When omitted the screen
-  /// shows [CompletionWarningDialog].
-  final VoidCallback? onNextPressed;
 
-  /// Optional callback that receives selected booking values.
-  final Future<void> Function(BookingFlowData data)? onNextWithBookingData;
   final Future<List<BookingSelectionOption>> Function()? loadGovernorates;
   final Future<List<BookingSelectionOption>> Function(String governorateId)?
       loadTrafficUnits;
   final Future<List<String>> Function(DateTime selectedDate)? loadSlotsForDate;
-  final Future<AppointmentBookingMeta?> Function(
-    String governorateId,
-    String secondaryId,
-    DateTime selectedDate,
-    String selectedSlot,
-  )? submitAppointmentBooking;
 
   const PracticalTestBookingScreen({
     super.key,
     required this.appBarTitle,
-    this.onNextPressed,
-    this.onNextWithBookingData,
+
     this.loadGovernorates,
     this.loadTrafficUnits,
     this.loadSlotsForDate,
-    this.submitAppointmentBooking,
   });
 
   @override
@@ -67,9 +55,6 @@ class PracticalTestBookingScreen extends StatelessWidget {
       loadGovernorates: loadGovernorates,
       loadSecondaryOptions: loadTrafficUnits,
       loadSlotsForDate: loadSlotsForDate,
-      submitAppointmentBooking: submitAppointmentBooking,
-      onNextPressed: onNextPressed ?? () => CompletionWarningDialog.show(context),
-      onNextWithBookingData: onNextWithBookingData,
     );
   }
 }

@@ -13,7 +13,7 @@ enum AppointmentType {
       case AppointmentType.medical:
         return 'كشف طبي';
       case AppointmentType.driving:
-        return 'قيادة عملي';
+        return 'اختبار قيادة';
       case AppointmentType.technical:
         return 'فحص فني';
     }
@@ -94,22 +94,14 @@ class AppointmentBookingRequestModel {
   });
 
   Map<String, Object?> toJson() {
-    final Map<String, Object?> body = <String, Object?>{
+    return <String, Object?>{
+      'requestNumber': requestNumber,
+      'serviceType': serviceTypeOverride ?? type.serviceTypeValue,
       'governorateId': governorateId,
       'trafficUnitId': trafficUnitId,
-      'GovernorateId': governorateId,
-      'TrafficUnitId': trafficUnitId,
-      'serviceType': serviceTypeOverride ?? type.serviceTypeValue,
-      'type': type.apiValue,
       'date': date,
       'time': startTime,
-      'startTime': startTime,
     };
-    if (requestNumber != null && requestNumber!.isNotEmpty) {
-      body['requestNumber'] = requestNumber;
-      body['RequestNumber'] = requestNumber;
-    }
-    return body;
   }
 }
 
@@ -121,6 +113,8 @@ class AppointmentBookingResponseModel {
   final String startTime;
   final String status;
   final String type;
+  final String? trafficUnitAddress;
+  final String? workingHours;
 
   const AppointmentBookingResponseModel({
     required this.serviceNumber,
@@ -129,16 +123,25 @@ class AppointmentBookingResponseModel {
     required this.startTime,
     required this.status,
     required this.type,
+    this.trafficUnitAddress,
+    this.workingHours,
   });
 
   factory AppointmentBookingResponseModel.fromJson(Map<String, Object?> json) {
+    // Check if the data is nested under 'appointment' as per the new structure
+    final Map<String, Object?> appointment = (json['appointment'] is Map)
+        ? (json['appointment']! as Map<String, Object?>)
+        : json;
+
     return AppointmentBookingResponseModel(
-      serviceNumber: (json['serviceNumber'] ?? '').toString(),
-      applicationId: (json['applicationId'] ?? '').toString(),
-      date: (json['date'] ?? '').toString(),
-      startTime: (json['startTime'] ?? '').toString(),
-      status: (json['status'] ?? '').toString(),
-      type: (json['type'] ?? '').toString(),
+      serviceNumber: (appointment['bookingNumber'] ?? appointment['serviceNumber'] ?? '').toString(),
+      applicationId: (appointment['applicationId'] ?? '').toString(),
+      date: (appointment['date'] ?? '').toString(),
+      startTime: (appointment['time'] ?? appointment['startTime'] ?? '').toString(),
+      status: (appointment['status'] ?? '').toString(),
+      type: (appointment['serviceName'] ?? appointment['type'] ?? '').toString(),
+      trafficUnitAddress: appointment['trafficUnitAddress']?.toString(),
+      workingHours: appointment['workingHours']?.toString(),
     );
   }
 }
@@ -163,6 +166,21 @@ class RenewalUiSnapshot {
     required this.selectedTrafficUnit,
     required this.selectedAppointmentDate,
     required this.selectedAppointmentSlot,
+  });
+}
+
+@immutable
+class AppointmentBookingMeta {
+  final String bookingNumber;
+  final String requestNumber;
+  final String? trafficUnitAddress;
+  final String? workingHours;
+
+  const AppointmentBookingMeta({
+    required this.bookingNumber,
+    required this.requestNumber,
+    this.trafficUnitAddress,
+    this.workingHours,
   });
 }
 

@@ -6,10 +6,7 @@ import '../../domain/entities/order_model.dart';
 class OrderSummaryHeaderCard extends StatelessWidget {
   final OrderModel order;
 
-  const OrderSummaryHeaderCard({
-    super.key,
-    required this.order,
-  });
+  const OrderSummaryHeaderCard({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +16,7 @@ class OrderSummaryHeaderCard extends StatelessWidget {
       decoration: ShapeDecoration(
         color: const Color(0xFFF8F9F9),
         shape: RoundedRectangleBorder(
-          side: const BorderSide(
-            width: 1,
-            color: Color(0xFF27AE60),
-          ),
+          side: const BorderSide(width: 1, color: Color(0xFF27AE60)),
           borderRadius: BorderRadius.circular(5.r),
         ),
         shadows: const [
@@ -31,7 +25,7 @@ class OrderSummaryHeaderCard extends StatelessWidget {
             blurRadius: 4,
             offset: Offset(0, 1),
             spreadRadius: 0,
-          )
+          ),
         ],
       ),
       child: Column(

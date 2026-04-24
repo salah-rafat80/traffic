@@ -16,25 +16,19 @@ class AppointmentResult {
   final String selectedSlot;
   final String? bookingNumber;
   final String? requestNumber;
+  final String? trafficUnitAddress;
+  final String? workingHours;
 
   const AppointmentResult({
     required this.selectedDate,
     required this.selectedSlot,
     this.bookingNumber,
     this.requestNumber,
+    this.trafficUnitAddress,
+    this.workingHours,
   });
 }
 
-@immutable
-class AppointmentBookingMeta {
-  final String bookingNumber;
-  final String requestNumber;
-
-  const AppointmentBookingMeta({
-    required this.bookingNumber,
-    required this.requestNumber,
-  });
-}
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 

@@ -11,6 +11,7 @@ import '../../cubits/driving_license_state.dart';
 import '../medical_check/medical_check_screen.dart';
 import '../practical_test/practical_test_booking_screen.dart';
 import 'widgets/first_license_booking_helper.dart';
+import 'package:traffic/core/widgets/generic_booking_screen.dart';
 
 class DrivingLicenseUploadDocumentsScreen extends StatelessWidget {
   const DrivingLicenseUploadDocumentsScreen({super.key});
@@ -78,8 +79,8 @@ class _UploadContentState extends State<_UploadContent> {
 
   // ── Navigation chain ─────────────────────────────────────────────────────
 
-  void _goToMedical(BuildContext ctx, String requestNumber) {
-    Navigator.push(
+  Future<void> _goToMedical(BuildContext ctx, String requestNumber) async {
+    final BookingFlowData? medicalData = await Navigator.push<BookingFlowData>(
       ctx,
       MaterialPageRoute(
         builder: (_) => MedicalCheckScreen(
@@ -87,22 +88,40 @@ class _UploadContentState extends State<_UploadContent> {
           loadGovernorates: _booking.loadGovernorates,
           loadMedicalCenters: _booking.loadTrafficUnits,
           loadSlotsForDate: _booking.loadMedicalSlots,
-          submitAppointmentBooking: (
-            String govId,
-            String unitId,
-            DateTime date,
-            String slot,
-          ) =>
-              _booking.submitMedicalAppointment(govId, unitId, date, slot, requestNumber),
-          // Medical done → go directly to Practical (no Theory Test step)
-          onNextPressed: () => _goToPractical(ctx, requestNumber),
         ),
       ),
     );
+
+    if (medicalData == null || !ctx.mounted) return;
+
+    try {
+      await _booking.submitMedicalAppointment(
+        medicalData.selectedGovernorateId ?? '',
+        medicalData.selectedSecondaryId ?? '',
+        medicalData.selectedDate,
+        medicalData.selectedSlot,
+        requestNumber,
+      );
+    } catch (e) {
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              textDirection: TextDirection.rtl,
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!ctx.mounted) return;
+    _goToPractical(ctx, requestNumber);
   }
 
-  void _goToPractical(BuildContext ctx, String requestNumber) {
-    Navigator.push(
+  Future<void> _goToPractical(BuildContext ctx, String requestNumber) async {
+    final BookingFlowData? practicalData = await Navigator.push<BookingFlowData>(
       ctx,
       MaterialPageRoute(
         builder: (_) => PracticalTestBookingScreen(
@@ -110,17 +129,36 @@ class _UploadContentState extends State<_UploadContent> {
           loadGovernorates: _booking.loadGovernorates,
           loadTrafficUnits: _booking.loadTrafficUnits,
           loadSlotsForDate: _booking.loadDrivingSlots,
-          submitAppointmentBooking: (
-            String govId,
-            String unitId,
-            DateTime date,
-            String slot,
-          ) =>
-              _booking.submitDrivingAppointment(govId, unitId, date, slot, requestNumber),
-          onNextWithBookingData: (_) => _goToOrders(ctx),
         ),
       ),
     );
+
+    if (practicalData == null || !ctx.mounted) return;
+
+    try {
+      await _booking.submitDrivingAppointment(
+        practicalData.selectedGovernorateId ?? '',
+        practicalData.selectedSecondaryId ?? '',
+        practicalData.selectedDate,
+        practicalData.selectedSlot,
+        requestNumber,
+      );
+    } catch (e) {
+      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              textDirection: TextDirection.rtl,
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!ctx.mounted) return;
+    _goToOrders(ctx);
   }
 
   Future<void> _goToOrders(BuildContext ctx) async {

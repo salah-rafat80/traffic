@@ -18,13 +18,9 @@ import 'widgets/order_status_timeline.dart';
 import 'widgets/order_summary_header_card.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
-
   final OrderModel order;
 
-  const OrderDetailsScreen({
-    super.key,
-    required this.order,
-  });
+  const OrderDetailsScreen({super.key, required this.order});
 
   @override
   State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
@@ -36,14 +32,16 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   /// Returns true when this order is an approved driving license renewal
   /// that the user can finalize (choose delivery method).
   bool get _showFinalizeButton {
-    final bool isSupportedProcedure = widget.order.title.contains('تجديد رخصة') ||
-        widget.order.title.contains('تجديد رخصة قيادة') || 
+    final bool isSupportedProcedure =
+        widget.order.title.contains('تجديد رخصة') ||
+        widget.order.title.contains('تجديد رخصة قيادة') ||
         widget.order.title.contains('إصدار رخصة قيادة');
 
     // Show the button when the order was accepted/approved but not yet
     // completed. "pending" and "needsData" are the typical states where
     // the backend has approved but the citizen still needs to finalize.
-    final bool isActionable = widget.order.status == OrderStatus.pending ||
+    final bool isActionable =
+        widget.order.status == OrderStatus.pending ||
         widget.order.status == OrderStatus.needsData;
 
     return isSupportedProcedure && isActionable;
@@ -75,15 +73,14 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
               repository: DrivingLicenseRepository(apiClient),
               profileRepository: ProfileRepository(apiClient),
             ),
-            child: FinalizeDrivingLicenseScreen(
-              requestNumber: requestNumber,
-            ),
+            child: FinalizeDrivingLicenseScreen(requestNumber: requestNumber),
           ),
         ),
       );
     } else if (title.contains('تجديد رخصة')) {
-      final DrivingRenewalRepository repository =
-          DrivingRenewalRepository(apiClient);
+      final DrivingRenewalRepository repository = DrivingRenewalRepository(
+        apiClient,
+      );
       final DrivingLicenseRenewalDataHandler dataHandler =
           DrivingLicenseRenewalDataHandler(repository);
 

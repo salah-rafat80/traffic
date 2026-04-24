@@ -4,6 +4,8 @@ import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_error_handler.dart';
 import '../../../../core/api/api_result.dart';
 import '../models/driving_renewal_model.dart';
+import '../../../../core/api/request_id_manager.dart';
+import 'package:flutter/foundation.dart';
 
 class DrivingRenewalRepository {
   final ApiClient _apiClient;
@@ -86,13 +88,44 @@ class DrivingRenewalRepository {
     required AppointmentBookingRequestModel request,
   }) async {
     try {
+      // Enforce Request ID for Booking
+      final effectiveRequestNumber = request.requestNumber ?? RequestIdManager().currentRequestId;
+      
+      if (effectiveRequestNumber == null || effectiveRequestNumber.isEmpty) {
+        debugPrint('BookAppointment: FAILED - Request ID is missing.');
+        return ApiResult<AppointmentBookingResponseModel>.failure(
+          'لا يمكن حجز موعد بدون رقم طلب. يرجى إتمام الخطوات السابقة أولاً.',
+        );
+      }
+
+      debugPrint('BookAppointment: Sending Booking with Request ID = $effectiveRequestNumber');
+
+      // Create a new request object with the effective request number
+      final finalRequest = AppointmentBookingRequestModel(
+        governorateId: request.governorateId,
+        trafficUnitId: request.trafficUnitId,
+        type: request.type,
+        serviceTypeOverride: request.serviceTypeOverride,
+        date: request.date,
+        startTime: request.startTime,
+        requestNumber: effectiveRequestNumber,
+      );
+
+      debugPrint('BookAppointment Request Body: ${finalRequest.toJson()}');
+
       final Response<Object?> response = await _apiClient.dio.post<Object?>(
         '/appointments/book',
-        data: request.toJson(),
+        data: finalRequest.toJson(),
       );
 
       final AppointmentBookingResponseModel parsed =
           _parseBookingResponse(response.data);
+          
+      final extractedId = RequestIdManager().extractId(response.data);
+      if (extractedId != null) {
+        RequestIdManager().updateRequestId(extractedId);
+      }
+
       if (parsed.serviceNumber.isEmpty || parsed.applicationId.isEmpty) {
         return ApiResult<AppointmentBookingResponseModel>.failure(
           'تم الحجز لكن لم يتم استلام بيانات الموعد كاملة.',
@@ -142,6 +175,8 @@ class DrivingRenewalRepository {
           startTime: request.startTime,
           requestNumber: request.requestNumber,
         );
+
+        debugPrint('BookAppointment Retry Body: ${fallbackRequest.toJson()}');
 
         final Response<Object?> retryResponse = await _apiClient.dio.post<Object?>(
           '/appointments/book',
@@ -200,7 +235,14 @@ class DrivingRenewalRepository {
         options: Options(contentType: 'multipart/form-data'),
       );
 
-      final RenewalResponseModel parsed = _parseRenewalResponse(response.data);
+      final data = response.data;
+      final extractedId = RequestIdManager().extractId(data);
+      if (extractedId != null) {
+        RequestIdManager().updateRequestId(extractedId);
+        return ApiResult<RenewalResponseModel>.success(RenewalResponseModel(requestNumber: extractedId));
+      }
+
+      final RenewalResponseModel parsed = _parseRenewalResponse(data);
       if (parsed.requestNumber.isEmpty) {
         return ApiResult<RenewalResponseModel>.failure(
           'لم يتم استلام رقم طلب التجديد من الخادم.',
@@ -243,6 +285,12 @@ class DrivingRenewalRepository {
 
       final FinalizeRenewalResponseModel parsed =
           _parseFinalizeRenewalResponse(response.data);
+          
+      final extractedId = RequestIdManager().extractId(response.data);
+      if (extractedId != null) {
+        RequestIdManager().updateRequestId(extractedId);
+      }
+
       final bool hasRequestNumber = parsed.requestNumber.trim().isNotEmpty;
       final bool hasLicenseNumber = parsed.drivingLicenseNumber.trim().isNotEmpty;
       if (!hasRequestNumber && !hasLicenseNumber) {

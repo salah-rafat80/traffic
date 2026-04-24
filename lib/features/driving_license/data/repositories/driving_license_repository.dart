@@ -7,6 +7,7 @@ import '../../../../core/api/api_result.dart';
 import '../models/driving_license_model.dart';
 import '../models/driving_license_finalize_model.dart';
 import '../models/issue_replacement_response_model.dart';
+import '../../../../core/api/request_id_manager.dart';
 
 class DrivingLicenseRepository {
   final ApiClient _apiClient;
@@ -106,13 +107,10 @@ class DrivingLicenseRepository {
 
       final data = response.data;
       if (data is Map<String, dynamic>) {
-        if (data['requestNumber'] != null) {
-          return ApiResult.success(data['requestNumber'].toString());
-        } else if (data['details'] != null && data['details'] is Map) {
-          final details = data['details'] as Map;
-          if (details['requestNumber'] != null) {
-            return ApiResult.success(details['requestNumber'].toString());
-          }
+        final extractedId = RequestIdManager().extractId(data);
+        if (extractedId != null) {
+          RequestIdManager().updateRequestId(extractedId);
+          return ApiResult.success(extractedId);
         }
       }
 
@@ -157,6 +155,11 @@ class DrivingLicenseRepository {
         final bool isSuccess = data['isSuccess'] as bool? ?? false;
 
         if (isSuccess) {
+          final extractedId = RequestIdManager().extractId(data);
+          if (extractedId != null) {
+            RequestIdManager().updateRequestId(extractedId);
+          }
+          
           final Object? rawDetails = data['details'];
           if (rawDetails is Map<String, dynamic>) {
             return ApiResult.success(

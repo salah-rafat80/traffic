@@ -34,6 +34,8 @@ class _AuthInterceptor extends Interceptor {
       '/Auth/reset-password',
       '/VehicleTypes',
       '/appointments/available-slots',
+      '/governorates',
+      '/VehicleLicense/insurance-companies',
     ];
 
     final isPublic = publicPaths.any(

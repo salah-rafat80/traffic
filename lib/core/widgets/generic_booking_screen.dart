@@ -122,23 +122,16 @@ class GenericBookingScreen extends StatefulWidget {
   /// Defaults to `'موعد الكشف الطبي'` if omitted.
   final String? appointmentCardTitle;
 
-  /// Callback invoked when the user taps "التالي" **after** a successful
-  /// booking. The widget guarantees this is only called when
-  /// `_canProceed == true`.
-  final VoidCallback onNextPressed;
-
   /// Optional richer callback that receives current booking selections.
   final Future<void> Function(BookingFlowData data)? onNextWithBookingData;
+
+  /// Optional legacy callback. If provided, it will be called instead of popping.
+  final VoidCallback? onNextPressed;
+
   final Future<List<BookingSelectionOption>> Function()? loadGovernorates;
   final Future<List<BookingSelectionOption>> Function(String governorateId)?
       loadSecondaryOptions;
   final Future<List<String>> Function(DateTime selectedDate)? loadSlotsForDate;
-  final Future<AppointmentBookingMeta?> Function(
-    String governorateId,
-    String secondaryId,
-    DateTime selectedDate,
-    String selectedSlot,
-  )? submitAppointmentBooking;
 
   const GenericBookingScreen({
     super.key,
@@ -147,12 +140,11 @@ class GenericBookingScreen extends StatefulWidget {
     required this.bookingCardTitle,
     required this.secondaryDropdown,
     this.appointmentCardTitle,
-    required this.onNextPressed,
+    this.onNextPressed,
     this.onNextWithBookingData,
     this.loadGovernorates,
     this.loadSecondaryOptions,
     this.loadSlotsForDate,
-    this.submitAppointmentBooking,
   });
 
   @override
@@ -275,85 +267,30 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
       return;
     }
 
-    AppointmentResult effectiveBookingResult = _bookingResult!;
-    final Future<AppointmentBookingMeta?> Function(
-      String governorateId,
-      String secondaryId,
-      DateTime selectedDate,
-      String selectedSlot,
-    )? submitter = widget.submitAppointmentBooking;
+    final AppointmentResult effectiveBookingResult = _bookingResult!;
 
-    if (submitter != null) {
-      if (_selectedGovernorateId == null || _selectedSecondaryId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'تعذر استكمال الحجز بسبب نقص بيانات الموقع.',
-              textDirection: TextDirection.rtl,
-            ),
-          ),
-        );
-        return;
-      }
+    final BookingFlowData data = BookingFlowData(
+      selectedGovernorate: _selectedGovernorate!,
+      selectedGovernorateId: _selectedGovernorateId,
+      selectedSecondary: _selectedSecondary!,
+      selectedSecondaryId: _selectedSecondaryId,
+      selectedDate: effectiveBookingResult.selectedDate,
+      selectedSlot: effectiveBookingResult.selectedSlot,
+      bookingNumber: effectiveBookingResult.bookingNumber,
+      requestNumber: effectiveBookingResult.requestNumber,
+    );
 
-      try {
-        final AppointmentBookingMeta? bookingMeta = await submitter(
-          _selectedGovernorateId!,
-          _selectedSecondaryId!,
-          effectiveBookingResult.selectedDate,
-          effectiveBookingResult.selectedSlot,
-        );
-
-        if (!mounted) {
-          return;
-        }
-
-        if (bookingMeta != null) {
-          effectiveBookingResult = AppointmentResult(
-            selectedDate: effectiveBookingResult.selectedDate,
-            selectedSlot: effectiveBookingResult.selectedSlot,
-            bookingNumber: bookingMeta.bookingNumber,
-            requestNumber: bookingMeta.requestNumber,
-          );
-          setState(() {
-            _bookingResult = effectiveBookingResult;
-          });
-        }
-      } catch (error) {
-        if (!mounted) {
-          return;
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _extractErrorMessage(error, 'تعذر تأكيد الحجز حالياً.'),
-              textDirection: TextDirection.rtl,
-            ),
-          ),
-        );
-        return;
-      }
-    }
-
-    final Future<void> Function(BookingFlowData data)? callback =
-        widget.onNextWithBookingData;
-
-    if (callback != null) {
-      final BookingFlowData data = BookingFlowData(
-        selectedGovernorate: _selectedGovernorate!,
-        selectedGovernorateId: _selectedGovernorateId,
-        selectedSecondary: _selectedSecondary!,
-        selectedSecondaryId: _selectedSecondaryId,
-        selectedDate: effectiveBookingResult.selectedDate,
-        selectedSlot: effectiveBookingResult.selectedSlot,
-        bookingNumber: effectiveBookingResult.bookingNumber,
-        requestNumber: effectiveBookingResult.requestNumber,
-      );
-      await callback(data);
+    if (widget.onNextWithBookingData != null) {
+      await widget.onNextWithBookingData!(data);
       return;
     }
 
-    widget.onNextPressed();
+    if (widget.onNextPressed != null) {
+      widget.onNextPressed!();
+      return;
+    }
+
+    Navigator.pop(context, data);
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -500,98 +437,102 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
         key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5F5F5),
         drawer: const AppDrawer(),
-        body: Column(
+        body: Stack(
           children: [
-            // ── App bar ────────────────────────────────────────────────────
-            ServiceScreenAppBar(
-              title: widget.appBarTitle,
-              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            ),
-
-            // ── Scrollable body ────────────────────────────────────────────
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SizedBox(height: 16.h),
-
-                    // ── Section title ────────────────────────────────────
-                    Text(
-                      widget.headerTitle,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        color: const Color(0xFF222222),
-                        fontSize: 17.sp,
-                        fontFamily: 'Tajawal',
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // ── Governorate picker ───────────────────────────────
-                    CustomDropdownField(
-                      label: 'المحافظة',
-                      hint: 'اختر محافظتك',
-                      value: _selectedGovernorate,
-                      onTap: _showGovernorateSheet,
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // ── Secondary picker (traffic unit / medical centre) ─
-                    CustomDropdownField(
-                      label: widget.secondaryDropdown.label,
-                      hint: widget.secondaryDropdown.hint,
-                      value: _selectedSecondary,
-                      onTap: _showSecondarySheet,
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // ── Booking card ─────────────────────────────────────
-                    _BookingCard(
-                      title: widget.bookingCardTitle,
-                      isBooked: _isBooked,
-                      onBookPressed: _onBookAppointmentPressed,
-                    ),
-
-                    // ── Post-booking info (conditional) ──────────────────
-                    if (_isBooked && _bookingResult != null) ...[
-                      SizedBox(height: 16.h),
-
-                      // Facility info card
-                      MedicalCenterInfoCard(
-                        centerName: _selectedSecondary ?? '',
-                        address:
-                            'شارع التسعين , ${_selectedSecondary ?? ''} , ${_selectedGovernorate ?? ''}',
-                        workingHours: '9 ص الي 3 م (الاحد -الخميس)',
-                      ),
-                      SizedBox(height: 16.h),
-
-                      // Booking summary card
-                      AppointmentDetailsCard(
-                        title: widget.appointmentCardTitle,
-                        date: _formatDate(_bookingResult!.selectedDate),
-                        time: _formatTime(_bookingResult!.selectedSlot),
-                        bookingNumber: _bookingResult!.bookingNumber ?? '10',
-                        requestNumber: _bookingResult!.requestNumber ?? '13456670',
-                      ),
-                    ],
-
-                    SizedBox(height: 24.h),
-                  ],
+            Column(
+              children: [
+                // ── App bar ────────────────────────────────────────────────────
+                ServiceScreenAppBar(
+                  title: widget.appBarTitle,
+                  onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
                 ),
-              ),
-            ),
 
-            // ── Bottom action ──────────────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
-              child: PrimaryButton(
-                label: 'التالي',
-                onPressed: _canProceed ? _onNextTapped : null,
-                height: 48.h,
-              ),
+                // ── Scrollable body ────────────────────────────────────────────
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(height: 16.h),
+
+                        // ── Section title ────────────────────────────────────
+                        Text(
+                          widget.headerTitle,
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            color: const Color(0xFF222222),
+                            fontSize: 17.sp,
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+
+                        // ── Governorate picker ───────────────────────────────
+                        CustomDropdownField(
+                          label: 'المحافظة',
+                          hint: 'اختر محافظتك',
+                          value: _selectedGovernorate,
+                          onTap: _showGovernorateSheet,
+                        ),
+                        SizedBox(height: 16.h),
+
+                        // ── Secondary picker (traffic unit / medical centre) ─
+                        CustomDropdownField(
+                          label: widget.secondaryDropdown.label,
+                          hint: widget.secondaryDropdown.hint,
+                          value: _selectedSecondary,
+                          onTap: _showSecondarySheet,
+                        ),
+                        SizedBox(height: 16.h),
+
+                        // ── Booking card ─────────────────────────────────────
+                        _BookingCard(
+                          title: widget.bookingCardTitle,
+                          isBooked: _isBooked,
+                          onBookPressed: _onBookAppointmentPressed,
+                        ),
+
+                        // ── Post-booking info (conditional) ──────────────────
+                        if (_isBooked && _bookingResult != null) ...[
+                          SizedBox(height: 16.h),
+
+                          // Facility info card
+                          MedicalCenterInfoCard(
+                            centerName: _selectedSecondary ?? '',
+                            address: _bookingResult!.trafficUnitAddress ??
+                                'وحدة مرور ${_selectedSecondary ?? ''} - محافظة ${_selectedGovernorate ?? ''}',
+                            workingHours: _bookingResult!.workingHours ?? 'من 9 صباحاً حتى 3 مساءً',
+                          ),
+                          SizedBox(height: 16.h),
+
+                          // Booking summary card
+                          AppointmentDetailsCard(
+                            title: widget.appointmentCardTitle,
+                            date: _formatDate(_bookingResult!.selectedDate),
+                            time: _formatTime(_bookingResult!.selectedSlot),
+                            bookingNumber: _bookingResult!.bookingNumber ?? '',
+                            requestNumber: _bookingResult!.requestNumber ?? '',
+                          ),
+                        ],
+
+                        SizedBox(height: 24.h),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ── Bottom action ──────────────────────────────────────────────
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
+                  child: PrimaryButton(
+                    label: 'تأكيد الموعد',
+                    onPressed: _canProceed ? _onNextTapped : null,
+                    height: 48.h,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
