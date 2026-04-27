@@ -7,7 +7,8 @@ import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/generic_document_upload_screen.dart';
 import 'package:traffic/features/vehicle_license/presentation/cubits/vehicle_license_cubit.dart';
 import 'package:traffic/features/vehicle_license/presentation/cubits/vehicle_license_state.dart';
-import 'package:traffic/features/vehicle_license/presentation/screens/vehicle_inspection_booking_screen.dart';
+import 'package:traffic/features/vehicle_license/presentation/screens/finalize_vehicle_license_screen.dart';
+import 'package:traffic/features/vehicle_license/data/models/vehicle_type_model.dart';
 import '../widgets/insurance_company_card.dart';
 
 class VehicleInsuranceScreen extends StatefulWidget {
@@ -28,7 +29,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   int? _selectedCompanyIndex;
-  List<Map<String, dynamic>> _companies = const [];
+  List<InsuranceCompanyModel> _companies = const [];
 
   @override
   void initState() {
@@ -54,7 +55,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
     }
 
     final selectedCompany = _companies[_selectedCompanyIndex!];
-    final companyId = selectedCompany['id']?.toString() ?? '1';
+    final companyId = selectedCompany.id.toString();
 
     // Map documents by index (matches the order defined in VehicleLicenseScreen)
     // [0] OwnershipProof, [1] VehicleDataCertificate, [2] IdCard,
@@ -66,10 +67,48 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
     final customClearancePath = docs.length > 3 ? docs[3].filePath : null;
     final insuranceCertPath = docs.length > 4 ? docs[4].filePath : null;
 
-    context.read<VehicleLicenseCubit>().uploadDocuments(
-      vehicleType: widget.selectedDropdowns['نوع المركبة'] ?? '',
-      brand: widget.selectedDropdowns['الماركة'] ?? '',
-      model: widget.selectedDropdowns['الموديل'] ?? '',
+    // The API requires the English enum name for VehicleType
+    // (e.g. "PrivateCar", "Truck") — not the Arabic display name.
+    // Look it up from the cached types list using the Arabic name the user picked.
+    final cubit = context.read<VehicleLicenseCubit>();
+    final selectedAr = widget.selectedDropdowns['نوع المركبة'] ?? '';
+    String vehicleTypeEnum = selectedAr;
+
+    if (cubit.cachedVehicleTypes.isNotEmpty) {
+      try {
+        vehicleTypeEnum = cubit.cachedVehicleTypes
+            .firstWhere(
+              (t) => t.displayName == selectedAr || t.name == selectedAr,
+            )
+            .name; // English enum name: "PrivateCar", "Truck", etc.
+      } catch (_) {
+        vehicleTypeEnum = selectedAr; // fallback — pass as-is
+      }
+    }
+
+    // Similarly resolve brand and model to their English names.
+    String brandName = widget.selectedDropdowns['الماركة'] ?? '';
+    String modelName = widget.selectedDropdowns['الموديل'] ?? '';
+
+    if (cubit.cachedVehicleTypes.isNotEmpty) {
+      for (final type in cubit.cachedVehicleTypes) {
+        for (final brand in type.brands) {
+          if (brand.displayName == brandName || brand.name == brandName) {
+            brandName = brand.name;
+            for (final model in brand.models) {
+              if (model.displayName == modelName || model.name == modelName) {
+                modelName = model.name;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    cubit.uploadDocuments(
+      vehicleType: vehicleTypeEnum,
+      brand: brandName,
+      model: modelName,
       ownershipProofPath: ownershipPath,
       vehicleDataCertificatePath: vehicleDataPath,
       idCardPath: idCardPath,
@@ -89,7 +128,12 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => const VehicleInspectionBookingScreen(),
+              builder: (_) => BlocProvider.value(
+                value: context.read<VehicleLicenseCubit>(),
+                child: FinalizeVehicleLicenseScreen(
+                  requestNumber: state.requestNumber,
+                ),
+              ),
             ),
           );
         } else if (state is VehicleLicenseFailure) {
@@ -155,16 +199,11 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
 
                       ...List.generate(_companies.length, (index) {
                         final company = _companies[index];
-                        final name = company['name']?.toString() ?? '';
-                        final details =
-                            company['details']?.toString() ??
-                            company['description']?.toString() ??
-                            '';
                         return Padding(
                           padding: EdgeInsets.only(bottom: 16.h),
                           child: InsuranceCompanyCard(
-                            companyName: name,
-                            details: details,
+                            companyName: company.displayName,
+                            details: company.displayDescription,
                             logoAssetPath:
                                 'assets/images/insurance_logo.png',
                             isSelected: _selectedCompanyIndex == index,

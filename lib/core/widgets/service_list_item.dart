@@ -24,7 +24,7 @@ class ServiceListItem extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 60.h,
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+        padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 5.h),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15.r),
@@ -56,7 +56,7 @@ class ServiceListItem extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(width: 12.w),
+            SizedBox(width: 7.w),
 
             // ── Title text ──
             Expanded(
@@ -66,6 +66,7 @@ class ServiceListItem extends StatelessWidget {
                 textDirection: TextDirection.rtl,
                 style: GoogleFonts.cairo(
                   fontSize: 15.sp,
+                  // letterSpacing: -0.5,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF222222),
                   // height: 1.3,

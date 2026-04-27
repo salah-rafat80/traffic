@@ -37,8 +37,9 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
   void initState() {
     super.initState();
     final ApiClient apiClient = ApiClient();
-    final DrivingRenewalRepository renewalRepository =
-        DrivingRenewalRepository(apiClient);
+    final DrivingRenewalRepository renewalRepository = DrivingRenewalRepository(
+      apiClient,
+    );
     _renewalDataHandler = DrivingLicenseRenewalDataHandler(renewalRepository);
     _drivingRenewalCubit = DrivingRenewalCubit(
       dataHandler: _renewalDataHandler,
@@ -113,17 +114,18 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
     if (state is DrivingRenewalSuccess) {
       final String requestNumber = state.response.requestNumber;
 
-      final BookingFlowData? bookingData = await Navigator.push<BookingFlowData>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PracticalTestBookingScreen(
-            appBarTitle: 'تجديد رخصة القيادة',
-            loadGovernorates: _loadGovernorates,
-            loadTrafficUnits: _loadTrafficUnits,
-            loadSlotsForDate: _loadDrivingSlots,
-          ),
-        ),
-      );
+      final BookingFlowData? bookingData =
+          await Navigator.push<BookingFlowData>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PracticalTestBookingScreen(
+                appBarTitle: 'تجديد رخصة القيادة',
+                loadGovernorates: _loadGovernorates,
+                loadTrafficUnits: _loadTrafficUnits,
+                loadSlotsForDate: _loadDrivingSlots,
+              ),
+            ),
+          );
 
       if (bookingData != null && mounted) {
         await _completeRenewalAfterBooking(
@@ -137,10 +139,7 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
     if (state is DrivingRenewalFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            state.message,
-            textDirection: TextDirection.rtl,
-          ),
+          content: Text(state.message, textDirection: TextDirection.rtl),
         ),
       );
       return;
@@ -332,7 +331,7 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
                   ),
                   SizedBox(height: 24.h),
                   ServiceListItem(
-                    title: 'استعلام عن مخالفات رخصة القيادة',
+                    title: 'استعلام وسداد مخالفات رخصة القيادة',
                     icon: "assets/search.svg",
                     onTap: () => Navigator.push(
                       context,
@@ -342,11 +341,11 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
                     ),
                   ),
                   SizedBox(height: 24.h),
-                  ServiceListItem(
-                    title: 'سداد مخالفات رخصة القيادة',
-                    icon: "assets/cart_payment.svg",
-                  ),
-                  SizedBox(height: 24.h),
+                  // ServiceListItem(
+                  //   title: 'سداد مخالفات رخصة القيادة',
+                  //   icon: "assets/cart_payment.svg",
+                  // ),
+                  // SizedBox(height: 24.h),
                 ],
               ),
             ),

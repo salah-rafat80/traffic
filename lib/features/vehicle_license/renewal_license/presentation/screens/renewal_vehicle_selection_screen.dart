@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
+import 'package:traffic/features/vehicle_license/data/models/vehicle_license_model.dart';
+import 'package:traffic/features/vehicle_license/data/repositories/vehicle_license_repository.dart';
 import '../../data/models/renewal_vehicle_license_model.dart';
 import '../widgets/renewal_vehicle_license_card.dart';
 import 'vehicle_technical_inspection_screen.dart';
 
 /// Step 2 – Vehicle selection screen.
-/// User picks which vehicle to renew the license for.
+/// Loads real data from GET /VehicleLicense/my-licenses using cache-first strategy.
 class RenewalVehicleSelectionScreen extends StatefulWidget {
   const RenewalVehicleSelectionScreen({super.key});
 
@@ -21,20 +24,85 @@ class _RenewalVehicleSelectionScreenState
     extends State<RenewalVehicleSelectionScreen> {
   int? _selectedIndex;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  List<VehicleLicenseModel> _vehicles = [];
+  bool _isLoading = true;
 
-  RenewalVehicleLicenseModel? get _selected => _selectedIndex != null
-      ? RenewalVehicleLicenseModel.dummyVehicles[_selectedIndex!]
-      : null;
+  @override
+  void initState() {
+    super.initState();
+    _loadVehicles();
+  }
 
-  bool get _canProceed => _selected?.canRenew ?? false;
+  Future<void> _loadVehicles() async {
+    setState(() => _isLoading = true);
+    try {
+      final repository = VehicleLicenseRepository(ApiClient());
+
+      // Cache-first: show cached data immediately, then refresh in background
+      final cached = await repository.getLocalLicenses();
+      if (cached.isNotEmpty) {
+        setState(() {
+          _vehicles = cached;
+          _isLoading = false;
+        });
+        final result = await repository.getMyLicenses();
+        if (result.isSuccess && result.data != null) {
+          await repository.saveLicensesLocal(result.data!);
+          if (mounted) setState(() => _vehicles = result.data!);
+        }
+        return;
+      }
+
+      final result = await repository.getMyLicenses();
+      if (result.isSuccess && result.data != null) {
+        await repository.saveLicensesLocal(result.data!);
+        if (mounted) {
+          setState(() {
+            _vehicles = result.data!;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// Maps VehicleLicenseModel status to RenewalLicenseStatus for the card widget.
+  RenewalVehicleLicenseModel _toRenewalModel(VehicleLicenseModel v) {
+    RenewalLicenseStatus renewalStatus;
+    switch (v.status.name) {
+      case 'expired':
+        renewalStatus = RenewalLicenseStatus.expired;
+        break;
+      case 'withdrawn':
+        renewalStatus = RenewalLicenseStatus.withdrawn;
+        break;
+      default:
+        renewalStatus = RenewalLicenseStatus.valid;
+    }
+    return RenewalVehicleLicenseModel(
+      plateNumber: v.vehicleLicenseNumber,
+      vehicleType: '${v.category} – ${v.brand} ${v.model}',
+      expiryDate: v.expiryDate,
+      status: renewalStatus,
+      hasUnpaidViolations: v.hasUnpaidViolations,
+    );
+  }
+
+  RenewalVehicleLicenseModel? get _selectedModel =>
+      _selectedIndex != null ? _toRenewalModel(_vehicles[_selectedIndex!]) : null;
+
+  bool get _canProceed => _selectedModel?.canRenew ?? false;
 
   void _onNextPressed() {
-    if (_selected == null) return;
+    if (_selectedModel == null) return;
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            VehicleTechnicalInspectionScreen(vehicle: _selected!),
+        builder: (_) => VehicleTechnicalInspectionScreen(vehicle: _selectedModel!),
       ),
     );
   }
@@ -70,23 +138,35 @@ class _RenewalVehicleSelectionScreenState
                       ),
                     ),
                     SizedBox(height: 12.h),
-                    ...RenewalVehicleLicenseModel.dummyVehicles
-                        .asMap()
-                        .entries
-                        .map((entry) {
-                      final index = entry.key;
-                      final vehicle = entry.value;
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: 12.h),
-                        child: RenewalVehicleLicenseCard(
-                          vehicle: vehicle,
-                          isSelected: _selectedIndex == index,
-                          onTap: vehicle.canRenew
-                              ? () => setState(() => _selectedIndex = index)
-                              : null,
+
+                    if (_isLoading)
+                      const Center(child: CircularProgressIndicator())
+                    else if (_vehicles.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Text(
+                            'لا يوجد رخص مركبات مسجلة حالياً',
+                            style: TextStyle(fontFamily: 'Tajawal'),
+                          ),
                         ),
-                      );
-                    }),
+                      )
+                    else
+                      ..._vehicles.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final model = _toRenewalModel(entry.value);
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 12.h),
+                          child: RenewalVehicleLicenseCard(
+                            vehicle: model,
+                            isSelected: _selectedIndex == index,
+                            onTap: model.canRenew
+                                ? () => setState(() => _selectedIndex = index)
+                                : null,
+                          ),
+                        );
+                      }),
+
                     SizedBox(height: 12.h),
                     PrimaryButton(
                       label: 'التالي',
