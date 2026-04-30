@@ -94,7 +94,7 @@ class _ViolationsListViewState extends State<_ViolationsListView> {
         final List<ViolationModel> allViolations =
             state is ViolationsLoaded ? state.violationsList.violations : [];
         final filtered = _getFiltered(allViolations);
-        final totalAmt = _totalAmount(allViolations);
+        final totalAmt = state is ViolationsLoaded ? state.violationsList.totalPayableAmount : 0.0;
         final selAmt = _selectedAmount(allViolations);
 
         return Scaffold(
@@ -151,6 +151,7 @@ class _ViolationsListViewState extends State<_ViolationsListView> {
                                                   'مخالفات رخصة القيادة',
                                               amount: selAmt,
                                               currency: 'جنية مصري',
+                                              violationIds: selected.map((v) => v.violationId).toList(),
                                             ),
                                           ),
                                         ),
@@ -220,76 +221,84 @@ class _ViolationsListViewState extends State<_ViolationsListView> {
     final now = DateTime.now();
     final lastUpdate = '${now.day}/${now.month}/${now.year}';
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          SizedBox(height: 16.h),
-
-          // ── Section title ──
-          Text(
-            'مخالفات رخصة القيادة',
-            style: TextStyle(
-              fontFamily: 'Tajawal',
-              fontSize: 17.sp,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1A1A1A),
+    return RefreshIndicator(
+      onRefresh: () async {
+        await context.read<ViolationsCubit>().loadDrivingLicenseViolations(
+              licenseNumber: widget.license.drivingLicenseNumber,
+            );
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            SizedBox(height: 16.h),
+    
+            // ── Section title ──
+            Text(
+              'مخالفات رخصة القيادة',
+              style: TextStyle(
+                fontFamily: 'Tajawal',
+                fontSize: 17.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1A1A1A),
+              ),
             ),
-          ),
-          SizedBox(height: 16.h),
-
-          // ── Summary card ──
-          ViolationsSummaryCard(
-            totalViolations: allViolations.length,
-            totalAmount: totalAmt,
-            lastUpdate: lastUpdate,
-          ),
-          SizedBox(height: 16.h),
-
-          // ── Filter tabs ──
-          ViolationFilterTabs(
-            showPaid: _showPaid,
-            onChanged: (val) => setState(() {
-              _showPaid = val;
-              _selectedViolationIds.clear();
-            }),
-          ),
-          SizedBox(height: 16.h),
-
-          // ── Violations list ──
-          if (filtered.isEmpty)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 40.h),
-              child: Center(
-                child: Text(
-                  'لا توجد مخالفات',
-                  style: TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF999999),
+            SizedBox(height: 16.h),
+    
+            // ── Summary card ──
+            ViolationsSummaryCard(
+              totalViolations: allViolations.length,
+              totalAmount: totalAmt,
+              lastUpdate: lastUpdate,
+            ),
+            SizedBox(height: 16.h),
+    
+            // ── Filter tabs ──
+            ViolationFilterTabs(
+              showPaid: _showPaid,
+              onChanged: (val) => setState(() {
+                _showPaid = val;
+                _selectedViolationIds.clear();
+              }),
+            ),
+            SizedBox(height: 16.h),
+    
+            // ── Violations list ──
+            if (filtered.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 40.h),
+                child: Center(
+                  child: Text(
+                    'لا توجد مخالفات',
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF999999),
+                    ),
+                  ),
+                ),
+              )
+            else
+              ...filtered.map(
+                (violation) => ViolationListItem(
+                  violation: violation,
+                  isSelected: _selectedViolationIds.contains(violation.id),
+                  onSelect: (selected) => _toggleSelection(violation, selected),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ViolationDetailsScreen(violation: violation),
+                    ),
                   ),
                 ),
               ),
-            )
-          else
-            ...filtered.map(
-              (violation) => ViolationListItem(
-                violation: violation,
-                isSelected: _selectedViolationIds.contains(violation.id),
-                onSelect: (selected) => _toggleSelection(violation, selected),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        ViolationDetailsScreen(violation: violation),
-                  ),
-                ),
-              ),
-            ),
-          SizedBox(height: 16.h),
-        ],
+            SizedBox(height: 16.h),
+          ],
+        ),
       ),
     );
   }

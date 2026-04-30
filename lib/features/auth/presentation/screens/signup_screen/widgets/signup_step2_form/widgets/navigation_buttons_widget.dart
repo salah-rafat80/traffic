@@ -54,7 +54,7 @@ class NavigationButtonsWidget extends StatelessWidget {
               onPressed: onPreviousPressed,
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF27AE60),
-                side: const BorderSide(color: Color(0xFF27AE60), width: 1),
+                side: const BorderSide(color: Color(0xFF27AE60)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.r),
                 ),

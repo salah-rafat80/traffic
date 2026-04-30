@@ -61,7 +61,6 @@ class InsuranceCompanyCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               child: Row(
                 textDirection: TextDirection.rtl,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Texts
                   Expanded(

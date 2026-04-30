@@ -23,13 +23,12 @@ class ReviewSummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(5.r),
         border: Border.all(
           color: const Color(0xFF27AE60),
-          width: 1,
         ),
         boxShadow: [
-          BoxShadow(
-            color: const Color(0x3F000000),
+          const BoxShadow(
+            color: Color(0x3F000000),
             blurRadius: 4,
-            offset: const Offset(0, 1),
+            offset: Offset(0, 1),
           ),
         ],
       ),

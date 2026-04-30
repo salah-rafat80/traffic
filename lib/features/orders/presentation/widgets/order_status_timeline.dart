@@ -61,7 +61,6 @@ class OrderStatusTimeline extends StatelessWidget {
           dateSubtitle: '25 اكتوبر 2025',
           descSubtitle: 'يتم طباعة الرخصة',
           isCompleted: true,
-          isCurrent: false,
         ));
 
         steps.add(_StepData(
@@ -112,7 +111,6 @@ class OrderStatusTimeline extends StatelessWidget {
         color: const Color(0xFFF8F9F9),
         shape: RoundedRectangleBorder(
           side: const BorderSide(
-            width: 1,
             color: Color(0xFF27AE60),
           ),
           borderRadius: BorderRadius.circular(5.r),
@@ -122,7 +120,6 @@ class OrderStatusTimeline extends StatelessWidget {
             color: Color(0x3F000000),
             blurRadius: 4,
             offset: Offset(0, 1),
-            spreadRadius: 0,
           )
         ],
       ),

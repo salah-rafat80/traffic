@@ -28,7 +28,7 @@ class ServiceListItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15.r),
-          border: Border.all(color: const Color(0xFFE8E8E8), width: 1),
+          border: Border.all(color: const Color(0xFFE8E8E8)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.15),

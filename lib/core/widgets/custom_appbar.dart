@@ -25,7 +25,6 @@ class CustomAppbar extends StatelessWidget {
 
         Row(
           textDirection: TextDirection.rtl,
-          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Flexible(
               child: Row(

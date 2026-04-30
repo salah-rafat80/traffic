@@ -177,7 +177,6 @@ class _UploadContentState extends State<_UploadContent> {
             textDirection: TextDirection.rtl,
           ),
           backgroundColor: Color(0xFF27AE60),
-          duration: Duration(seconds: 4),
         ),
       );
     }

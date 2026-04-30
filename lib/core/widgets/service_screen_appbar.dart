@@ -10,12 +10,14 @@ class ServiceScreenAppBar extends StatelessWidget {
   final String title;
   final VoidCallback? onBackPressed;
   final VoidCallback? onMenuPressed;
+  final bool showBackButton;
 
   const ServiceScreenAppBar({
     super.key,
     required this.title,
     this.onBackPressed,
     this.onMenuPressed,
+    this.showBackButton = true,
   });
 
   @override
@@ -32,7 +34,7 @@ class ServiceScreenAppBar extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 6,
               offset: const Offset(0, 5),
             ),
@@ -44,14 +46,17 @@ class ServiceScreenAppBar extends StatelessWidget {
             textDirection: TextDirection.rtl,
             children: [
               // ── Back arrow (right side in RTL) ──
-              GestureDetector(
-                onTap: onBackPressed ?? () => Navigator.pop(context),
-                child: SvgPicture.asset(
-                  'assets/weui_arrow-filled.svg',
-                  width: 24.w,
-                  height: 24.w,
-                ),
-              ),
+              if (showBackButton)
+                GestureDetector(
+                  onTap: onBackPressed ?? () => Navigator.pop(context),
+                  child: SvgPicture.asset(
+                    'assets/weui_arrow-filled.svg',
+                    width: 24.w,
+                    height: 24.w,
+                  ),
+                )
+              else
+                SizedBox(width: 24.w),
 
               // ── Title (centered) ──
               Expanded(

@@ -83,6 +83,7 @@ class _GenericDocumentUploadScreenState
   Future<void> _openGenericSheet(DropdownConfig config) async {
     final result = await showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
       ),
@@ -103,9 +104,6 @@ class _GenericDocumentUploadScreenState
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: doc.allowedExtensions,
-        allowMultiple: false,
-        withData: false,
-        withReadStream: false,
       );
 
       if (result == null || result.files.isEmpty) return;
@@ -289,6 +287,8 @@ class _CategoryPickerField extends StatelessWidget {
               child: Text(
                 selectedValue ?? hint,
                 textDirection: TextDirection.rtl,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: hasSelection
                       ? const Color(0xFF222222)
@@ -355,56 +355,62 @@ class GenericOptionsBottomSheet extends StatelessWidget {
               ),
             ),
             SizedBox(height: 8.h),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(5.r),
-                child: Material(
-                  color: const Color(0xFFF8F9F9),
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(
-                      color: const Color(0xFFDADADA),
-                      width: 1.w,
+            Flexible(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5.r),
+                  child: Material(
+                    color: const Color(0xFFF8F9F9),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        color: const Color(0xFFDADADA),
+                        width: 1.w,
+                      ),
+                      borderRadius: BorderRadius.circular(5.r),
                     ),
-                    borderRadius: BorderRadius.circular(5.r),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (int i = 0; i < options.length; i++) ...[
-                        InkWell(
-                          onTap: () => Navigator.pop(context, options[i]),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16.w,
-                                vertical: 14.h,
-                              ),
-                              child: Text(
-                                options[i],
-                                textAlign: TextAlign.right,
-                                textDirection: TextDirection.rtl,
-                                style: TextStyle(
-                                  color: const Color(0xFF222222),
-                                  fontSize: 15.sp,
-                                  fontFamily: 'Cairo',
-                                  fontWeight: FontWeight.w500,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (int i = 0; i < options.length; i++) ...[
+                            InkWell(
+                              onTap: () => Navigator.pop(context, options[i]),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w,
+                                    vertical: 14.h,
+                                  ),
+                                  child: Text(
+                                    options[i],
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: const Color(0xFF222222),
+                                      fontSize: 15.sp,
+                                      fontFamily: 'Cairo',
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                        if (i < options.length - 1)
-                          Divider(
-                            height: 1.h,
-                            thickness: 1.h,
-                            color: const Color(0xFFDADADA),
-                            indent: 0,
-                            endIndent: 0,
-                          ),
-                      ],
-                    ],
+                            if (i < options.length - 1)
+                              Divider(
+                                height: 1.h,
+                                thickness: 1.h,
+                                color: const Color(0xFFDADADA),
+                                indent: 0,
+                                endIndent: 0,
+                              ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

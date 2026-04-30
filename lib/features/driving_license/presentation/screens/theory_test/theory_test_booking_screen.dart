@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:traffic/core/widgets/generic_booking_screen.dart';
-import 'package:traffic/features/driving_license/data/models/driving_renewal_model.dart';
-import 'package:traffic/features/driving_license/presentation/screens/medical_check/appointment_booking_screen.dart';
 
 import '../practical_test/practical_test_booking_screen.dart';
 

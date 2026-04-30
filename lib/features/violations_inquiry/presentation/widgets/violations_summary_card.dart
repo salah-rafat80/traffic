@@ -33,7 +33,7 @@ class ViolationsSummaryCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
 
         children: [
-          Spacer(),
+          const Spacer(),
           Row(
             textDirection: TextDirection.rtl,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -52,7 +52,7 @@ class ViolationsSummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          Spacer(),
+          const Spacer(),
           Text(
             'اخر تحديث:$lastUpdate',
             textDirection: TextDirection.rtl,
@@ -110,7 +110,7 @@ class _SummaryItem extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            if (label12.isNotEmpty) SizedBox(width: 2),
+            if (label12.isNotEmpty) const SizedBox(width: 2),
             if (label12.isNotEmpty)
               Text(
                 label12,
@@ -121,7 +121,7 @@ class _SummaryItem extends StatelessWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-            if (label11.isNotEmpty) SizedBox(width: 2),
+            if (label11.isNotEmpty) const SizedBox(width: 2),
 
             if (label11.isNotEmpty)
               Text(

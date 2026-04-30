@@ -7,7 +7,7 @@ import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/generic_document_upload_screen.dart';
 import 'package:traffic/features/vehicle_license/presentation/cubits/vehicle_license_cubit.dart';
 import 'package:traffic/features/vehicle_license/presentation/cubits/vehicle_license_state.dart';
-import 'package:traffic/features/vehicle_license/presentation/screens/finalize_vehicle_license_screen.dart';
+import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:traffic/features/vehicle_license/data/models/vehicle_type_model.dart';
 import '../widgets/insurance_company_card.dart';
 
@@ -125,16 +125,22 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
         if (state is VehicleLicenseInsuranceLoaded) {
           setState(() => _companies = state.companies);
         } else if (state is VehicleLicenseUploadSuccess) {
-          Navigator.push(
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'تم رفع المستندات بنجاح. رقم الطلب: ${state.requestNumber}',
+                textDirection: TextDirection.rtl,
+                style: TextStyle(fontFamily: 'Cairo', fontSize: 13.sp),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (_) => BlocProvider.value(
-                value: context.read<VehicleLicenseCubit>(),
-                child: FinalizeVehicleLicenseScreen(
-                  requestNumber: state.requestNumber,
-                ),
-              ),
+              builder: (_) => const MainNavigationScreen(),
             ),
+            (route) => false,
           );
         } else if (state is VehicleLicenseFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -150,7 +156,8 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
         }
       },
       builder: (context, state) {
-        final isLoading = state is VehicleLicenseLoading;
+        final isUploadLoading = state is VehicleLicenseLoading;
+        final isInsuranceLoading = state is VehicleLicenseInsuranceLoading;
 
         return Scaffold(
           key: _scaffoldKey,
@@ -162,7 +169,11 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                 title: 'اصدار رخصة مركبة',
                 onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),
-              if (isLoading)
+              if (isUploadLoading)
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (isInsuranceLoading)
                 const Expanded(
                   child: Center(child: CircularProgressIndicator()),
                 )

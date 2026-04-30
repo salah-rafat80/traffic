@@ -71,7 +71,7 @@ class _ReplacementTypeSelectionScreenState
         body: Column(
           children: [
             // ── App bar ──────────────────────────────────────────────────────
-            ServiceScreenAppBar(title: 'اصدار بدل فاقد / تالف رخصة قيادة'),
+            const ServiceScreenAppBar(title: 'اصدار بدل فاقد / تالف رخصة قيادة'),
 
             // ── Scrollable body ──────────────────────────────────────────────
             Expanded(

@@ -83,6 +83,7 @@ class _ViolationDetailsScreenState extends State<ViolationDetailsScreen> {
                       orderType: 'سداد مخالفات رخصة المركبة',
                       amount: v.amount,
                       currency: 'جنية مصري',
+                      violationIds: [v.violationId],
                     ),
                   ),
                 ),

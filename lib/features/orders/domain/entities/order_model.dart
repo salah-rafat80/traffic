@@ -78,6 +78,9 @@ class OrderModel {
 
   final OrderStatus status;
 
+  /// Raw status label from backend
+  final String statusLabel;
+
   // ── Extra fields (available from list, needed for details pane) ──
   final String? citizenNationalId;
   final String? lastUpdatedAt;
@@ -91,6 +94,7 @@ class OrderModel {
     required this.title,
     required this.date,
     required this.status,
+    required this.statusLabel,
     this.citizenNationalId,
     this.lastUpdatedAt,
     this.referenceId,
@@ -100,11 +104,13 @@ class OrderModel {
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    final rawStatus = json['status']?.toString() ?? '';
     return OrderModel(
       id: json['requestNumber']?.toString() ?? '',
       title: json['serviceType']?.toString() ?? 'طلب خدمة',
       date: json['submittedAt']?.toString() ?? '',
-      status: _parseStatus(json['status']?.toString() ?? ''),
+      status: _parseStatus(rawStatus),
+      statusLabel: rawStatus,
       citizenNationalId: json['citizenNationalId']?.toString(),
       lastUpdatedAt: json['lastUpdatedAt']?.toString(),
       referenceId: json['referenceId'] as int?,

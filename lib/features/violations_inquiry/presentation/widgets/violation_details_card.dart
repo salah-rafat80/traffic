@@ -40,7 +40,6 @@ class ViolationDetailsCard extends StatelessWidget {
             // ── Title + Status Tag row ──
             Row(
               textDirection: TextDirection.rtl,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: Text(

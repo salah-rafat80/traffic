@@ -12,6 +12,7 @@ import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
 import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
+import 'package:traffic/features/examiner_dashboard/presentation/screens/daily_tests_screen.dart';
 
 /// Pixel-perfect Login Screen with real-time validation.
 /// All sizes are responsive using flutter_screenutil.
@@ -35,6 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _phoneError;
   String? _passwordError;
   bool _obscurePassword = true;
+  String? _loadingRole; // 'CITIZEN' or 'STAFF'
 
   // --- Colors ---
   static const Color _green = Color(0xFF27AE60);
@@ -96,15 +98,17 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordError == null;
   }
 
-  void _onLogin(BuildContext context) {
+  void _onLogin(BuildContext context, {String? requiredRole}) {
     // Validate before login
     _validatePhone();
     _validatePassword();
 
     if (_isFormValid) {
+      setState(() => _loadingRole = requiredRole);
       context.read<AuthCubit>().login(
         _phoneController.text.trim(),
         _passwordController.text,
+        requiredRole: requiredRole,
       );
     }
   }
@@ -123,53 +127,73 @@ class _LoginScreenState extends State<LoginScreen> {
         textDirection: TextDirection.rtl,
         child: Scaffold(
           backgroundColor: _white,
-          body: BlocListener<AuthCubit, AuthState>(
-            listener: (context, state) {
-              if (state is AuthLoginSuccess) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-                  (route) => false,
-                );
-              } else if (state is AuthFailure) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      state.message,
-                      style: GoogleFonts.cairo(),
-                    ),
-                    backgroundColor: _errorRed,
-                  ),
-                );
-              }
-            },
-            child: SafeArea(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      CustomAppbar(onBackPressed: () {}, title: 'تسجيل الدخول'),
-                      SizedBox(height: 32.h),
-                      _buildPhoneField(),
-                      SizedBox(height: 24.h),
-                      _buildPasswordField(),
-                      SizedBox(height: 32.h),
-                      BlocBuilder<AuthCubit, AuthState>(
-                        builder: (context, state) {
-                          final isLoading = state is AuthLoading;
-                          return _buildLoginButton(context, isLoading);
-                        },
+          body: Builder(
+            builder: (context) => BlocListener<AuthCubit, AuthState>(
+              listener: (context, state) {
+                if (state is AuthLoginSuccess) {
+                  // Check roles to determine navigation
+                  final isOfficer = state.roles.any(
+                    (r) =>
+                        r == 'INSPECTOR' || r == 'DOCTOR' || r == 'EXAMINATOR',
+                  );
+
+                  if (isOfficer) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DailyTestsScreen(),
                       ),
-                      SizedBox(height: 24.h),
-                      _buildOrDivider(),
-                      SizedBox(height: 24.h),
-                      _buildSocialButtons(),
-                      SizedBox(height: 48.h),
-                      _buildFooter(),
-                      SizedBox(height: 24.h),
-                    ],
+                      (route) => false,
+                    );
+                  } else {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MainNavigationScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  }
+                } else if (state is AuthFailure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message, textAlign: TextAlign.right),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        CustomAppbar(
+                          onBackPressed: () {},
+                          title: 'تسجيل الدخول',
+                        ),
+                        SizedBox(height: 32.h),
+                        _buildPhoneField(),
+                        SizedBox(height: 24.h),
+                        _buildPasswordField(),
+                        SizedBox(height: 32.h),
+                        BlocBuilder<AuthCubit, AuthState>(
+                          builder: (context, state) {
+                            final isLoading = state is AuthLoading;
+                            return _buildLoginButtons(context, isLoading);
+                          },
+                        ),
+                        SizedBox(height: 24.h),
+                        // _buildOrDivider(),
+                        SizedBox(height: 24.h),
+                        // _buildSocialButtons(),
+                        // SizedBox(height: 48.h),
+                        _buildFooter(),
+                        SizedBox(height: 24.h),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -378,34 +402,80 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // --- Login Button ---
-  Widget _buildLoginButton(BuildContext context, bool isLoading) {
-    return SizedBox(
-      height: 52.h,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : () => _onLogin(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _green,
-          foregroundColor: _white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          padding: EdgeInsets.zero,
-        ),
-        child: Center(
-          child: isLoading
-              ? const CircularProgressIndicator(color: _white)
-              : Text(
-                  'تسجيل الدخول',
-                  style: GoogleFonts.cairo(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w700,
-                    color: _white,
+  // --- Login Buttons ---
+  Widget _buildLoginButtons(BuildContext context, bool isLoading) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 60.h,
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: isLoading
+                ? null
+                : () => _onLogin(context, requiredRole: 'CITIZEN'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _green,
+              foregroundColor: _white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            child: (isLoading && _loadingRole == 'CITIZEN')
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: _white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : FittedBox(
+                    fit: BoxFit.fill,
+                    child: Text(
+                      'دخول المواطنين',
+                      style: GoogleFonts.cairo(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                ),
+          ),
         ),
-      ),
+        SizedBox(height: 16.h),
+        SizedBox(
+          height: 52.h,
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: isLoading
+                ? null
+                : () => _onLogin(context, requiredRole: 'STAFF'),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: _green, width: 1.5),
+              foregroundColor: _green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            child: (isLoading && _loadingRole == 'STAFF')
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: _green,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    'دخول الموظفين / الممتحنين',
+                    style: GoogleFonts.cairo(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -413,7 +483,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildOrDivider() {
     return Row(
       children: [
-        Expanded(child: Divider(color: _borderGrey, thickness: 1)),
+        const Expanded(child: Divider(color: _borderGrey, thickness: 1)),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Text(
@@ -425,52 +495,52 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        Expanded(child: Divider(color: _borderGrey, thickness: 1)),
+        const Expanded(child: Divider(color: _borderGrey, thickness: 1)),
       ],
     );
   }
 
-  // --- Social Buttons ---
-  Widget _buildSocialButtons() {
-    return Row(
-      children: [
-        // Apple button
-        Expanded(
-          child: Container(
-            height: 52.h,
-            decoration: BoxDecoration(
-              border: Border.all(color: _borderGrey, width: 1),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Center(
-              child: Icon(Icons.apple, size: 28.r, color: _textPrimary),
-            ),
-          ),
-        ),
-        SizedBox(width: 16.w),
-        // Google button
-        Expanded(
-          child: Container(
-            height: 52.h,
-            decoration: BoxDecoration(
-              border: Border.all(color: _borderGrey, width: 1),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Center(
-              child: Text(
-                'G',
-                style: GoogleFonts.cairo(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF4285F4),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // // --- Social Buttons ---
+  // Widget _buildSocialButtons() {
+  //   return Row(
+  //     children: [
+  //       // Apple button
+  //       Expanded(
+  //         child: Container(
+  //           height: 52.h,
+  //           decoration: BoxDecoration(
+  //             border: Border.all(color: _borderGrey),
+  //             borderRadius: BorderRadius.circular(12.r),
+  //           ),
+  //           child: Center(
+  //             child: Icon(Icons.apple, size: 28.r, color: _textPrimary),
+  //           ),
+  //         ),
+  //       ),
+  //       SizedBox(width: 16.w),
+  //       // Google button
+  //       Expanded(
+  //         child: Container(
+  //           height: 52.h,
+  //           decoration: BoxDecoration(
+  //             border: Border.all(color: _borderGrey),
+  //             borderRadius: BorderRadius.circular(12.r),
+  //           ),
+  //           child: Center(
+  //             child: Text(
+  //               'G',
+  //               style: GoogleFonts.cairo(
+  //                 fontSize: 24.sp,
+  //                 fontWeight: FontWeight.w700,
+  //                 color: const Color(0xFF4285F4),
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   // --- Footer ---
   Widget _buildFooter() {
@@ -505,6 +575,28 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // --- Bypass Button (Dev Only) ---
+  Widget _buildBypassButton(BuildContext context) {
+    return Center(
+      child: TextButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DailyTestsScreen()),
+          );
+        },
+        child: Text(
+          '[دخول المُمتحن - تجريبي]',
+          style: GoogleFonts.cairo(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            color: _textSecondary,
+          ),
+        ),
+      ),
     );
   }
 }

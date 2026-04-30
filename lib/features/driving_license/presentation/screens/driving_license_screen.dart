@@ -10,10 +10,8 @@ import 'package:traffic/features/driving_license/data/repositories/driving_renew
 import 'package:traffic/features/driving_license/data/models/driving_license_model.dart';
 import 'package:traffic/features/driving_license/data/models/driving_renewal_model.dart';
 import 'package:traffic/features/driving_license/presentation/cubits/driving_renewal_cubit.dart';
-import 'package:traffic/features/driving_license/presentation/screens/medical_check/appointment_booking_screen.dart';
 import 'package:traffic/features/driving_license/presentation/screens/license_details/license_details_screen.dart';
 import 'package:traffic/features/driving_license/presentation/screens/terms_and_conditions/terms_and_conditions_screen.dart';
-import 'package:traffic/features/driving_license/presentation/screens/theory_test/theory_test_booking_screen.dart';
 import 'package:traffic/features/driving_license/presentation/screens/practical_test/practical_test_booking_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/select_license_screen.dart';
 import 'package:traffic/features/profile/data/repositories/profile_repository.dart';

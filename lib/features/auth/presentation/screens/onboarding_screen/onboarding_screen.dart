@@ -211,7 +211,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.symmetric(
                               horizontal: 4.w,
-                              vertical: 0,
                             ),
                             minimumSize: Size(0, 30.h),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -262,7 +261,6 @@ class OnboardingPage extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: imagePadding),
         child: SvgPicture.asset(
           imageData!['image']!,
-          fit: BoxFit.contain,
           excludeFromSemantics: true,
         ),
       ),

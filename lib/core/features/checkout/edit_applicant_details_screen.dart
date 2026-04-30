@@ -132,7 +132,7 @@ class _EditApplicantDetailsScreenState
                       SizedBox(height: 16.h),
 
                       // ── Personal Data card ──────────────────────────────
-                      _SectionHeader(title: 'البيانات الشخصية'),
+                      const _SectionHeader(title: 'البيانات الشخصية'),
                       SizedBox(height: 8.h),
                       _FormCard(
                         children: [
@@ -164,7 +164,7 @@ class _EditApplicantDetailsScreenState
                       SizedBox(height: 16.h),
 
                       // ── Contact Info card ───────────────────────────────
-                      _SectionHeader(title: 'معلومات التواصل'),
+                      const _SectionHeader(title: 'معلومات التواصل'),
                       SizedBox(height: 8.h),
                       _FormCard(
                         children: [

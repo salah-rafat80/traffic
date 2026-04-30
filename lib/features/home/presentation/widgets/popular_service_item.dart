@@ -24,8 +24,6 @@ class PopularServiceItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 8.w),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
             colors: [
               Color.lerp(Colors.white, const Color(0xFF3FB678), 0.20)!,
               Color.lerp(Colors.white, const Color(0xFFD3FFE9), 0.15)!,
@@ -37,7 +35,6 @@ class PopularServiceItem extends StatelessWidget {
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 8,
-              spreadRadius: 0,
               offset: const Offset(0, 2),
             ),
           ],
@@ -48,8 +45,8 @@ class PopularServiceItem extends StatelessWidget {
           children: [
             Column(
               children: [
-                SizedBox(height: 5),
-                Container(
+                const SizedBox(height: 5),
+                SizedBox(
                   height: 45.h,
                   width: 45.h,
                   // padding: EdgeInsets.all(10.w),
@@ -57,7 +54,6 @@ class PopularServiceItem extends StatelessWidget {
                     icon,
                     width: 24.w,
                     height: 24.w,
-                    fit: BoxFit.contain,
                   ),
                 ),
               ],

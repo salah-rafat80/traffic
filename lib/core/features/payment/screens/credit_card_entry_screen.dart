@@ -41,8 +41,8 @@ class _CreditCardEntryScreenState extends State<CreditCardEntryScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       if (!_isAgreedToTerms) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
+          const SnackBar(
+            content: Text(
               'برجاء الموافقة على الشروط والأحكام',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -50,7 +50,7 @@ class _CreditCardEntryScreenState extends State<CreditCardEntryScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            backgroundColor: const Color(0xFFE53935),
+            backgroundColor: Color(0xFFE53935),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -72,13 +72,13 @@ class _CreditCardEntryScreenState extends State<CreditCardEntryScreen> {
 
       // Show success toast
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
+        const SnackBar(
+          content: Text(
             'تم تأكيد الدفع بنجاح!', // Placeholder success
             textAlign: TextAlign.center,
             style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.w600),
           ),
-          backgroundColor: const Color(0xFF27AE60),
+          backgroundColor: Color(0xFF27AE60),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -209,8 +209,6 @@ class _CreditCardEntryScreenState extends State<CreditCardEntryScreen> {
 
                           // Secure connection note
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons
@@ -250,9 +248,9 @@ class _CreditCardEntryScreenState extends State<CreditCardEntryScreen> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
               child: _isLoading
-                  ? Center(
+                  ? const Center(
                       child: CircularProgressIndicator(
-                        color: const Color(0xFF27AE60),
+                        color: Color(0xFF27AE60),
                       ),
                     )
                   : PrimaryButton(

@@ -12,7 +12,6 @@ import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
 import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
-import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
 
 /// OTP verification screen with three states: initial, error, and success.
 class OtpScreen extends StatefulWidget {

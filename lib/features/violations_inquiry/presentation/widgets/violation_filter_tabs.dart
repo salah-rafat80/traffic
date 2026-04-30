@@ -19,7 +19,7 @@ class ViolationFilterTabs extends StatelessWidget {
       width: double.infinity,
       height: 48.h,
       decoration: BoxDecoration(
-        color: Color(0xffD9D9D9),
+        color: const Color(0xffD9D9D9),
         borderRadius: BorderRadius.circular(10.r),
       ),
       child: Row(

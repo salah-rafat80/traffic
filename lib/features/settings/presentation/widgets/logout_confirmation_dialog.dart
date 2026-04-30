@@ -26,7 +26,6 @@ class LogoutConfirmationDialog extends StatelessWidget {
               color: Color(0x19000000),
               blurRadius: 10,
               offset: Offset(0, 4),
-              spreadRadius: 0,
             ),
           ],
         ),

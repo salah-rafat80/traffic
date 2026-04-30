@@ -61,20 +61,20 @@ class LicenseDetailsCard extends StatelessWidget {
               customValue: _LicenseNumberChip(number: license.licenseNumber),
             ),
             SizedBox(height: 6.h),
-            Divider(),
+            const Divider(),
 
             // ── Type ──
             _DetailRow(label: 'نوع الرخصة', value: license.licenseType),
             SizedBox(height: 6.h),
-            Divider(),
+            const Divider(),
             // ── Governorate ──
             _DetailRow(label: 'المحافظة', value: license.governorate),
             SizedBox(height: 6.h),
-            Divider(),
+            const Divider(),
             // ── Licensing unit ──
             _DetailRow(label: 'وحدة الترخيص', value: license.licensingUnit),
             SizedBox(height: 6.h),
-            Divider(),
+            const Divider(),
             // ── Status ──
             _DetailRow(
               label: 'حالة الرخصة',
@@ -82,11 +82,11 @@ class LicenseDetailsCard extends StatelessWidget {
               customValue: _StatusChip(status: license.status),
             ),
             SizedBox(height: 6.h),
-            Divider(),
+            const Divider(),
             // ── Issue date ──
             _DetailRow(label: 'تاريخ الاصدار', value: license.issueDate),
             SizedBox(height: 6.h),
-            Divider(),
+            const Divider(),
             // ── Expiry date ──
             _DetailRow(label: 'تاريخ الانتهاء', value: license.expiryDate),
           ],
@@ -158,7 +158,6 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(6.r),
         border: Border.all(
           color: isActive ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F),
-          width: 1,
         ),
       ),
       child: Text(

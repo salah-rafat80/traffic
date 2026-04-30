@@ -10,6 +10,11 @@ import '../widgets/custom_text_form_field.dart';
 import '../widgets/selection_option_card.dart';
 import '../../data/models/vehicle_license_model.dart';
 import 'vehicle_replacement_type_selection_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../data/repositories/vehicle_license_repository.dart';
+import '../../../presentation/cubits/vehicle_replacement_cubit.dart';
+import '../../../presentation/cubits/vehicle_replacement_state.dart';
+import 'package:traffic/core/api/api_client.dart';
 
 enum VehicleDeliveryMethod { pickup, delivery }
 
@@ -29,6 +34,7 @@ class VehicleDeliveryMethodScreen extends StatefulWidget {
 }
 
 class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScreen> {
+  VehicleReplacementCubit? _replacementCubit;
   VehicleDeliveryMethod? selectedMethod;
   final _formKey = GlobalKey<FormState>();
 
@@ -37,7 +43,16 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
   final TextEditingController _addressDetailsController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _replacementCubit = VehicleReplacementCubit(
+      VehicleLicenseRepository(ApiClient()),
+    );
+  }
+
+  @override
   void dispose() {
+    _replacementCubit?.close();
     _governorateController.dispose();
     _cityController.dispose();
     _addressDetailsController.dispose();
@@ -51,6 +66,22 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
       if (!(_formKey.currentState?.validate() ?? false)) return;
     }
 
+    final int method = selectedMethod == VehicleDeliveryMethod.delivery ? 2 : 1;
+    final String repType = widget.replacementType == VehicleReplacementType.lost
+        ? "0" // "بدل فاقد" maps to 0 in API as per driving license? Wait, driving license was "Lost" and "Damaged". Vehicle API docs say: "بدل فاقد" (0), "بدل تالف" (1). But wait, driving license actually sends "Lost" or "Damaged". Let's check API docs. It says `replacementtype`: "بدل فاقد" (0), "بدل تالف" (1). I'll send string '0' or '1' or int? The API doc says: `replacementtype`: "بدل فاقد" (0), "بدل تالف" (1).
+        : "1";
+
+    _replacementCubit?.issueReplacement(
+      licenseNumber: widget.vehicle.plateNumber,
+      replacementType: repType,
+      method: method,
+      governorate: method == 2 ? _governorateController.text.trim() : null,
+      city: method == 2 ? _cityController.text.trim() : null,
+      details: method == 2 ? _addressDetailsController.text.trim() : null,
+    );
+  }
+
+  void _navigateToOrderReview(VehicleReplacementSuccess state) {
     const applicant = ApplicantDetails(
       name: 'اميرة عصام حامد',
       nationalId: '010123456789099',
@@ -74,17 +105,21 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
       orderId: widget.vehicle.plateNumber,
     );
 
-    final fees = FeesDetails(
-      items: [
-        const FeeItem(label: 'رسوم اصدار الرخصة', amount: '280 جنيه مصري'),
-        if (selectedMethod == VehicleDeliveryMethod.delivery)
-          const FeeItem(label: 'رسوم شحن الرخصة', amount: '80 جنيه مصري'),
-        const FeeItem(label: 'رسوم الفحص', amount: '80 جنيه مصري'),
-      ],
-      total: selectedMethod == VehicleDeliveryMethod.delivery
-          ? '440 جنيه مصري'
-          : '360 جنيه مصري',
-    );
+    final double baseFee = state.response.fees?.baseFee ?? 0;
+    final double deliveryFee = state.response.fees?.deliveryFee ?? 0;
+    final double totalAmount = state.response.fees?.totalAmount ?? 0;
+
+    final List<FeeItem> items = [
+      FeeItem(label: 'الرسوم الأساسية', amount: '$baseFee جنية مصري'),
+    ];
+
+    if (selectedMethod == VehicleDeliveryMethod.delivery) {
+      items.add(
+        FeeItem(label: 'رسوم التوصيل', amount: '$deliveryFee جنية مصري'),
+      );
+    }
+
+    final fees = FeesDetails(items: items, total: '$totalAmount جنية مصري');
 
     Navigator.push(
       context,
@@ -94,6 +129,7 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
           applicantDetails: applicant,
           orderSummary: orderSummary,
           feesDetails: fees,
+          serviceRequestNumber: state.response.requestNumber,
         ),
       ),
     );
@@ -101,7 +137,7 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
+    Widget body = Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F5),
@@ -186,16 +222,65 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
-              child: PrimaryButton(
-                label: 'التالي',
-                onPressed: _isButtonEnabled ? _onNextPressed : null,
-                height: 48.h,
-                backgroundColor: const Color(0xFF27AE60),
-              ),
+              child: _buildBottomButton(),
             ),
           ],
         ),
       ),
+    );
+
+    if (_replacementCubit != null) {
+      body = BlocProvider.value(
+        value: _replacementCubit!,
+        child: BlocListener<VehicleReplacementCubit, VehicleReplacementState>(
+          listener: (ctx, state) {
+            if (state is VehicleReplacementSuccess) {
+              _navigateToOrderReview(state);
+            } else if (state is VehicleReplacementFailure) {
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    state.message,
+                    textDirection: TextDirection.rtl,
+                  ),
+                  backgroundColor: const Color(0xFFE74C3C),
+                ),
+              );
+            }
+          },
+          child: body,
+        ),
+      );
+    }
+
+    return body;
+  }
+
+  Widget _buildBottomButton() {
+    if (_replacementCubit != null) {
+      return BlocBuilder<VehicleReplacementCubit, VehicleReplacementState>(
+        bloc: _replacementCubit,
+        builder: (ctx, state) {
+          if (state is VehicleReplacementLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return PrimaryButton(
+            label: 'التالي',
+            onPressed: _isButtonEnabled ? _onNextPressed : null,
+            height: 48.h,
+            backgroundColor: const Color(0xFF27AE60),
+            fontSize: 18.sp,
+          );
+        },
+      );
+    }
+
+    return PrimaryButton(
+      label: 'التالي',
+      onPressed: _isButtonEnabled ? _onNextPressed : null,
+      height: 48.h,
+      backgroundColor: const Color(0xFF27AE60),
+      fontSize: 18.sp,
     );
   }
 }

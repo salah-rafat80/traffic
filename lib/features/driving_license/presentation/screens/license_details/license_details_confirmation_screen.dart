@@ -48,7 +48,7 @@ class LicenseDetailsConfirmationScreen extends StatelessWidget {
         body: Column(
           children: [
             // ── App bar ──────────────────────────────────────────────────────
-            ServiceScreenAppBar(
+            const ServiceScreenAppBar(
               title: 'تجديد رخصة القيادة',
             ),
 

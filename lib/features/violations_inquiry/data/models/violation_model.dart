@@ -32,7 +32,8 @@ class ViolationModel {
   });
 
   /// Whether the violation is fully paid.
-  bool get isPaid => status.toLowerCase() == 'paid';
+  /// We check both status and remainingAmount for robustness.
+  bool get isPaid => remainingAmount == 0 || status.toLowerCase() == 'paid' || statusAr == 'مدفوعة';
 
   /// A unique string ID to use as map key / selection key.
   String get id => violationId.toString();

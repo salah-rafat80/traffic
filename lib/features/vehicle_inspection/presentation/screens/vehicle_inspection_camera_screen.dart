@@ -134,10 +134,10 @@ class _VehicleInspectionCameraScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
+            content: const Text(
               'حدث خطأ أثناء التقاط الصورة. حاول مرة أخرى.',
               textDirection: TextDirection.rtl,
-              style: const TextStyle(fontFamily: 'Tajawal'),
+              style: TextStyle(fontFamily: 'Tajawal'),
             ),
             backgroundColor: Colors.red.shade700,
           ),
@@ -166,7 +166,7 @@ class _VehicleInspectionCameraScreenState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Spacer(flex: 1),
+                const Spacer(),
 
                 // ── Camera preview with viewfinder overlay ──
                 CameraPreviewWithViewfinder(

@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return MaterialApp(
           title: 'Traffic App',
-          theme: AppTheme.light(arabic: true),
+          theme: AppTheme.light(),
           debugShowCheckedModeBanner: false,
           home: child,
         );

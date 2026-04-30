@@ -23,7 +23,6 @@ class TermInfoCard extends StatelessWidget {
             color: Color(0x3F000000),
             blurRadius: 4,
             offset: Offset(0, 1),
-            spreadRadius: 0,
           ),
         ],
       ),

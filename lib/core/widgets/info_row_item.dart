@@ -42,7 +42,6 @@ class InfoRowItem extends StatelessWidget {
           child: Row(
             textDirection: TextDirection.rtl,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // ── Label (right in RTL) ──────────────────────────────────────
               Flexible(

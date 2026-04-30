@@ -54,13 +54,13 @@ class _VehicleInspectionPreviewScreenState
                   InspectionAnalyzeButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                        const SnackBar(
                           content: Text(
                             'جاري تحليل المركبة...',
                             textDirection: TextDirection.rtl,
-                            style: const TextStyle(fontFamily: 'Tajawal'),
+                            style: TextStyle(fontFamily: 'Tajawal'),
                           ),
-                          backgroundColor: const Color(0xFF2E7D32),
+                          backgroundColor: Color(0xFF2E7D32),
                         ),
                       );
                     },

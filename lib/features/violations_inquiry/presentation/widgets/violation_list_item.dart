@@ -51,7 +51,6 @@ class ViolationListItem extends StatelessWidget {
           // ── Top Row: Checkbox + Title & Amount + Icon ──
           Row(
             textDirection: TextDirection.rtl,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Icon on the Right (First in RTL)
               if (_violationSvgMap.containsKey(violation.title))
@@ -125,26 +124,32 @@ class ViolationListItem extends StatelessWidget {
               SizedBox(width: 10.w),
 
               // Checkbox (18x18, green #27AE60)
-              GestureDetector(
-                onTap: () => onSelect?.call(!isSelected),
-                child: Container(
-                  width: 18.w,
-                  height: 18.h,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFF27AE60)
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(4.r),
-                    border: Border.all(
-                      color: const Color(0xFF27AE60),
-                      width: 1.5,
+              if (!violation.isPaid)
+                GestureDetector(
+                  onTap: () => onSelect?.call(!isSelected),
+                  child: Container(
+                    width: 18.w,
+                    height: 18.h,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF27AE60)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(4.r),
+                      border: Border.all(
+                        color: const Color(0xFF27AE60),
+                        width: 1.5,
+                      ),
                     ),
+                    child: isSelected
+                        ? Icon(Icons.check, size: 14.w, color: Colors.white)
+                        : null,
                   ),
-                  child: isSelected
-                      ? Icon(Icons.check, size: 14.w, color: Colors.white)
-                      : null,
-                ),
-              ),
+                )
+              else
+                // Spacer or Paid Badge if needed, but for now just empty space to keep layout if necessary
+                // though Expanded will take it.
+                SizedBox(width: 18.w), 
+
             ],
           ),
 

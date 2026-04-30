@@ -36,7 +36,6 @@ class ViolationItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(5.r),
         border: Border.all(
           color: const Color(0xFFDADADA),
-          width: 1,
         ),
       ),
       child: Row(

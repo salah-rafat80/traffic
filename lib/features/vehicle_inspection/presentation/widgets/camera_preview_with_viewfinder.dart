@@ -43,7 +43,6 @@ class CameraPreviewWithViewfinder extends StatelessWidget {
                   padding: EdgeInsets.all(20.w),
                   child: CustomPaint(
                     painter: ViewfinderPainter(
-                      color: const Color(0xFF2E7D32),
                       strokeWidth: 3.5,
                       cornerLength: 35.w,
                       cornerRadius: 14.r,

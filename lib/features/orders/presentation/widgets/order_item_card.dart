@@ -105,36 +105,14 @@ class OrderItemCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge(OrderStatus status) {
-    Color bgColor;
-    Color textColor;
-    String text;
-
-    switch (status) {
-      case OrderStatus.pending:
-        bgColor = const Color(0xFFA5D4FF);
-        textColor = const Color(0xFF3B82F6);
-        text = 'قيد التنفيذ';
-      case OrderStatus.completed:
-        bgColor = const Color(0xFFD4ECDE);
-        textColor = const Color(0xFF27AE60);
-        text = 'مكتمل';
-      case OrderStatus.needsData:
-        bgColor = const Color(0xFFFFE3CF);
-        textColor = const Color(0xFFDD8C50);
-        text = 'مطلوب استكمال البيانات';
-      case OrderStatus.awaitingService:
-        bgColor = const Color(0xFFA5D4FF);
-        textColor = const Color(0xFF3B82F6);
-        text = 'بانتظار الموعد';
-      case OrderStatus.passed:
-        bgColor = const Color(0xFFD4ECDE);
-        textColor = const Color(0xFF27AE60);
-        text = 'تم اجتياز الاختبار';
-      case OrderStatus.failed:
-        bgColor = const Color(0xFFFFE9E9);
-        textColor = const Color(0xFFE53935);
-        text = 'لم يتم الاجتياز';
-    }
+    final (bgColor, textColor) = switch (status) {
+      OrderStatus.pending => (const Color(0xFFA5D4FF), const Color(0xFF3B82F6)),
+      OrderStatus.completed => (const Color(0xFFD4ECDE), const Color(0xFF27AE60)),
+      OrderStatus.needsData => (const Color(0xFFFFE3CF), const Color(0xFFDD8C50)),
+      OrderStatus.awaitingService => (const Color(0xFFA5D4FF), const Color(0xFF3B82F6)),
+      OrderStatus.passed => (const Color(0xFFD4ECDE), const Color(0xFF27AE60)),
+      OrderStatus.failed => (const Color(0xFFFFE9E9), const Color(0xFFE53935)),
+    };
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
@@ -143,7 +121,7 @@ class OrderItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(10.r),
       ),
       child: Text(
-        text,
+        order.statusLabel,
         textAlign: TextAlign.center,
         style: TextStyle(
           color: textColor,

@@ -44,7 +44,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
           decoration: BoxDecoration(
             color: const Color(0xFFF2F2F2),
             borderRadius: BorderRadius.circular(14.r),
-            border: Border.all(color: const Color(0xFFE0E0E0), width: 1),
+            border: Border.all(color: const Color(0xFFE0E0E0)),
           ),
           child: ValueListenableBuilder<TextEditingValue>(
             valueListenable: _controller,

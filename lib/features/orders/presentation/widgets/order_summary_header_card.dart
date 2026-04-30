@@ -16,7 +16,7 @@ class OrderSummaryHeaderCard extends StatelessWidget {
       decoration: ShapeDecoration(
         color: const Color(0xFFF8F9F9),
         shape: RoundedRectangleBorder(
-          side: const BorderSide(width: 1, color: Color(0xFF27AE60)),
+          side: const BorderSide(color: Color(0xFF27AE60)),
           borderRadius: BorderRadius.circular(5.r),
         ),
         shadows: const [
@@ -24,7 +24,6 @@ class OrderSummaryHeaderCard extends StatelessWidget {
             color: Color(0x3F000000),
             blurRadius: 4,
             offset: Offset(0, 1),
-            spreadRadius: 0,
           ),
         ],
       ),

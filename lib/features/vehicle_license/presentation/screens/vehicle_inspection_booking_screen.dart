@@ -45,14 +45,14 @@ class VehicleInspectionBookingScreen extends StatelessWidget {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: 20),
-              Icon(
+              const SizedBox(height: 20),
+              const Icon(
                 Icons.warning_amber_rounded,
                 color: Color(0xFFF1C40F),
                 size: 80,
               ),
-              SizedBox(height: 20),
-              Text(
+              const SizedBox(height: 20),
+              const Text(
                 'لا يمكن استكمال إصدار رخصة المركبة إلا بعد إجراء الفحص الفني بنجاح للمركبة',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -63,20 +63,20 @@ class VehicleInspectionBookingScreen extends StatelessWidget {
                   height: 1.5,
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               OutlinedButton(
                 onPressed: () {
                   // Navigate back to home or similar
                   Navigator.of(context).popUntil((route) => route.isFirst);
                 },
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Color(0xFF27AE60)),
-                  minimumSize: Size(double.infinity, 48),
+                  side: const BorderSide(color: Color(0xFF27AE60)),
+                  minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   'العودة للصفحة الرئيسية',
                   style: TextStyle(
                     fontFamily: 'Cairo',
@@ -86,7 +86,7 @@ class VehicleInspectionBookingScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
             ],
           ),
         ),

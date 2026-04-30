@@ -12,21 +12,37 @@ class AuthCubit extends Cubit<AuthState> {
     required this.drivingLicenseRepository,
   }) : super(AuthInitial());
 
-  Future<void> login(String mobileNumber, String password) async {
+  Future<void> login(String mobileNumber, String password, {String? requiredRole}) async {
     emit(AuthLoading());
     try {
-      final error = await authRepository.login(mobileNumber, password);
+      final (error, roles) = await authRepository.login(mobileNumber, password);
       if (error == null) {
-        // Fetch and store licenses immediately after successful login
-        final result = await drivingLicenseRepository.getMyLicenses();
-        if (result.isSuccess) {
-          await drivingLicenseRepository.saveLicensesLocal(result.data!);
-          emit(AuthLoginSuccess());
-        } else {
-          // Even if license fetch fails, we logic success because the user is authenticated
-          // but we might want to log it or handle it. For now, just continue.
-          emit(AuthLoginSuccess());
+        final rolesList = roles ?? [];
+        
+        // Validate role if required
+        if (requiredRole != null) {
+          bool isValid = false;
+          if (requiredRole == 'CITIZEN') {
+            isValid = rolesList.contains('CITIZEN');
+          } else if (requiredRole == 'STAFF') {
+            isValid = rolesList.any((r) => ['INSPECTOR', 'DOCTOR', 'EXAMINATOR'].contains(r));
+          }
+
+          if (!isValid) {
+            await authRepository.logout(); // Clear token/roles if mismatch
+            emit(AuthFailure(message: 'عذراً، لا تمتلك الصلاحية للدخول من هذا المسار.'));
+            return;
+          }
         }
+
+        // Only fetch citizen licenses if user is a CITIZEN
+        if (rolesList.contains('CITIZEN')) {
+          final result = await drivingLicenseRepository.getMyLicenses();
+          if (result.isSuccess) {
+            await drivingLicenseRepository.saveLicensesLocal(result.data!);
+          }
+        }
+        emit(AuthLoginSuccess(roles: rolesList));
       } else {
         emit(AuthFailure(message: error));
       }
@@ -83,7 +99,8 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> checkAuthStatus() async {
     final hasToken = await authRepository.hasToken();
     if (hasToken) {
-      emit(AuthAuthenticated());
+      final roles = await authRepository.getRoles();
+      emit(AuthAuthenticated(roles: roles));
     } else {
       emit(AuthUnauthenticated());
     }

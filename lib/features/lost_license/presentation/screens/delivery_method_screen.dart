@@ -16,8 +16,6 @@ import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
 import 'package:traffic/features/driving_license/presentation/cubits/driving_replacement_cubit.dart';
 import 'package:traffic/features/driving_license/presentation/cubits/driving_replacement_state.dart';
-import 'package:traffic/features/driving_license/presentation/cubits/driving_license_cubit.dart';
-import 'package:traffic/features/driving_license/presentation/cubits/driving_license_state.dart';
 import '../widgets/custom_text_form_field.dart';
 import '../widgets/selection_option_card.dart';
 import 'replacement_type_selection_screen.dart';

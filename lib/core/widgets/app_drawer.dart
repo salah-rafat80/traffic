@@ -39,7 +39,7 @@ class AppDrawer extends StatelessWidget {
             // SizedBox(height: 60.h),
 
             // ── Divider ───────────────────────────────────────────────────────
-            Divider(color: const Color(0xFFE0E0E0), thickness: 1, height: 1),
+            const Divider(color: Color(0xFFE0E0E0), thickness: 1, height: 1),
 
             SizedBox(height: 8.h),
 
@@ -49,7 +49,7 @@ class AppDrawer extends StatelessWidget {
               iconAsset: 'assets/home.svg',
               onTap: () => _navigateTo(context, 3),
             ),
-            Divider(color: const Color(0xFFE0E0E0), thickness: 1, height: 1),
+            const Divider(color: Color(0xFFE0E0E0), thickness: 1, height: 1),
 
             SizedBox(height: 8.h),
             _DrawerItem(
@@ -57,7 +57,7 @@ class AppDrawer extends StatelessWidget {
               iconAsset: 'assets/order.svg',
               onTap: () => _navigateTo(context, 2),
             ),
-            Divider(color: const Color(0xFFE0E0E0), thickness: 1, height: 1),
+            const Divider(color: Color(0xFFE0E0E0), thickness: 1, height: 1),
 
             SizedBox(height: 8.h),
             _DrawerItem(
@@ -65,7 +65,7 @@ class AppDrawer extends StatelessWidget {
               iconAsset: 'assets/settings.svg',
               onTap: () => _navigateTo(context, 1),
             ),
-            Divider(color: const Color(0xFFE0E0E0), thickness: 1, height: 1),
+            const Divider(color: Color(0xFFE0E0E0), thickness: 1, height: 1),
 
             SizedBox(height: 8.h),
             _DrawerItem(

@@ -52,16 +52,22 @@ class _PaymentMethodScreenContentState extends State<_PaymentMethodScreenContent
     _lastClickTime = now;
 
     if (_isVisaSelected) {
-      if (widget.paymentIntent.serviceRequestNumber == null ||
-          widget.paymentIntent.serviceRequestNumber!.isEmpty) {
+      final hasServiceRequest = widget.paymentIntent.serviceRequestNumber != null &&
+          widget.paymentIntent.serviceRequestNumber!.isNotEmpty;
+      final hasViolations = widget.paymentIntent.violationIds != null &&
+          widget.paymentIntent.violationIds!.isNotEmpty;
+
+      if (!hasServiceRequest && !hasViolations) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('رقم الطلب غير متاح')),
+          const SnackBar(content: Text('بيانات الطلب غير متاحة')),
         );
         return;
       }
-      developer.log('Initiating payment for: ${widget.paymentIntent.serviceRequestNumber}', name: 'PaymentMethodScreen');
+      developer.log('Initiating payment for: ${widget.paymentIntent.serviceRequestNumber} or ${widget.paymentIntent.violationIds}', name: 'PaymentMethodScreen');
       context.read<PaymentCubit>().initiatePayment(
-            widget.paymentIntent.serviceRequestNumber!,
+            serviceRequestNumber: widget.paymentIntent.serviceRequestNumber,
+            violationIds: widget.paymentIntent.violationIds,
+            amount: widget.paymentIntent.amount,
           );
     }
   }

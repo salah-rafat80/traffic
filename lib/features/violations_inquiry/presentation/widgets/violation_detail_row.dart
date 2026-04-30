@@ -29,7 +29,6 @@ class ViolationDetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       textDirection: TextDirection.rtl,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           width: 35.w,

@@ -16,6 +16,7 @@ import '../../profile/data/repositories/profile_repository.dart';
 import '../domain/entities/order_model.dart';
 import 'widgets/order_status_timeline.dart';
 import 'widgets/order_summary_header_card.dart';
+import '../../vehicle_license/renewal_license/presentation/screens/vehicle_renewal_delivery_screen.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
   final OrderModel order;
@@ -35,7 +36,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     final bool isSupportedProcedure =
         widget.order.title.contains('تجديد رخصة') ||
         widget.order.title.contains('تجديد رخصة قيادة') ||
-        widget.order.title.contains('إصدار رخصة قيادة');
+        widget.order.title.contains('إصدار رخصة قيادة') ||
+        widget.order.title.contains('تجديد رخصة مركبة');
 
     // Show the button when the order was accepted/approved but not yet
     // completed. "pending" and "needsData" are the typical states where
@@ -64,7 +66,19 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     final ApiClient apiClient = ApiClient();
     final String title = widget.order.title;
 
-    if (title.contains('إصدار رخصة قيادة')) {
+    if (title.contains('تجديد رخصة مركبة') || requestNumber.startsWith('VR-')) {
+      // Vehicle License Renewal Finalization
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VehicleRenewalDeliveryScreen(
+            requestNumber: requestNumber,
+            // Pass the ID as plate number since we don't have the original model here
+            plateNumber: widget.order.id, 
+          ),
+        ),
+      );
+    } else if (title.contains('إصدار رخصة قيادة') || requestNumber.startsWith('LR-')) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -77,7 +91,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           ),
         ),
       );
-    } else if (title.contains('تجديد رخصة')) {
+    } else if (title.contains('تجديد رخصة قيادة') ||
+        title.contains('تجديد رخصة') ||
+        requestNumber.startsWith('DR-')) {
       final DrivingRenewalRepository repository = DrivingRenewalRepository(
         apiClient,
       );

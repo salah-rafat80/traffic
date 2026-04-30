@@ -30,7 +30,6 @@ class SettingsMenuItem extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             child: Row(
               textDirection: TextDirection.rtl,
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Container(
                   width: 30.w,

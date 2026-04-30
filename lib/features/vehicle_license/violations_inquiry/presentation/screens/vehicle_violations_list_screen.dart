@@ -29,9 +29,8 @@ class VehicleViolationsListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ViolationsCubit(
-        ViolationsRepository(ApiClient()),
-      )..loadVehicleLicenseViolations(
+      create: (_) => ViolationsCubit(ViolationsRepository(ApiClient()))
+        ..loadVehicleLicenseViolations(
           licenseNumber: vehicle.vehicleLicenseNumber,
         ),
       child: _VehicleViolationsListView(vehicle: vehicle),
@@ -94,10 +93,11 @@ class _VehicleViolationsListViewState
         }
       },
       builder: (context, state) {
-        final List<ViolationModel> allViolations =
-            state is ViolationsLoaded ? state.violationsList.violations : [];
+        final List<ViolationModel> allViolations = state is ViolationsLoaded
+            ? state.violationsList.violations
+            : [];
         final filtered = _getFiltered(allViolations);
-        final totalAmt = _totalAmount(allViolations);
+        final totalAmt = state is ViolationsLoaded ? state.violationsList.totalPayableAmount : 0.0;
         final selAmt = _selectedAmount(allViolations);
 
         return Scaffold(
@@ -135,8 +135,9 @@ class _VehicleViolationsListViewState
                       onPressed: _selectedCount > 0
                           ? () {
                               final selected = allViolations
-                                  .where((v) =>
-                                      _selectedViolationIds.contains(v.id))
+                                  .where(
+                                    (v) => _selectedViolationIds.contains(v.id),
+                                  )
                                   .toList();
                               Navigator.push(
                                 context,
@@ -146,13 +147,14 @@ class _VehicleViolationsListViewState
                                     onNext: () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => PaymentMethodScreen(
-                                          paymentIntent: PaymentIntent(
-                                            orderType: 'مخالفات رخصة المركبة',
-                                            amount: selAmt,
-                                            currency: 'جنية مصري',
+                                          builder: (_) => PaymentMethodScreen(
+                                            paymentIntent: PaymentIntent(
+                                              orderType: 'مخالفات رخصة المركبة',
+                                              amount: selAmt,
+                                              currency: 'جنية مصري',
+                                              violationIds: selected.map((v) => v.violationId).toList(),
+                                            ),
                                           ),
-                                        ),
                                       ),
                                     ),
                                     onEdit: () => Navigator.pop(context),
@@ -199,11 +201,9 @@ class _VehicleViolationsListViewState
               SizedBox(height: 16.h),
               ElevatedButton(
                 onPressed: () {
-                  context
-                      .read<ViolationsCubit>()
-                      .loadVehicleLicenseViolations(
-                        licenseNumber: widget.vehicle.plateNumber,
-                      );
+                  context.read<ViolationsCubit>().loadVehicleLicenseViolations(
+                    licenseNumber: widget.vehicle.vehicleLicenseNumber,
+                  );
                 },
                 child: const Text(
                   'إعادة المحاولة',
@@ -219,68 +219,76 @@ class _VehicleViolationsListViewState
     final now = DateTime.now();
     final lastUpdate = '${now.day}/${now.month}/${now.year}';
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          SizedBox(height: 16.h),
-          Text(
-            'مخالفات رخصة المركبة',
-            style: TextStyle(
-              fontFamily: 'Tajawal',
-              fontSize: 17.sp,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1A1A1A),
+    return RefreshIndicator(
+      onRefresh: () async {
+        await context.read<ViolationsCubit>().loadVehicleLicenseViolations(
+              licenseNumber: widget.vehicle.vehicleLicenseNumber,
+            );
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            SizedBox(height: 16.h),
+            Text(
+              'مخالفات رخصة المركبة',
+              style: TextStyle(
+                fontFamily: 'Tajawal',
+                fontSize: 17.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1A1A1A),
+              ),
             ),
-          ),
-          SizedBox(height: 16.h),
-          ViolationsSummaryCard(
-            totalViolations: allViolations.length,
-            totalAmount: totalAmt,
-            lastUpdate: lastUpdate,
-          ),
-          SizedBox(height: 16.h),
-          ViolationFilterTabs(
-            showPaid: _showPaid,
-            onChanged: (val) => setState(() {
-              _showPaid = val;
-              _selectedViolationIds.clear();
-            }),
-          ),
-          SizedBox(height: 16.h),
-          if (filtered.isEmpty)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 40.h),
-              child: Center(
-                child: Text(
-                  'لا توجد مخالفات',
-                  style: TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF999999),
+            SizedBox(height: 16.h),
+            ViolationsSummaryCard(
+              totalViolations: allViolations.length,
+              totalAmount: totalAmt,
+              lastUpdate: lastUpdate,
+            ),
+            SizedBox(height: 16.h),
+            ViolationFilterTabs(
+              showPaid: _showPaid,
+              onChanged: (val) => setState(() {
+                _showPaid = val;
+                _selectedViolationIds.clear();
+              }),
+            ),
+            SizedBox(height: 16.h),
+            if (filtered.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 40.h),
+                child: Center(
+                  child: Text(
+                    'لا توجد مخالفات',
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF999999),
+                    ),
+                  ),
+                ),
+              )
+            else
+              ...filtered.map(
+                (violation) => ViolationListItem(
+                  violation: violation,
+                  isSelected: _selectedViolationIds.contains(violation.id),
+                  onSelect: (selected) => _toggleSelection(violation, selected),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ViolationDetailsScreen(violation: violation),
+                    ),
                   ),
                 ),
               ),
-            )
-          else
-            ...filtered.map(
-              (violation) => ViolationListItem(
-                violation: violation,
-                isSelected: _selectedViolationIds.contains(violation.id),
-                onSelect: (selected) => _toggleSelection(violation, selected),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        ViolationDetailsScreen(violation: violation),
-                  ),
-                ),
-              ),
-            ),
-          SizedBox(height: 16.h),
-        ],
+            SizedBox(height: 16.h),
+          ],
+        ),
       ),
     );
   }

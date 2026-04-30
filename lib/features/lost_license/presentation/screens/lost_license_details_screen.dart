@@ -42,7 +42,7 @@ class LostLicenseDetailsScreen extends StatelessWidget {
         body: Column(
           children: [
             // ── App bar ──────────────────────────────────────────────────────
-            ServiceScreenAppBar(title: 'استخراج بدل فاقد / تالف'),
+            const ServiceScreenAppBar(title: 'استخراج بدل فاقد / تالف'),
 
             // ── Scrollable body ──────────────────────────────────────────────
             Expanded(

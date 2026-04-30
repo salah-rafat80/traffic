@@ -9,7 +9,6 @@ class AppTheme {
     final text = arabic ? AppTypography.arabic() : AppTypography.latin();
     final baseScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
-      brightness: Brightness.light,
     );
     final colorScheme = baseScheme.copyWith(
       primary: AppColors.primary,
@@ -35,11 +34,11 @@ class AppTheme {
         displayColor: AppColors.onPrimary,
         fontFamily: 'Tajawal',
       ),
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           fontFamily: 'Tajawal',
           fontSize: 18,
           fontWeight: FontWeight.w600,
@@ -169,7 +168,7 @@ class AppTheme {
           }
           return Colors.transparent;
         }),
-        side: const BorderSide(color: AppColors.border, width: 1),
+        side: const BorderSide(color: AppColors.border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
     );

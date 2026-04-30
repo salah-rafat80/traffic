@@ -16,6 +16,7 @@ import 'package:traffic/features/profile/data/repositories/profile_repository.da
 import 'package:traffic/features/vehicle_license/replacement_license/presentation/screens/vehicle_lost_license_selection_screen.dart';
 import 'package:traffic/features/vehicle_license/renewal_license/presentation/screens/renewal_vehicle_selection_screen.dart';
 import 'package:traffic/features/vehicle_license/violations_inquiry/presentation/screens/select_vehicle_violation_screen.dart';
+import 'package:traffic/features/vehicle_license/data/models/vehicle_type_model.dart';
 
 class VehicleLicenseScreen extends StatefulWidget {
   const VehicleLicenseScreen({super.key});
@@ -66,8 +67,6 @@ class _VehicleLicenseScreenState extends State<VehicleLicenseScreen> {
       ProfileRepository(ApiClient()),
     );
 
-    // Kick off API load immediately so data is ready by the time the user
-    // finishes reading the terms screen.
     cubit.fetchInitData();
 
     final documents = [
@@ -98,77 +97,111 @@ class _VehicleLicenseScreenState extends State<VehicleLicenseScreen> {
                 MaterialPageRoute(
                   builder: (_) => BlocProvider.value(
                     value: cubit,
-                    // BlocBuilder waits for VehicleLicenseInitDataSuccess so
-                    // vehicle type / brand / model dropdowns are populated from
-                    // the API (GET /VehicleTypes) rather than hardcoded lists.
-                    child: BlocBuilder<VehicleLicenseCubit, VehicleLicenseState>(
-                      builder: (ctx, state) {
-                        // ── Derive dropdown options from API response ────────
-                        List<String> typeOptions = [];
-                        List<String> brandOptions = [];
-                        List<String> modelOptions = [];
-
-                        if (state is VehicleLicenseInitDataSuccess) {
-                          final types = state.vehicleTypes;
-                          typeOptions =
-                              types.map((t) => t.displayName).toList();
-                          // Flatten all brands and models across all types so
-                          // the existing GenericDocumentUploadScreen still works.
-                          final allBrands = types
-                              .expand((t) => t.brands)
-                              .toList();
-                          brandOptions =
-                              allBrands.map((b) => b.displayName).toList();
-                          modelOptions = allBrands
-                              .expand((b) => b.models)
-                              .map((m) => m.displayName)
-                              .toList();
-                        } else if (state is VehicleLicenseLoading) {
-                          return const Scaffold(
-                            body: Center(child: CircularProgressIndicator()),
-                          );
-                        } else if (state is VehicleLicenseFailure) {
-                          // On failure, retry once and fall through to
-                          // show the screen with a minimal fallback.
-                          typeOptions = ['ملاكي', 'نقل', 'أجرة', 'دراجة نارية'];
-                          brandOptions = ['تويوتا', 'هيونداي', 'كيا', 'نيسان'];
-                          modelOptions = ['2023', '2024', '2025', '2026'];
-                        }
-
-                        return GenericDocumentUploadScreen(
-                          appBarTitle: 'اصدار رخصة مركبة',
-                          subtitle:
-                              'يرجى رفع المستندات التالية لإتمام إجراءات إصدار رخصة المركبة. يجب أن تكون الصور واضحة ومقروءة.',
-                          dropdowns: [
-                            DropdownConfig(
-                              title: 'نوع المركبة',
-                              hint: 'اختر نوع المركبة',
-                              options: typeOptions,
-                            ),
-                            DropdownConfig(
-                              title: 'الماركة',
-                              hint: 'اختر الماركة',
-                              options: brandOptions,
-                            ),
-                            DropdownConfig(
-                              title: 'الموديل',
-                              hint: 'اختر الموديل',
-                              options: modelOptions,
-                            ),
-                          ],
-                          documents: documents,
-                          onNextPressed: (selectedDropdowns) {
-                            Navigator.push(
-                              ctx,
-                              MaterialPageRoute(
-                                builder: (_) => BlocProvider.value(
-                                  value: cubit,
-                                  child: VehicleInsuranceScreen(
-                                    documents: documents,
-                                    selectedDropdowns: selectedDropdowns,
+                    child: Builder(
+                      builder: (ctx) {
+                        return BlocConsumer<VehicleLicenseCubit,
+                            VehicleLicenseState>(
+                          listener: (ctx, state) {
+                            if (state is VehicleLicenseFailure) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    state.message,
+                                    textDirection: TextDirection.rtl,
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 13.sp,
+                                    ),
                                   ),
+                                  backgroundColor: Colors.red,
                                 ),
-                              ),
+                              );
+                            }
+                          },
+                          builder: (ctx, state) {
+                            List<String> typeOptions = [];
+                            List<String> brandOptions = [];
+                            List<String> modelOptions = [];
+
+                            if (state is VehicleLicenseInitDataSuccess) {
+                              final types = state.vehicleTypes;
+                              final allowedBackendNames = {
+                                'PrivateCar',
+                                'Truck',
+                                'Taxi',
+                                'Motorcycle',
+                                'Bus',
+                                'PrivateBus',
+                                'Trailer',
+                              };
+
+                              final filteredTypes = types
+                                  .where((t) =>
+                                      allowedBackendNames.contains(t.name))
+                                  .toList();
+
+                              typeOptions = filteredTypes
+                                  .map((t) => t.displayName)
+                                  .toList();
+
+                              final allBrands =
+                                  types.expand((t) => t.brands).toList();
+                              brandOptions = allBrands
+                                  .map((b) => b.displayName)
+                                  .toList();
+                              modelOptions = allBrands
+                                  .expand((b) => b.models)
+                                  .map((m) => m.displayName)
+                                  .toList();
+                            } else if (state is VehicleLicenseLoading) {
+                              return const Scaffold(
+                                body:
+                                    Center(child: CircularProgressIndicator()),
+                              );
+                            } else if (state is VehicleLicenseFailure) {
+                              typeOptions = VehicleTypeModel.fallbackTypes
+                                  .map((t) => t.displayName)
+                                  .toList();
+                              brandOptions = [];
+                              modelOptions = [];
+                            }
+
+                            return GenericDocumentUploadScreen(
+                              appBarTitle: 'اصدار رخصة مركبة',
+                              subtitle:
+                                  'يرجى رفع المستندات التالية لإتمام إجراءات إصدار رخصة المركبة. يجب أن تكون الصور واضحة ومقروءة.',
+                              dropdowns: [
+                                DropdownConfig(
+                                  title: 'نوع المركبة',
+                                  hint: 'اختر نوع المركبة',
+                                  options: typeOptions,
+                                ),
+                                DropdownConfig(
+                                  title: 'الماركة',
+                                  hint: 'اختر الماركة',
+                                  options: brandOptions,
+                                ),
+                                DropdownConfig(
+                                  title: 'الموديل',
+                                  hint: 'اختر الموديل',
+                                  options: modelOptions,
+                                ),
+                              ],
+                              documents: documents,
+                              onNextPressed: (selectedDropdowns) {
+                                Navigator.push(
+                                  ctx,
+                                  MaterialPageRoute(
+                                    builder: (_) => BlocProvider.value(
+                                      value: cubit,
+                                      child: VehicleInsuranceScreen(
+                                        documents: documents,
+                                        selectedDropdowns: selectedDropdowns,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                             );
                           },
                         );
@@ -197,7 +230,6 @@ class _VehicleLicenseScreenState extends State<VehicleLicenseScreen> {
             onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
           ),
           SizedBox(height: 5.h),
-
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -246,7 +278,6 @@ class _VehicleLicenseScreenState extends State<VehicleLicenseScreen> {
                       ),
                     ),
                   ),
-
                   SizedBox(height: 24.h),
                   ServiceListItem(
                     title: 'استعلام عن مخالفات المركبة و سدادها',
@@ -258,13 +289,6 @@ class _VehicleLicenseScreenState extends State<VehicleLicenseScreen> {
                       ),
                     ),
                   ),
-
-                  SizedBox(height: 24.h),
-                  const ServiceListItem(
-                    title: 'سداد مخالفات المركبة',
-                    icon: 'assets/cart_payment.svg',
-                  ),
-                  SizedBox(height: 24.h),
                 ],
               ),
             ),

@@ -4,6 +4,7 @@ import 'package:traffic/features/auth/presentation/screens/onboarding_screen/onb
 import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
 import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
+import 'package:traffic/features/examiner_dashboard/presentation/screens/daily_tests_screen.dart';
 
 
 class SplashScreen extends StatefulWidget {
@@ -31,10 +32,18 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (isAuthenticated) {
-      // Navigate to main navigation screen (Home)
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-      );
+      final roles = await authRepository.getRoles();
+      final isStaff = roles.any((r) => ['INSPECTOR', 'DOCTOR', 'EXAMINATOR'].contains(r));
+
+      if (isStaff) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const DailyTestsScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+        );
+      }
     } else {
       // Navigate to onboarding screen
       Navigator.of(context).pushReplacement(

@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class RadioDot extends StatelessWidget {
   final bool isSelected;
-  const RadioDot({required this.isSelected});
+  const RadioDot({super.key, required this.isSelected});
 
   @override
   Widget build(BuildContext context) {

@@ -434,21 +434,7 @@ class _StyledCalendar extends StatelessWidget {
 
               // ── Grid borders ─────────────────────────────────────────────
               daysHaveCircularBorder: true,
-              thisMonthDayBorderColor: Colors.transparent,
-
-              // ── Background ───────────────────────────────────────────────
-              dayButtonColor: Colors.transparent,
-
-              // ── Separator between weekday labels and day cells ───────────
-              headerTitleTouchable: false,
-              showIconBehindDayText: false,
-
-              // ── Locale / week start ──────────────────────────────────────
-              showOnlyCurrentMonthDate: false,
               isScrollable: false,
-
-              // ── No event marks ───────────────────────────────────────────
-              markedDatesMap: null,
             ),
           ),
         ],

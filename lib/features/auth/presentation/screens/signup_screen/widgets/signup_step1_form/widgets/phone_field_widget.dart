@@ -36,7 +36,6 @@ class PhoneFieldWidget extends StatelessWidget {
               color: error != null
                   ? const Color(0xFFD32F2F)
                   : const Color(0xFF27AE60),
-              width: 1,
             ),
             borderRadius: BorderRadius.circular(8.r),
           ),

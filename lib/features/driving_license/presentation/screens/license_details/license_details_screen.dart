@@ -221,10 +221,10 @@ class _LicenseDetailsScreenState extends State<LicenseDetailsScreen> {
               ],
             ),
             if (_isSubmitting)
-              Positioned.fill(
+              const Positioned.fill(
                 child: ColoredBox(
-                  color: const Color(0x66000000),
-                  child: const Center(
+                  color: Color(0x66000000),
+                  child: Center(
                     child: CircularProgressIndicator(),
                   ),
                 ),
@@ -282,7 +282,7 @@ class _SelectableLicenseCard extends StatelessWidget {
 
               // ── Warning banner (shown inside card when violations exist) ──
               if (isSelected && data.hasUnpaidViolations) ...[
-                SizedBox(height: 0),
+                const SizedBox(height: 0),
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: 12.w,

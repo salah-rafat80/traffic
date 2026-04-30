@@ -9,7 +9,7 @@ class AuthRepository {
 
   AuthRepository(this._apiClient);
 
-  Future<String?> login(String mobileNumber, String password) async {
+  Future<(String? error, List<String>? roles)> login(String mobileNumber, String password) async {
     try {
       final response = await _apiClient.dio.post(
         '/Auth/login',
@@ -31,25 +31,33 @@ class AuthRepository {
           if (token != null && token.isNotEmpty) {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('token', token);
-            return null; // Return null on success
+            
+            // Save roles if available
+            final roles = details['roles'] as List?;
+            if (roles != null) {
+              await prefs.setStringList('roles', roles.map((e) => e.toString()).toList());
+            }
+            
+            final rolesList = roles?.map((e) => e.toString()).toList() ?? [];
+            return (null, rolesList); // Return null on success
           }
         }
         
         final message = data['message'] as String?;
-        return message ?? 'فشل تسجيل الدخول. تأكد من صحة البيانات.';
+        return (message ?? 'فشل تسجيل الدخول. تأكد من صحة البيانات.', null);
       }
       
-      return 'لم يتم استلام رد صحيح من السيرفر';
+      return ('لم يتم استلام رد صحيح من السيرفر', null);
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
          final errorData = e.response!.data;
          if (errorData is Map<String, dynamic> && errorData['message'] != null) {
-            return errorData['message'].toString();
+            return (errorData['message'].toString(), null);
          }
       }
-      return 'فشل تسجيل الدخول. تأكد من صحة البيانات.';
+      return ('فشل تسجيل الدخول. تأكد من صحة البيانات.', null);
     } catch (e) {
-      return 'حدث خطأ غير متوقع.';
+      return ('حدث خطأ غير متوقع.', null);
     }
   }
 
@@ -187,9 +195,15 @@ class AuthRepository {
     return token != null && token.isNotEmpty;
   }
 
+  Future<List<String>> getRoles() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList('roles') ?? [];
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    await prefs.remove('roles');
     await ProfileCache().clearProfile();
   }
 }

@@ -18,7 +18,6 @@ class AgreementCheckbox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
       textDirection: TextDirection.rtl,
       children: [
         SizedBox(
@@ -28,7 +27,7 @@ class AgreementCheckbox extends StatelessWidget {
             value: isAgreed,
             onChanged: onChanged != null ? (v) => onChanged!(v ?? false) : null,
             activeColor: const Color(0xFF27AE60),
-            side: BorderSide(color: Colors.black, width: 1.r),
+            side: BorderSide(width: 1.r),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4.r),
             ),

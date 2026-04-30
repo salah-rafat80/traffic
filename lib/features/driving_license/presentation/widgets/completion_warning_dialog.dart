@@ -36,17 +36,15 @@ class CompletionWarningDialog extends StatelessWidget {
             color: const Color(0xFFF8F9F9),
             borderRadius: BorderRadius.circular(24.r),
             boxShadow: [
-              BoxShadow(
-                color: const Color(0x19000000),
+              const BoxShadow(
+                color: Color(0x19000000),
                 blurRadius: 10,
-                offset: const Offset(0, 4),
-                spreadRadius: 0,
+                offset: Offset(0, 4),
               ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // ── Warning icon ─────────────────────────────────────────────
               SvgPicture.asset(

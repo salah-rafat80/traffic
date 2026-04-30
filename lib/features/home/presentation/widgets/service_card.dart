@@ -31,11 +31,10 @@ class ServiceCard extends StatelessWidget {
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 8,
-              spreadRadius: 0,
               offset: const Offset(0, 2),
             ),
           ],
-          border: Border.all(color: const Color(0xFFF0F0F0), width: 1),
+          border: Border.all(color: const Color(0xFFF0F0F0)),
         ),
         child: isAssistant
             ? _AssistantContent(icon: icon, title: title)
