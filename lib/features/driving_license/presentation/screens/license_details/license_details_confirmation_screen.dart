@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 import 'package:traffic/features/auth/presentation/screens/signup_screen/widgets/signup_step1_form/widgets/next_button_widget.dart';
 import 'package:traffic/features/driving_license/presentation/screens/theory_test/theory_test_booking_screen.dart';
@@ -15,7 +16,7 @@ import 'widgets/license_info_card.dart';
 /// selected [DrivingLicenseModel] and renders it in a read-only, confirmed
 /// state (green border, selected radio dot). The "التالي" button navigates to
 /// [TheoryTestBookingScreen].
-class LicenseDetailsConfirmationScreen extends StatelessWidget {
+class LicenseDetailsConfirmationScreen extends StatefulWidget {
   /// The licence chosen by the user on the previous screen.
   final DrivingLicenseModel license;
 
@@ -23,6 +24,13 @@ class LicenseDetailsConfirmationScreen extends StatelessWidget {
     super.key,
     required this.license,
   });
+
+  @override
+  State<LicenseDetailsConfirmationScreen> createState() => _LicenseDetailsConfirmationScreenState();
+}
+
+class _LicenseDetailsConfirmationScreenState extends State<LicenseDetailsConfirmationScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -44,12 +52,15 @@ class LicenseDetailsConfirmationScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5F5F5),
+        drawer: const AppDrawer(),
         body: Column(
           children: [
             // ── App bar ──────────────────────────────────────────────────────
-            const ServiceScreenAppBar(
+            ServiceScreenAppBar(
               title: 'تجديد رخصة القيادة',
+              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
             ),
 
             // ── Scrollable body ──────────────────────────────────────────────
@@ -79,7 +90,7 @@ class LicenseDetailsConfirmationScreen extends StatelessWidget {
                     // ── Confirmed licence card ────────────────────────────────
                     // Wrapped in a green-bordered container to match the
                     // "selected" state shown in the design.
-                    _ConfirmedLicenseCard(data: license),
+                    _ConfirmedLicenseCard(data: widget.license),
 
                     SizedBox(height: 24.h),
 

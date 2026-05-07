@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../presentation/cubits/vehicle_renewal_cubit.dart';
 import '../../../presentation/cubits/vehicle_renewal_state.dart';
 import 'package:traffic/core/widgets/loading_overlay.dart';
+import 'package:traffic/injection_container.dart';
 
 /// Step 2 – Vehicle selection screen.
 /// Loads real data from GET /VehicleLicense/my-licenses using cache-first strategy.
@@ -40,26 +41,11 @@ class _RenewalVehicleSelectionScreenState
   Future<void> _loadVehicles() async {
     setState(() => _isLoading = true);
     try {
-      final repository = VehicleLicenseRepository(ApiClient());
+      final repository = getIt<VehicleLicenseRepository>();
 
-      // Cache-first: show cached data immediately, then refresh in background
-      final cached = await repository.getLocalLicenses();
-      if (cached.isNotEmpty) {
-        setState(() {
-          _vehicles = cached;
-          _isLoading = false;
-        });
-        final result = await repository.getMyLicenses();
-        if (result.isSuccess && result.data != null) {
-          await repository.saveLicensesLocal(result.data!);
-          if (mounted) setState(() => _vehicles = result.data!);
-        }
-        return;
-      }
-
+      // Fetch fresh from API directly
       final result = await repository.getMyLicenses();
       if (result.isSuccess && result.data != null) {
-        await repository.saveLicensesLocal(result.data!);
         if (mounted) {
           setState(() {
             _vehicles = result.data!;
@@ -67,7 +53,12 @@ class _RenewalVehicleSelectionScreenState
           });
         }
       } else {
-        if (mounted) setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result.error ?? 'فشل تحميل الرخص')),
+          );
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
@@ -112,8 +103,7 @@ class _RenewalVehicleSelectionScreenState
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          VehicleRenewalCubit(VehicleLicenseRepository(ApiClient())),
+      create: (context) => getIt<VehicleRenewalCubit>(),
       child: Builder(
         builder: (context) {
           return BlocConsumer<VehicleRenewalCubit, VehicleRenewalState>(
@@ -144,82 +134,79 @@ class _RenewalVehicleSelectionScreenState
             builder: (context, state) {
               return LoadingOverlay(
                 isLoading: state is VehicleRenewalLoading,
-                child: Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: Scaffold(
-                    key: _scaffoldKey,
-                    backgroundColor: const Color(0xFFF5F5F5),
-                    drawer: const AppDrawer(),
-                    body: Column(
-                      children: [
-                        ServiceScreenAppBar(
-                          title: 'تجديد رخصة مركبة',
-                          onMenuPressed: () =>
-                              _scaffoldKey.currentState?.openDrawer(),
-                        ),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16.w, vertical: 16.h),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  'تفاصيل رخصة المركبة',
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(
-                                    fontFamily: 'Tajawal',
-                                    fontSize: 17.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF222222),
-                                  ),
+                child: Scaffold(
+                  key: _scaffoldKey,
+                  backgroundColor: const Color(0xFFF5F5F5),
+                  endDrawer: const AppDrawer(),
+                  body: Column(
+                    children: [
+                      ServiceScreenAppBar(
+                        title: 'تجديد رخصة مركبة',
+                        onMenuPressed: () =>
+                            _scaffoldKey.currentState?.openEndDrawer(),
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.w, vertical: 16.h),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'تفاصيل رخصة المركبة',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontSize: 17.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF222222),
                                 ),
-                                SizedBox(height: 12.h),
-                                if (_isLoading)
-                                  const Center(
-                                      child: CircularProgressIndicator())
-                                else if (_vehicles.isEmpty)
-                                  const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(20.0),
-                                      child: Text(
-                                        'لا يوجد رخص مركبات مسجلة حالياً',
-                                        style: TextStyle(fontFamily: 'Tajawal'),
-                                      ),
+                              ),
+                              SizedBox(height: 12.h),
+                              if (_isLoading)
+                                const Center(
+                                    child: CircularProgressIndicator())
+                              else if (_vehicles.isEmpty)
+                                const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(20.0),
+                                    child: Text(
+                                      'لا يوجد رخص مركبات مسجلة حالياً',
+                                      style: TextStyle(fontFamily: 'Tajawal'),
                                     ),
-                                  )
-                                else
-                                  ..._vehicles.asMap().entries.map((entry) {
-                                    final index = entry.key;
-                                    final model = _toRenewalModel(entry.value);
-                                    return Padding(
-                                      padding: EdgeInsets.only(bottom: 12.h),
-                                      child: RenewalVehicleLicenseCard(
-                                        vehicle: model,
-                                        isSelected: _selectedIndex == index,
-                                        onTap: model.canRenew
-                                            ? () => setState(
-                                                () => _selectedIndex = index)
-                                            : null,
-                                      ),
-                                    );
-                                  }),
-                                SizedBox(height: 12.h),
-                                PrimaryButton(
-                                  label: 'التالي',
-                                  onPressed: _canProceed
-                                      ? () => _onNextPressed(context)
-                                      : null,
-                                  height: 48.h,
-                                  backgroundColor: const Color(0xFF27AE60),
-                                ),
-                                SizedBox(height: 24.h),
-                              ],
-                            ),
+                                  ),
+                                )
+                              else
+                                ..._vehicles.asMap().entries.map((entry) {
+                                  final index = entry.key;
+                                  final model = _toRenewalModel(entry.value);
+                                  return Padding(
+                                    padding: EdgeInsets.only(bottom: 12.h),
+                                    child: RenewalVehicleLicenseCard(
+                                      vehicle: model,
+                                      isSelected: _selectedIndex == index,
+                                      onTap: model.canRenew
+                                          ? () => setState(
+                                              () => _selectedIndex = index)
+                                          : null,
+                                    ),
+                                  );
+                                }),
+                              SizedBox(height: 12.h),
+                              PrimaryButton(
+                                label: 'التالي',
+                                onPressed: _canProceed
+                                    ? () => _onNextPressed(context)
+                                    : null,
+                                height: 48.h,
+                                backgroundColor: const Color(0xFF27AE60),
+                              ),
+                              SizedBox(height: 24.h),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               );

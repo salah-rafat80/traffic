@@ -5,6 +5,7 @@ import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
 import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:traffic/features/examiner_dashboard/presentation/screens/daily_tests_screen.dart';
+import 'package:traffic/injection_container.dart';
 
 
 class SplashScreen extends StatefulWidget {
@@ -22,30 +23,43 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initApp() async {
-    // Wait for 3 seconds
-    await Future.delayed(const Duration(seconds: 3));
+    try {
+      // Wait for 3 seconds
+      await Future.delayed(const Duration(seconds: 3));
 
-    // Check authentication status
-    final authRepository = AuthRepository(ApiClient());
-    final isAuthenticated = await authRepository.hasToken();
+      // Check authentication status
+      final authRepository = getIt<AuthRepository>();
+      final isAuthenticated = await authRepository.hasToken();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (isAuthenticated) {
-      final roles = await authRepository.getRoles();
-      final isStaff = roles.any((r) => ['INSPECTOR', 'DOCTOR', 'EXAMINATOR'].contains(r));
+      if (isAuthenticated) {
+        final roles = await authRepository.getRoles();
+        final isStaff =
+            roles.any((r) => ['INSPECTOR', 'DOCTOR', 'EXAMINATOR'].contains(r));
 
-      if (isStaff) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const DailyTestsScreen()),
-        );
+        if (isStaff) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const DailyTestsScreen()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+                builder: (context) => const MainNavigationScreen()),
+          );
+        }
       } else {
+        // Navigate to onboarding screen
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
         );
       }
-    } else {
-      // Navigate to onboarding screen
+    } catch (e, stack) {
+      debugPrint('🚨 CRITICAL ERROR during SplashScreen init: $e');
+      debugPrint('Stack trace: $stack');
+      
+      if (!mounted) return;
+      // If error occurs, fallback to onboarding to avoid stuck splash
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const OnboardingScreen()),
       );

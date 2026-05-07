@@ -6,6 +6,7 @@ class NavigationButtonsWidget extends StatelessWidget {
   final VoidCallback onPreviousPressed;
   final bool isValid;
   final double buttonHeight;
+  final bool isLoading;
 
   const NavigationButtonsWidget({
     super.key,
@@ -13,6 +14,7 @@ class NavigationButtonsWidget extends StatelessWidget {
     required this.onPreviousPressed,
     required this.isValid,
     required this.buttonHeight,
+    this.isLoading = false,
   });
 
   @override
@@ -22,25 +24,34 @@ class NavigationButtonsWidget extends StatelessWidget {
         // Next button
         Expanded(
           child: InkWell(
-            onTap: isValid ? onNextPressed : null,
+            onTap: (isValid && !isLoading) ? onNextPressed : null,
             child: Container(
               height: buttonHeight,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8.r),
-                color: isValid
+                color: (isValid && !isLoading)
                     ? const Color(0xFF27AE60)
                     : const Color(0xFFBDBDBD),
               ),
               child: Center(
-                child: Text(
-                  'التالي',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Tajawal',
-                  ),
-                ),
+                child: isLoading
+                    ? SizedBox(
+                        height: 24.h,
+                        width: 24.h,
+                        child: const CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'التالي',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Tajawal',
+                        ),
+                      ),
               ),
             ),
           ),
@@ -51,7 +62,7 @@ class NavigationButtonsWidget extends StatelessWidget {
           child: SizedBox(
             height: buttonHeight,
             child: OutlinedButton(
-              onPressed: onPreviousPressed,
+              onPressed: isLoading ? null : onPreviousPressed,
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF27AE60),
                 side: const BorderSide(color: Color(0xFF27AE60)),
@@ -74,3 +85,4 @@ class NavigationButtonsWidget extends StatelessWidget {
     );
   }
 }
+

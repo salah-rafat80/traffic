@@ -12,18 +12,15 @@ import '../medical_check/medical_check_screen.dart';
 import '../practical_test/practical_test_booking_screen.dart';
 import 'widgets/first_license_booking_helper.dart';
 import 'package:traffic/core/widgets/generic_booking_screen.dart';
+import 'package:traffic/injection_container.dart';
 
 class DrivingLicenseUploadDocumentsScreen extends StatelessWidget {
   const DrivingLicenseUploadDocumentsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final ApiClient apiClient = ApiClient();
     return BlocProvider(
-      create: (_) => DrivingLicenseCubit(
-        repository: DrivingLicenseRepository(apiClient),
-        profileRepository: ProfileRepository(apiClient),
-      ),
+      create: (_) => getIt<DrivingLicenseCubit>(),
       child: const _UploadContent(),
     );
   }
@@ -38,11 +35,12 @@ class _UploadContent extends StatefulWidget {
 
 class _UploadContentState extends State<_UploadContent> {
   late final List<DocumentItemModel> _documents;
-  final FirstLicenseBookingHelper _booking = FirstLicenseBookingHelper();
+  late final FirstLicenseBookingHelper _booking;
 
   @override
   void initState() {
     super.initState();
+    _booking = getIt<FirstLicenseBookingHelper>();
     _documents = [
       DocumentItemModel(title: 'شهادة المؤهل الدراسي', isRequired: true),
       DocumentItemModel(title: 'صور شخصية حديثة', isRequired: true),

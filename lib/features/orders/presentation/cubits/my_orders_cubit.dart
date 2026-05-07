@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 import '../../data/repositories/service_requests_repository.dart';
 import 'my_orders_state.dart';
 
+@injectable
 class MyOrdersCubit extends Cubit<MyOrdersState> {
   final ServiceRequestsRepository _repository;
 

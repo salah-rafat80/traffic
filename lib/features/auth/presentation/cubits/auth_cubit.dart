@@ -1,8 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
 import 'auth_state.dart';
 
+@injectable
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository authRepository;
   final DrivingLicenseRepository drivingLicenseRepository;
@@ -37,10 +39,9 @@ class AuthCubit extends Cubit<AuthState> {
 
         // Only fetch citizen licenses if user is a CITIZEN
         if (rolesList.contains('CITIZEN')) {
-          final result = await drivingLicenseRepository.getMyLicenses();
-          if (result.isSuccess) {
-            await drivingLicenseRepository.saveLicensesLocal(result.data!);
-          }
+          // Just fetch to verify connectivity/data availability if needed, 
+          // or skip entirely if you only want to fetch on the specific screen.
+          await drivingLicenseRepository.getMyLicenses();
         }
         emit(AuthLoginSuccess(roles: rolesList));
       } else {

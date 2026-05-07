@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../core/api/api_client.dart';
+import '../../../core/constants/colors.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../data/repositories/profile_repository.dart';
 import 'cubits/change_password_cubit.dart';
 import 'cubits/change_password_state.dart';
-import 'confirm_password_reset_screen.dart';
 import 'widgets/profile_header.dart';
+import 'package:traffic/injection_container.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String email;
@@ -26,57 +25,64 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-
-  bool _doPasswordsMatch = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _newPasswordController.addListener(_validatePasswords);
-    _confirmPasswordController.addListener(_validatePasswords);
-  }
-
-  void _validatePasswords() {
-    final newPass = _newPasswordController.text;
-    final confirmPass = _confirmPasswordController.text;
-
-    setState(() {
-      _doPasswordsMatch = newPass.isNotEmpty && confirmPass.isNotEmpty && newPass == confirmPass;
-    });
-  }
+  final List<TextEditingController> _otpControllers =
+      List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _otpFocusNodes =
+      List.generate(6, (_) => FocusNode());
 
   @override
   void dispose() {
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
+    for (var c in _otpControllers) {
+      c.dispose();
+    }
+    for (var n in _otpFocusNodes) {
+      n.dispose();
+    }
     super.dispose();
   }
 
-  void _onSave(BuildContext context) {
-    if (_formKey.currentState!.validate()) {
-      context.read<ChangePasswordCubit>().requestOTP(widget.email);
+  String get _otpCode => _otpControllers.map((c) => c.text).join();
+
+  void _onSubmit(BuildContext context) {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_otpCode.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('برجاء إدخال رمز التحقق كاملاً')),
+      );
+      return;
     }
+
+    context.read<ChangePasswordCubit>().confirmReset(
+          email: widget.email,
+          code: _otpCode,
+          newPassword: _newPasswordController.text,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ChangePasswordCubit(ProfileRepository(ApiClient())),
+      create: (_) => getIt<ChangePasswordCubit>()..requestOTP(widget.email),
       child: BlocConsumer<ChangePasswordCubit, ChangePasswordState>(
         listener: (context, state) {
           if (state is ChangePasswordOTPSent) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (innerContext) => BlocProvider.value(
-                  value: context.read<ChangePasswordCubit>(),
-                  child: ConfirmPasswordResetScreen(
-                    email: widget.email,
-                    newPassword: _newPasswordController.text,
-                  ),
-                ),
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تم إرسال رمز التحقق إلى بريدك الإلكتروني'),
+                backgroundColor: Color(0xFF27AE60),
               ),
             );
+          } else if (state is ChangePasswordSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تم تغيير كلمة المرور بنجاح'),
+                backgroundColor: Color(0xFF27AE60),
+              ),
+            );
+            Navigator.pop(context);
           } else if (state is ChangePasswordFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
@@ -84,71 +90,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           }
         },
         builder: (context, state) {
+          final bool isLoading = state is ChangePasswordLoading;
+          final bool otpSent = state is ChangePasswordOTPSent ||
+              state is ChangePasswordFailure;
+
           return Scaffold(
             backgroundColor: const Color(0xFFF8F9F9),
             body: Column(
               children: [
-                const ProfileHeader(title: 'حسابي'),
+                const ProfileHeader(title: 'تغيير كلمة المرور'),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            'تغيير كلمة المرور',
-                            style: TextStyle(
-                              color: const Color(0xFF222222),
-                              fontSize: 20.sp,
-                              fontFamily: 'Tajawal',
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          SizedBox(height: 24.h),
-                          PasswordTextField(
-                            labelText: 'كلمة المرور الجديدة',
-                            hintText: 'ادخل كلمة المرور الجديدة',
-                            controller: _newPasswordController,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'برجاء إدخال كلمة المرور الجديدة';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: 24.h),
-                          PasswordTextField(
-                            labelText: 'تأكيد كلمة المرور',
-                            hintText: 'ادخل تأكيد كلمة المرور',
-                            controller: _confirmPasswordController,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'برجاء إدخال تأكيد كلمة المرور';
-                              }
-                              if (value != _newPasswordController.text) {
-                                return 'كلمة المرور غير متطابقة';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: 24.h),
-                          if (_doPasswordsMatch) _buildSuccessBanner(),
-                          SizedBox(height: 48.h),
-                          PrimaryButton(
-                            label: state is ChangePasswordLoading ? '' : 'حفظ وإرسال الرمز',
-                            onPressed: state is ChangePasswordLoading ? null : () => _onSave(context),
-                            backgroundColor: const Color(0xFF27AE60),
-                          ),
-                          if (state is ChangePasswordLoading)
-                            const Center(child: CircularProgressIndicator(color: Color(0xFF27AE60))),
-                          SizedBox(height: 16.h),
-                          _buildCancelButton(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  child: _buildBody(context, state, isLoading, otpSent),
                 ),
               ],
             ),
@@ -158,58 +110,194 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 
-  Widget _buildSuccessBanner() {
-    return Container(
-      width: double.infinity,
-      height: 48.h,
-      padding: EdgeInsets.symmetric(horizontal: 12.w),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1FFF2),
-        borderRadius: BorderRadius.circular(5.r),
-        border: Border.all(color: const Color(0xFF27AE60), width: 1.r),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Text(
-            'تطابق كلمة المرور!',
-            style: TextStyle(
-              color: const Color(0xFF444444),
-              fontSize: 15.sp,
-              fontFamily: 'Cairo',
-              fontWeight: FontWeight.w600,
+  Widget _buildBody(
+    BuildContext context,
+    ChangePasswordState state,
+    bool isLoading,
+    bool otpSent,
+  ) {
+    // Show loading while sending OTP
+    if (state is ChangePasswordLoading && !otpSent) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: AppColors.primary),
+            SizedBox(height: 16),
+            Text(
+              'جاري إرسال رمز التحقق...',
+              style: TextStyle(fontFamily: 'Cairo', fontSize: 14),
             ),
-          ),
-          SizedBox(width: 8.w),
-          Icon(
-            Icons.check_circle,
-            color: const Color(0xFF27AE60),
-            size: 20.r,
-          ),
-        ],
+          ],
+        ),
+      );
+    }
+
+    // Show the form once OTP is sent (or if there's an error to allow retry)
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // ── OTP Section ──
+            Text(
+              'رمز التحقق',
+              style: TextStyle(
+                color: const Color(0xFF222222),
+                fontSize: 17.sp,
+                fontFamily: 'Tajawal',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'تم إرسال رمز التحقق إلى بريدك الإلكتروني\n${widget.email}',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: const Color(0xFF666666),
+                fontSize: 13.sp,
+                fontFamily: 'Cairo',
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              textDirection: TextDirection.ltr,
+              children: List.generate(6, (index) => _buildOtpBox(index)),
+            ),
+            SizedBox(height: 8.h),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                onPressed: isLoading
+                    ? null
+                    : () => context
+                        .read<ChangePasswordCubit>()
+                        .requestOTP(widget.email),
+                child: Text(
+                  'إعادة إرسال الرمز',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 13.sp,
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 24.h),
+
+            // ── New Password Section ──
+            PasswordTextField(
+              labelText: 'كلمة المرور الجديدة',
+              hintText: 'ادخل كلمة المرور الجديدة',
+              controller: _newPasswordController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'برجاء إدخال كلمة المرور الجديدة';
+                }
+                if (value.length < 8) {
+                  return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+                }
+                if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                  return 'يجب أن تحتوي على حرف كبير واحد على الأقل';
+                }
+                if (!RegExp(r'[a-z]').hasMatch(value)) {
+                  return 'يجب أن تحتوي على حرف صغير واحد على الأقل';
+                }
+                if (!RegExp(r'[0-9]').hasMatch(value)) {
+                  return 'يجب أن تحتوي على رقم واحد على الأقل';
+                }
+                if (!RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(value)) {
+                  return 'يجب أن تحتوي على رمز خاص (!@#\$%...)';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: 24.h),
+
+            // ── Confirm Password Section ──
+            PasswordTextField(
+              labelText: 'تأكيد كلمة المرور',
+              hintText: 'ادخل تأكيد كلمة المرور',
+              controller: _confirmPasswordController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'برجاء إدخال تأكيد كلمة المرور';
+                }
+                if (value != _newPasswordController.text) {
+                  return 'كلمة المرور غير متطابقة';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: 48.h),
+
+            // ── Submit Button ──
+            PrimaryButton(
+              label: 'تغيير كلمة المرور',
+              isLoading: isLoading,
+              onPressed: isLoading ? null : () => _onSubmit(context),
+              backgroundColor: AppColors.primary,
+            ),
+            SizedBox(height: 16.h),
+
+            // ── Cancel Button ──
+            OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                minimumSize: Size(double.infinity, 48.h),
+                side: BorderSide(color: AppColors.primary, width: 1.r),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5.r),
+                ),
+                backgroundColor: const Color(0xFFF8F9F9),
+              ),
+              child: Text(
+                'الغاء',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 18.sp,
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildCancelButton() {
-    return OutlinedButton(
-      onPressed: () => Navigator.pop(context),
-      style: OutlinedButton.styleFrom(
-        minimumSize: Size(double.infinity, 48.h),
-        side: BorderSide(color: const Color(0xFF27AE60), width: 1.r),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(5.r),
-        ),
-        backgroundColor: const Color(0xFFF8F9F9),
+  Widget _buildOtpBox(int index) {
+    return Container(
+      width: 45.w,
+      height: 55.h,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: const Color(0xFFDADADA)),
       ),
-      child: Text(
-        'الغاء',
-        style: TextStyle(
-          color: const Color(0xFF27AE60),
-          fontSize: 18.sp,
-          fontFamily: 'Cairo',
-          fontWeight: FontWeight.w600,
+      child: TextField(
+        controller: _otpControllers[index],
+        focusNode: _otpFocusNodes[index],
+        textAlign: TextAlign.center,
+        keyboardType: TextInputType.number,
+        maxLength: 1,
+        style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+        decoration: const InputDecoration(
+          counterText: "",
+          border: InputBorder.none,
         ),
+        onChanged: (value) {
+          if (value.isNotEmpty && index < 5) {
+            _otpFocusNodes[index + 1].requestFocus();
+          } else if (value.isEmpty && index > 0) {
+            _otpFocusNodes[index - 1].requestFocus();
+          }
+        },
       ),
     );
   }

@@ -58,10 +58,14 @@ class _ConfirmPasswordResetScreenState extends State<ConfirmPasswordResetScreen>
       listener: (context, state) {
         if (state is ChangePasswordSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تم تغيير كلمة المرور بنجاح')),
+            const SnackBar(
+              content: Text('تم تغيير كلمة المرور بنجاح'),
+              backgroundColor: Color(0xFF27AE60),
+            ),
           );
-          // Go back to profile
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          // Pop back to the profile screen (2 pops: OTP screen + change password screen)
+          int popCount = 0;
+          Navigator.of(context).popUntil((_) => popCount++ >= 2);
         } else if (state is ChangePasswordFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message)),

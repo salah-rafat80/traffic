@@ -4,6 +4,8 @@ import 'package:traffic/core/features/checkout/models/applicant_details.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
 
+import 'package:traffic/core/widgets/app_drawer.dart';
+
 /// A generic "Edit Applicant Details" (تعديل البيانات) screen.
 ///
 /// Opened from [GenericOrderReviewScreen] when the user taps "تعديل".
@@ -29,6 +31,7 @@ class EditApplicantDetailsScreen extends StatefulWidget {
 
 class _EditApplicantDetailsScreenState
     extends State<EditApplicantDetailsScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _nameController;
@@ -103,11 +106,16 @@ class _EditApplicantDetailsScreenState
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5F5F5),
+        drawer: const AppDrawer(),
         body: Column(
           children: [
             // ── App bar ───────────────────────────────────────────────────
-            ServiceScreenAppBar(title: widget.appBarTitle),
+            ServiceScreenAppBar(
+              title: widget.appBarTitle,
+              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            ),
 
             // ── Scrollable body ───────────────────────────────────────────
             Expanded(

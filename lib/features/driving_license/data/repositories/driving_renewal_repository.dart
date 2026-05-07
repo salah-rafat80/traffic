@@ -6,7 +6,9 @@ import '../../../../core/api/api_result.dart';
 import '../models/driving_renewal_model.dart';
 import '../../../../core/api/request_id_manager.dart';
 import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 
+@lazySingleton
 class DrivingRenewalRepository {
   final ApiClient _apiClient;
 
@@ -547,6 +549,8 @@ class DrivingRenewalRepository {
 }
 
 /// Adapter that reads existing UI state snapshot and delegates API operations.
+
+@lazySingleton
 class DrivingLicenseRenewalDataHandler {
   final DrivingRenewalRepository _repository;
 

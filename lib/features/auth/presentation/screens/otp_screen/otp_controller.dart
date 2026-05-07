@@ -115,6 +115,7 @@ class OtpController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isTimerRunning = false; // Stop the timer to prevent notifyListeners after dispose
     for (var controller in controllers) {
       controller.dispose();
     }

@@ -15,6 +15,9 @@ import '../../../data/repositories/vehicle_license_repository.dart';
 import '../../../presentation/cubits/vehicle_replacement_cubit.dart';
 import '../../../presentation/cubits/vehicle_replacement_state.dart';
 import 'package:traffic/core/api/api_client.dart';
+import 'package:traffic/injection_container.dart';
+
+import 'package:traffic/core/widgets/app_drawer.dart';
 
 enum VehicleDeliveryMethod { pickup, delivery }
 
@@ -34,6 +37,7 @@ class VehicleDeliveryMethodScreen extends StatefulWidget {
 }
 
 class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   VehicleReplacementCubit? _replacementCubit;
   VehicleDeliveryMethod? selectedMethod;
   final _formKey = GlobalKey<FormState>();
@@ -45,9 +49,7 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
   @override
   void initState() {
     super.initState();
-    _replacementCubit = VehicleReplacementCubit(
-      VehicleLicenseRepository(ApiClient()),
-    );
+    _replacementCubit = getIt<VehicleReplacementCubit>();
   }
 
   @override
@@ -140,10 +142,15 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
     Widget body = Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5F5F5),
+        drawer: const AppDrawer(),
         body: Column(
           children: [
-            const ServiceScreenAppBar(title: 'اصدار بدل فاقد / تالف رخصة مركبة'),
+            ServiceScreenAppBar(
+              title: 'اصدار بدل فاقد / تالف رخصة مركبة',
+              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),

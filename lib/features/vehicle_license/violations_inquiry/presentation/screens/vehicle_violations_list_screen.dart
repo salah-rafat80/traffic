@@ -17,6 +17,7 @@ import 'package:traffic/features/violations_inquiry/presentation/screens/violati
 import 'package:traffic/features/violations_inquiry/presentation/widgets/violation_filter_tabs.dart';
 import 'package:traffic/features/violations_inquiry/presentation/widgets/violation_list_item.dart';
 import 'package:traffic/features/violations_inquiry/presentation/widgets/violations_summary_card.dart';
+import 'package:traffic/injection_container.dart';
 
 /// Step 2 – Violations list screen for vehicle licenses.
 /// Mirrors [ViolationsListScreen] from the driving-license violations flow but
@@ -29,7 +30,7 @@ class VehicleViolationsListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ViolationsCubit(ViolationsRepository(ApiClient()))
+      create: (_) => getIt<ViolationsCubit>()
         ..loadVehicleLicenseViolations(
           licenseNumber: vehicle.vehicleLicenseNumber,
         ),

@@ -12,6 +12,7 @@ import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
 import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
+import 'package:traffic/injection_container.dart';
 
 /// OTP verification screen with three states: initial, error, and success.
 class OtpScreen extends StatefulWidget {
@@ -31,11 +32,7 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void initState() {
     super.initState();
-    final apiClient = ApiClient();
-    _authCubit = AuthCubit(
-      authRepository: AuthRepository(apiClient),
-      drivingLicenseRepository: DrivingLicenseRepository(apiClient),
-    );
+    _authCubit = getIt<AuthCubit>();
     _controller = OtpController(
       email: widget.email,
       onComplete: (otp) {
@@ -70,6 +67,16 @@ class _OtpScreenState extends State<OtpScreen> {
               return BlocListener<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (state is AuthVerifyOtpSuccess) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'تم تفعيل الحساب بنجاح. يرجى تسجيل الدخول.',
+                          textAlign: TextAlign.right,
+                        ),
+                        backgroundColor: Color(0xFF27AE60),
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
@@ -120,7 +127,8 @@ class _OtpScreenState extends State<OtpScreen> {
                           if (_controller.showError) ...[
                             SizedBox(height: OtpStyles.errorMessageSpacing),
                             Text(
-                              _controller.errorMessage ?? 'الرمز خاطئ يرجى المحاولة مرة اخرى',
+                              _controller.errorMessage ??
+                                  'الرمز خاطئ يرجى المحاولة مرة اخرى',
                               style: OtpStyles.errorMessageStyle,
                               textAlign: TextAlign.center,
                             ),

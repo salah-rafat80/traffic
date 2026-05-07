@@ -7,8 +7,10 @@ import '../../../../core/api/api_result.dart';
 import '../models/driving_license_model.dart';
 import '../models/driving_license_finalize_model.dart';
 import '../models/issue_replacement_response_model.dart';
+import 'package:injectable/injectable.dart';
 import '../../../../core/api/request_id_manager.dart';
 
+@lazySingleton
 class DrivingLicenseRepository {
   final ApiClient _apiClient;
 
@@ -197,6 +199,10 @@ class DrivingLicenseRepository {
            final licenses = (data['details'] as List)
               .map((item) => DrivingLicenseModel.fromJson(item as Map<String, dynamic>))
               .toList();
+           
+           // Removed: repository.saveLicensesLocal(licenses);
+           // We no longer store them locally per user request.
+           
            return ApiResult.success(licenses);
         }
         return ApiResult.failure(data['message']?.toString() ?? 'حدث خطأ في استرجاع الرخص.');

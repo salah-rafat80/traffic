@@ -15,6 +15,7 @@ import 'package:traffic/features/driving_license/presentation/screens/terms_and_
 import 'package:traffic/features/driving_license/presentation/screens/practical_test/practical_test_booking_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/select_license_screen.dart';
 import 'package:traffic/features/profile/data/repositories/profile_repository.dart';
+import 'package:traffic/injection_container.dart';
 
 import '../../../lost_license/presentation/screens/lost_license_selection_screen.dart';
 import '../widgets/completion_warning_dialog.dart';
@@ -34,15 +35,8 @@ class _DrivingLicenseScreenState extends State<DrivingLicenseScreen> {
   @override
   void initState() {
     super.initState();
-    final ApiClient apiClient = ApiClient();
-    final DrivingRenewalRepository renewalRepository = DrivingRenewalRepository(
-      apiClient,
-    );
-    _renewalDataHandler = DrivingLicenseRenewalDataHandler(renewalRepository);
-    _drivingRenewalCubit = DrivingRenewalCubit(
-      dataHandler: _renewalDataHandler,
-      profileRepository: ProfileRepository(apiClient),
-    );
+    _renewalDataHandler = getIt<DrivingLicenseRenewalDataHandler>();
+    _drivingRenewalCubit = getIt<DrivingRenewalCubit>();
   }
 
   @override

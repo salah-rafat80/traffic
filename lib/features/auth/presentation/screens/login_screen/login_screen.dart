@@ -9,6 +9,7 @@ import 'package:traffic/features/auth/presentation/screens/signup_screen/signup_
 import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
+import 'package:traffic/injection_container.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
 import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
@@ -116,13 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) {
-        final apiClient = ApiClient();
-        return AuthCubit(
-          authRepository: AuthRepository(apiClient),
-          drivingLicenseRepository: DrivingLicenseRepository(apiClient),
-        );
-      },
+      create: (context) => getIt<AuthCubit>(),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(

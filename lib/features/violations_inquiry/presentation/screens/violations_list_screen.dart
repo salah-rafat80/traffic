@@ -12,6 +12,7 @@ import 'package:traffic/features/violations_inquiry/data/models/violation_model.
 import 'package:traffic/features/violations_inquiry/data/repositories/violations_repository.dart';
 import 'package:traffic/features/violations_inquiry/presentation/cubits/violations_cubit.dart';
 import 'package:traffic/features/violations_inquiry/presentation/cubits/violations_state.dart';
+import 'package:traffic/injection_container.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/violation_details_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/violation_review_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/widgets/violation_filter_tabs.dart';
@@ -26,9 +27,7 @@ class ViolationsListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ViolationsCubit(
-        ViolationsRepository(ApiClient()),
-      )..loadDrivingLicenseViolations(
+      create: (_) => getIt<ViolationsCubit>()..loadDrivingLicenseViolations(
           licenseNumber: license.drivingLicenseNumber,
         ),
       child: _ViolationsListView(license: license),

@@ -1,9 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 import '../../data/repositories/driving_license_repository.dart';
 import '../../../profile/data/repositories/profile_repository.dart';
 import '../../../../core/api/profile_cache.dart';
 import 'driving_license_state.dart';
 
+@injectable
 class DrivingLicenseCubit extends Cubit<DrivingLicenseState> {
   final DrivingLicenseRepository _repository;
   final ProfileRepository _profileRepository;

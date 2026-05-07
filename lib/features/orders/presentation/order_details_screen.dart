@@ -6,17 +6,15 @@ import '../../../core/api/api_client.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/service_screen_appbar.dart';
-import '../../driving_license/data/repositories/driving_renewal_repository.dart';
-import '../../driving_license/presentation/cubits/driving_renewal_cubit.dart';
-import '../../driving_license/presentation/cubits/driving_license_cubit.dart';
-import '../../driving_license/data/repositories/driving_license_repository.dart';
+import 'package:traffic/injection_container.dart';
+import '../../vehicle_license/renewal_license/presentation/screens/vehicle_renewal_delivery_screen.dart';
 import '../../driving_license/presentation/screens/finalize/finalize_driving_license_screen.dart';
+import '../../driving_license/presentation/cubits/driving_license_cubit.dart';
+import '../../driving_license/presentation/cubits/driving_renewal_cubit.dart';
 import '../../lost_license/presentation/screens/delivery_method_screen.dart';
-import '../../profile/data/repositories/profile_repository.dart';
 import '../domain/entities/order_model.dart';
 import 'widgets/order_status_timeline.dart';
 import 'widgets/order_summary_header_card.dart';
-import '../../vehicle_license/renewal_license/presentation/screens/vehicle_renewal_delivery_screen.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
   final OrderModel order;
@@ -63,7 +61,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       return;
     }
 
-    final ApiClient apiClient = ApiClient();
+    // apiClient is managed by getIt in repositories, manual use here is usually redundant
+    // final apiClient = getIt<ApiClient>(); 
     final String title = widget.order.title;
 
     if (title.contains('تجديد رخصة مركبة') || requestNumber.startsWith('VR-')) {
@@ -83,10 +82,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         context,
         MaterialPageRoute(
           builder: (_) => BlocProvider<DrivingLicenseCubit>(
-            create: (_) => DrivingLicenseCubit(
-              repository: DrivingLicenseRepository(apiClient),
-              profileRepository: ProfileRepository(apiClient),
-            ),
+            create: (_) => getIt<DrivingLicenseCubit>(),
             child: FinalizeDrivingLicenseScreen(requestNumber: requestNumber),
           ),
         ),
@@ -94,20 +90,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     } else if (title.contains('تجديد رخصة قيادة') ||
         title.contains('تجديد رخصة') ||
         requestNumber.startsWith('DR-')) {
-      final DrivingRenewalRepository repository = DrivingRenewalRepository(
-        apiClient,
-      );
-      final DrivingLicenseRenewalDataHandler dataHandler =
-          DrivingLicenseRenewalDataHandler(repository);
-
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => BlocProvider<DrivingRenewalCubit>(
-            create: (_) => DrivingRenewalCubit(
-              dataHandler: dataHandler,
-              profileRepository: ProfileRepository(apiClient),
-            ),
+            create: (_) => getIt<DrivingRenewalCubit>(),
             child: DeliveryMethodScreen.renewalFinalize(
               renewalRequestNumber: requestNumber,
             ),

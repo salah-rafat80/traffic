@@ -3,7 +3,9 @@ import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_error_handler.dart';
 import '../../../../core/api/api_result.dart';
 import '../models/profile_model.dart';
+import 'package:injectable/injectable.dart';
 
+@lazySingleton
 class ProfileRepository {
   final ApiClient _apiClient;
 

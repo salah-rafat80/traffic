@@ -26,6 +26,7 @@ class SignupStep3Form extends StatelessWidget {
   final VoidCallback onNextPressed;
   final VoidCallback onPreviousPressed;
   final bool isValid;
+  final bool isLoading;
 
   const SignupStep3Form({
     super.key,
@@ -47,6 +48,7 @@ class SignupStep3Form extends StatelessWidget {
     required this.onNextPressed,
     required this.onPreviousPressed,
     required this.isValid,
+    this.isLoading = false,
   });
 
   @override
@@ -107,6 +109,7 @@ class SignupStep3Form extends StatelessWidget {
               onPreviousPressed: onPreviousPressed,
               isValid: isValid,
               buttonHeight: buttonHeight,
+              isLoading: isLoading,
             ),
           ],
         ),

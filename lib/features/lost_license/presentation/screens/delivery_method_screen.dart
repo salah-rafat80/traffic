@@ -19,6 +19,9 @@ import 'package:traffic/features/driving_license/presentation/cubits/driving_rep
 import '../widgets/custom_text_form_field.dart';
 import '../widgets/selection_option_card.dart';
 import 'replacement_type_selection_screen.dart';
+import 'package:traffic/injection_container.dart';
+
+import 'package:traffic/core/widgets/app_drawer.dart';
 
 // ── Enum ──────────────────────────────────────────────────────────────────────
 
@@ -99,6 +102,7 @@ class DeliveryMethodScreen extends StatefulWidget {
 class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
   // ── State ─────────────────────────────────────────────────────────────────
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   DrivingReplacementCubit? _replacementCubit;
 
   /// Currently selected delivery method; `null` until the user picks one.
@@ -119,9 +123,7 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
   void initState() {
     super.initState();
     if (!widget._isRenewalFinalizeMode) {
-      _replacementCubit = DrivingReplacementCubit(
-        DrivingLicenseRepository(ApiClient()),
-      );
+      _replacementCubit = getIt<DrivingReplacementCubit>();
     }
   }
 
@@ -344,7 +346,9 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
     Widget body = Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5F5F5),
+        drawer: const AppDrawer(),
         body: Column(
           children: [
             // ── App bar ────────────────────────────────────────────────────
@@ -352,6 +356,7 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
               title: widget._isRenewalFinalizeMode
                   ? 'استكمال تجديد رخصة القيادة'
                   : 'اصدار بدل فاقد / تالف رخصة قيادة',
+              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
             ),
 
             // ── Scrollable body ────────────────────────────────────────────

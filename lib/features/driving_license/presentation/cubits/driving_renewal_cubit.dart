@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../data/models/driving_renewal_model.dart';
 import '../../data/repositories/driving_renewal_repository.dart';
@@ -44,6 +45,8 @@ class DrivingRenewalFinalizeSuccess extends DrivingRenewalState {
   });
 }
 
+
+@injectable
 class DrivingRenewalCubit extends Cubit<DrivingRenewalState> {
   final DrivingLicenseRenewalDataHandler _dataHandler;
   final ProfileRepository _profileRepository;

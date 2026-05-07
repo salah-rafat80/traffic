@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/features/auth/presentation/screens/login_screen/login_screen.dart';
 import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
-import 'package:traffic/core/api/api_client.dart';
+import 'package:traffic/injection_container.dart';
 
 
 class LogoutConfirmationDialog extends StatelessWidget {
@@ -45,7 +45,7 @@ class LogoutConfirmationDialog extends StatelessWidget {
             SizedBox(height: 32.h),
             InkWell(
               onTap: () async {
-                final authRepository = AuthRepository(ApiClient());
+                final authRepository = getIt<AuthRepository>();
                 await authRepository.logout();
                 
                 if (!context.mounted) return;

@@ -12,6 +12,7 @@ import 'cubits/profile_state.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_info_row.dart';
 import 'widgets/security_card.dart';
+import 'package:traffic/injection_container.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final ProfileModel profile;
@@ -48,7 +49,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ProfileCubit(ProfileRepository(ApiClient())),
+      create: (_) => getIt<ProfileCubit>(),
       child: BlocConsumer<ProfileCubit, ProfileState>(
         listener: (context, state) {
           if (state is ProfileEmailChangeRequested) {

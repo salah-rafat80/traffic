@@ -8,6 +8,7 @@ import 'package:traffic/features/driving_license/data/models/driving_license_mod
 import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/violations_list_screen.dart';
 import 'package:traffic/features/violations_inquiry/presentation/widgets/license_details_card.dart';
+import 'package:traffic/injection_container.dart';
 
 class SelectLicenseScreen extends StatefulWidget {
   const SelectLicenseScreen({super.key});
@@ -31,12 +32,17 @@ class _SelectLicenseScreenState extends State<SelectLicenseScreen> {
   Future<void> _loadLicenses() async {
     setState(() => _isLoading = true);
     try {
-      final repository = DrivingLicenseRepository(ApiClient());
-      final cachedLicenses = await repository.getLocalLicenses();
-      setState(() {
-        _licenses = cachedLicenses;
-        _isLoading = false;
-      });
+      final repository = getIt<DrivingLicenseRepository>();
+      final result = await repository.getMyLicenses();
+      
+      if (result.isSuccess && result.data != null) {
+        setState(() {
+          _licenses = result.data!;
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
     } catch (e) {
       setState(() => _isLoading = false);
     }

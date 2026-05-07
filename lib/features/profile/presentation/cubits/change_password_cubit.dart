@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 import '../../data/repositories/profile_repository.dart';
 import 'change_password_state.dart';
 
+@injectable
 class ChangePasswordCubit extends Cubit<ChangePasswordState> {
   final ProfileRepository _repository;
 

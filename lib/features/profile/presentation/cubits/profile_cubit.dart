@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 import '../../data/repositories/profile_repository.dart';
 import 'profile_state.dart';
 
+@injectable
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileRepository _repository;
 

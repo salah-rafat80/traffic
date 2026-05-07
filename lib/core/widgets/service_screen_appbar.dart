@@ -43,9 +43,8 @@ class ServiceScreenAppBar extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           child: Row(
-            textDirection: TextDirection.rtl,
             children: [
-              // ── Back arrow (right side in RTL) ──
+              // ── Back Button (Left) ──
               if (showBackButton)
                 GestureDetector(
                   onTap: onBackPressed ?? () => Navigator.pop(context),
@@ -58,7 +57,7 @@ class ServiceScreenAppBar extends StatelessWidget {
               else
                 SizedBox(width: 24.w),
 
-              // ── Title (centered) ──
+              // ── Title (Center) ──
               Expanded(
                 child: Text(
                   title,
@@ -72,7 +71,7 @@ class ServiceScreenAppBar extends StatelessWidget {
                 ),
               ),
 
-              // ── Hamburger menu (left side in RTL) ──
+              // ── Hamburger Menu (Right) ──
               GestureDetector(
                 onTap: onMenuPressed,
                 child: Icon(

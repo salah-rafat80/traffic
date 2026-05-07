@@ -1,78 +1,52 @@
+// ignore_for_file: invalid_annotation_target
+
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:traffic/core/models/shared_models.dart';
 import 'package:traffic/features/driving_license/domain/enums/license_status.dart';
 
-class DrivingLicenseModel {
-  final int id;
-  final String drivingLicenseNumber;
-  final String category;
-  final String governorate;
-  final String licensingUnit;
-  final String issueDate;
-  final String expiryDate;
-  final LicenseStatus status;
-  final String citizenName;
-  final bool hasUnpaidViolations;
-  final DeliveryModel? delivery;
+part 'driving_license_model.freezed.dart';
+part 'driving_license_model.g.dart';
 
-  const DrivingLicenseModel({
-    required this.id,
-    required this.drivingLicenseNumber,
-    required this.category,
-    required this.governorate,
-    required this.licensingUnit,
-    required this.issueDate,
-    required this.expiryDate,
-    required this.status,
-    required this.citizenName,
-    this.hasUnpaidViolations = false,
-    this.delivery,
-  });
+LicenseStatus _statusFromJson(dynamic status) {
+  if (status is int) return LicenseStatus.values[status];
+  final statusStr = (status?.toString() ?? '').toLowerCase();
+  if (statusStr.contains('expire') || statusStr.contains('منتهية')) {
+    return LicenseStatus.expired;
+  } else if (statusStr.contains('withdraw') || statusStr.contains('مسحوبة')) {
+    return LicenseStatus.withdrawn;
+  } else if (statusStr.contains('valid') || statusStr.contains('سارية')) {
+    return LicenseStatus.valid;
+  }
+  return LicenseStatus.valid;
+}
+
+String _statusToJson(LicenseStatus status) => status.name;
+
+@freezed
+class DrivingLicenseModel with _$DrivingLicenseModel {
+  const DrivingLicenseModel._();
+
+  const factory DrivingLicenseModel({
+    @Default(0) int id,
+    @JsonKey(name: 'licenseNumber') @Default('') String drivingLicenseNumber,
+    @JsonKey(name: 'category') @Default('') String category,
+    @Default('') String governorate,
+    @Default('') String licensingUnit,
+    @Default('') String issueDate,
+    @Default('') String expiryDate,
+    @JsonKey(fromJson: _statusFromJson, toJson: _statusToJson)
+    @Default(LicenseStatus.valid) LicenseStatus status,
+    @Default('') String citizenName,
+    @Default(false) bool hasUnpaidViolations,
+    DeliveryModel? delivery,
+  }) = _DrivingLicenseModel;
 
   // Compatibility getters for legacy code
   String get licenseNumber => drivingLicenseNumber;
   String get licenseType => category;
 
-  factory DrivingLicenseModel.fromJson(Map<String, dynamic> json) {
-    // Map status string to LicenseStatus enum
-    final statusStr = (json['status'] as String? ?? '').toLowerCase();
-    LicenseStatus mappedStatus = LicenseStatus.valid;
-    if (statusStr.contains('expire') || statusStr.contains('منتهية')) {
-      mappedStatus = LicenseStatus.expired;
-    } else if (statusStr.contains('withdraw') || statusStr.contains('مسحوبة')) {
-      mappedStatus = LicenseStatus.withdrawn;
-    }
-
-    return DrivingLicenseModel(
-      id: json['id'] as int? ?? 0,
-      drivingLicenseNumber: json['drivingLicenseNumber'] as String? ?? json['licenseNumber'] as String? ?? '',
-      category: json['category'] as String? ?? json['licenseType'] as String? ?? '',
-      governorate: json['governorate'] as String? ?? '',
-      licensingUnit: json['licensingUnit'] as String? ?? '',
-      issueDate: json['issueDate'] as String? ?? '',
-      expiryDate: json['expiryDate'] as String? ?? '',
-      status: mappedStatus,
-      citizenName: json['citizenName'] as String? ?? '',
-      hasUnpaidViolations: json['hasUnpaidViolations'] as bool? ?? false,
-      delivery: json['delivery'] != null
-          ? DeliveryModel.fromJson(json['delivery'] as Map<String, dynamic>)
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'drivingLicenseNumber': drivingLicenseNumber,
-      'category': category,
-      'governorate': governorate,
-      'licensingUnit': licensingUnit,
-      'issueDate': issueDate,
-      'expiryDate': expiryDate,
-      'status': status.name,
-      'citizenName': citizenName,
-      'hasUnpaidViolations': hasUnpaidViolations,
-      'delivery': delivery?.toJson(),
-    };
-  }
+  factory DrivingLicenseModel.fromJson(Map<String, dynamic> json) =>
+      _$DrivingLicenseModelFromJson(json);
 
   /// Dummy data for UI development and fallback
   static List<DrivingLicenseModel> get dummyLicenses => [
@@ -100,59 +74,4 @@ class DrivingLicenseModel {
           hasUnpaidViolations: true,
         ),
       ];
-}
-
-
-class DeliveryModel {
-  final String method;
-  final AddressModel? address;
-
-  const DeliveryModel({
-    required this.method,
-    this.address,
-  });
-
-  factory DeliveryModel.fromJson(Map<String, dynamic> json) {
-    return DeliveryModel(
-      method: json['method'] as String? ?? '',
-      address: json['address'] != null
-          ? AddressModel.fromJson(json['address'] as Map<String, dynamic>)
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'method': method,
-      'address': address?.toJson(),
-    };
-  }
-}
-
-class AddressModel {
-  final String governorate;
-  final String city;
-  final String details;
-
-  const AddressModel({
-    required this.governorate,
-    required this.city,
-    required this.details,
-  });
-
-  factory AddressModel.fromJson(Map<String, dynamic> json) {
-    return AddressModel(
-      governorate: json['governorate'] as String? ?? '',
-      city: json['city'] as String? ?? '',
-      details: json['details'] as String? ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'governorate': governorate,
-      'city': city,
-      'details': details,
-    };
-  }
 }

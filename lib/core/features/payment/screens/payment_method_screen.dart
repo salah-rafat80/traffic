@@ -10,8 +10,10 @@ import 'package:traffic/core/features/payment/models/payment_intent.dart';
 import 'package:traffic/core/features/payment/screens/payment_webview_screen.dart';
 import 'package:traffic/core/features/payment/widgets/payment_option_card.dart';
 import 'package:traffic/core/features/payment/widgets/payment_summary_card.dart';
+import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
+import 'package:traffic/injection_container.dart';
 
 class PaymentMethodScreen extends StatelessWidget {
   final PaymentIntent paymentIntent;
@@ -21,7 +23,7 @@ class PaymentMethodScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => PaymentCubit(PaymentRepository(ApiClient())),
+      create: (context) => getIt<PaymentCubit>(),
       child: _PaymentMethodScreenContent(paymentIntent: paymentIntent),
     );
   }
@@ -38,6 +40,7 @@ class _PaymentMethodScreenContent extends StatefulWidget {
 }
 
 class _PaymentMethodScreenContentState extends State<_PaymentMethodScreenContent> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isVisaSelected = true;
   DateTime? _lastClickTime;
 
@@ -147,7 +150,9 @@ class _PaymentMethodScreenContentState extends State<_PaymentMethodScreenContent
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5F5F5),
+        drawer: const AppDrawer(),
         body: BlocConsumer<PaymentCubit, PaymentState>(
           listener: (context, state) async {
             developer.log('State Transition: ${state.runtimeType}', name: 'PaymentMethodScreen');
@@ -180,7 +185,10 @@ class _PaymentMethodScreenContentState extends State<_PaymentMethodScreenContent
             return Column(
               children: [
                 // App bar
-                ServiceScreenAppBar(title: widget.paymentIntent.orderType),
+                ServiceScreenAppBar(
+                  title: widget.paymentIntent.orderType,
+                  onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
 
                 // Scrollable body
                 Expanded(

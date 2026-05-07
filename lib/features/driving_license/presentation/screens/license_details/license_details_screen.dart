@@ -11,6 +11,7 @@ import 'package:traffic/core/api/api_client.dart';
 import 'license_details_confirmation_screen.dart';
 import 'widgets/license_info_card.dart';
 import 'widgets/warning_banner.dart';
+import 'package:traffic/injection_container.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -58,24 +59,33 @@ class _LicenseDetailsScreenState extends State<LicenseDetailsScreen> {
   Future<void> _loadLicenses() async {
     setState(() => _isLoading = true);
     try {
-      final repository = DrivingLicenseRepository(ApiClient());
-      var cachedLicenses = await repository.getLocalLicenses();
-      
-      // If cache is empty (e.g. after hot restart without fresh login), fetch from API
-      if (cachedLicenses.isEmpty) {
-        final result = await repository.getMyLicenses();
-        if (result.isSuccess && result.data != null) {
-          cachedLicenses = result.data!;
-          await repository.saveLicensesLocal(cachedLicenses);
+      final repository = getIt<DrivingLicenseRepository>();
+
+      // Always fetch fresh from API
+      final result = await repository.getMyLicenses();
+
+      if (result.isSuccess && result.data != null) {
+        setState(() {
+          _licenses = result.data!;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _licenses = [];
+          _isLoading = false;
+        });
+        // Show error if needed
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result.error ?? 'فشل في تحميل الرخص')),
+          );
         }
       }
-
+    } catch (e) {
       setState(() {
-        _licenses = cachedLicenses;
+        _licenses = [];
         _isLoading = false;
       });
-    } catch (e) {
-      setState(() => _isLoading = false);
     }
   }
 

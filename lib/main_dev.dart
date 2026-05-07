@@ -1,12 +1,28 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/constants/app_sizes.dart';
 import 'package:traffic/core/utils/app_theme.dart';
-import 'package:traffic/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:traffic/features/main/presentation/screens/splash_screen.dart';
+
+import 'package:traffic/injection_container.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Catch Flutter framework errors
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('Flutter Error: ${details.exception}');
+  };
+
+  // Catch asynchronous errors (like platform channel failures)
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Async Error: $error');
+    return true; // Mark as handled
+  };
+
+  configureDependencies();
   runApp(const MyApp());
 }
 

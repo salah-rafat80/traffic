@@ -11,6 +11,7 @@ import 'package:traffic/core/features/payment/models/payment_intent.dart';
 import 'package:traffic/core/features/payment/screens/payment_method_screen.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
+import 'package:traffic/core/widgets/app_drawer.dart';
 
 /// A fully generic "Order Review / Checkout Summary" screen.
 ///
@@ -67,6 +68,8 @@ class GenericOrderReviewScreen extends StatefulWidget {
 }
 
 class _GenericOrderReviewScreenState extends State<GenericOrderReviewScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   /// Mutable copy so the edit screen can update applicant details.
   late ApplicantDetails _applicantDetails;
 
@@ -129,11 +132,16 @@ class _GenericOrderReviewScreenState extends State<GenericOrderReviewScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5F5F5),
+        drawer: const AppDrawer(),
         body: Column(
           children: [
             // ── App bar ─────────────────────────────────────────────────
-            ServiceScreenAppBar(title: widget.appBarTitle),
+            ServiceScreenAppBar(
+              title: widget.appBarTitle,
+              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            ),
 
             // ── Scrollable body ─────────────────────────────────────────
             Expanded(

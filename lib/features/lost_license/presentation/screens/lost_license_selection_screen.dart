@@ -11,6 +11,7 @@ import 'package:traffic/features/violations_inquiry/presentation/screens/violati
 import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
 import 'package:traffic/core/api/api_client.dart';
 import 'lost_license_details_screen.dart';
+import 'package:traffic/injection_container.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -53,22 +54,19 @@ class _LostLicenseSelectionScreenState
   Future<void> _loadLicenses() async {
     setState(() => _isLoading = true);
     try {
-      final repository = DrivingLicenseRepository(ApiClient());
-      var cachedLicenses = await repository.getLocalLicenses();
+      final repository = getIt<DrivingLicenseRepository>();
       
-      // If cache is empty (e.g. after hot restart without fresh login), fetch from API
-      if (cachedLicenses.isEmpty) {
-        final result = await repository.getMyLicenses();
-        if (result.isSuccess && result.data != null) {
-          cachedLicenses = result.data!;
-          await repository.saveLicensesLocal(cachedLicenses);
-        }
+      // Always fetch fresh from API
+      final result = await repository.getMyLicenses();
+      
+      if (result.isSuccess && result.data != null) {
+        setState(() {
+          _licenses = result.data!;
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
       }
-
-      setState(() {
-        _licenses = cachedLicenses;
-        _isLoading = false;
-      });
     } catch (e) {
       setState(() => _isLoading = false);
     }

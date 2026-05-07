@@ -1,45 +1,41 @@
-/// Model for a single traffic violation returned by:
-/// GET /TrafficViolations/license/{licenseNumber}/details?licenseType=Driving
-class ViolationModel {
-  final int violationId;
-  final String violationNumber;
-  final String violationType;
-  final String legalReference;
-  final String description;
-  final String location;
-  final String violationDateTime;
-  final double fineAmount;
-  final double paidAmount;
-  final double remainingAmount;
-  final String status;
-  final String statusAr;
-  final bool isPayable;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const ViolationModel({
-    required this.violationId,
-    required this.violationNumber,
-    required this.violationType,
-    required this.legalReference,
-    required this.description,
-    required this.location,
-    required this.violationDateTime,
-    required this.fineAmount,
-    required this.paidAmount,
-    required this.remainingAmount,
-    required this.status,
-    required this.statusAr,
-    required this.isPayable,
-  });
+part 'violation_model.freezed.dart';
+part 'violation_model.g.dart';
+
+@freezed
+class ViolationModel with _$ViolationModel {
+  const ViolationModel._();
+
+  const factory ViolationModel({
+    @Default(0) int violationId,
+    @Default('') String violationNumber,
+    @Default('') String violationType,
+    @Default('') String legalReference,
+    @Default('') String description,
+    @Default('') String location,
+    @Default('') String violationDateTime,
+    @Default(0.0) double fineAmount,
+    @Default(0.0) double paidAmount,
+    @Default(0.0) double remainingAmount,
+    @Default('') String status,
+    @Default('') String statusAr,
+    @Default(false) bool isPayable,
+  }) = _ViolationModel;
+
+  factory ViolationModel.fromJson(Map<String, dynamic> json) =>
+      _$ViolationModelFromJson(json);
 
   /// Whether the violation is fully paid.
-  /// We check both status and remainingAmount for robustness.
-  bool get isPaid => remainingAmount == 0 || status.toLowerCase() == 'paid' || statusAr == 'مدفوعة';
+  bool get isPaid =>
+      remainingAmount == 0 ||
+      status.toLowerCase() == 'paid' ||
+      statusAr == 'مدفوعة';
 
   /// A unique string ID to use as map key / selection key.
   String get id => violationId.toString();
 
   /// Payment date string shown in UI for paid violations.
-  /// Derived from [violationDateTime] when [isPaid] is true.
   String? get paymentDate => isPaid ? '$time, $date' : null;
 
   /// Formatted date extracted from violationDateTime ISO string.
@@ -70,60 +66,19 @@ class ViolationModel {
   String get articleNumber => legalReference;
   String get articleText => description;
   double get amount => remainingAmount > 0 ? remainingAmount : fineAmount;
-
-  factory ViolationModel.fromJson(Map<String, dynamic> json) {
-    return ViolationModel(
-      violationId: json['violationId'] as int? ?? 0,
-      violationNumber: json['violationNumber'] as String? ?? '',
-      violationType: json['violationType'] as String? ?? '',
-      legalReference: json['legalReference'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      location: json['location'] as String? ?? '',
-      violationDateTime: json['violationDateTime'] as String? ?? '',
-      fineAmount: (json['fineAmount'] as num?)?.toDouble() ?? 0.0,
-      paidAmount: (json['paidAmount'] as num?)?.toDouble() ?? 0.0,
-      remainingAmount: (json['remainingAmount'] as num?)?.toDouble() ?? 0.0,
-      status: json['status'] as String? ?? '',
-      statusAr: json['statusAr'] as String? ?? '',
-      isPayable: json['isPayable'] as bool? ?? false,
-    );
-  }
 }
 
-/// Wrapper model for the full API response details object.
-class ViolationsListModel {
-  final List<ViolationModel> violations;
-  final int totalCount;
-  final int unpaidCount;
-  final double totalPayableAmount;
-  final String message;
-  final String messageAr;
+@freezed
+class ViolationsListModel with _$ViolationsListModel {
+  const factory ViolationsListModel({
+    @Default([]) List<ViolationModel> violations,
+    @Default(0) int totalCount,
+    @Default(0) int unpaidCount,
+    @Default(0.0) double totalPayableAmount,
+    @Default('') String message,
+    @Default('') String messageAr,
+  }) = _ViolationsListModel;
 
-  const ViolationsListModel({
-    required this.violations,
-    required this.totalCount,
-    required this.unpaidCount,
-    required this.totalPayableAmount,
-    required this.message,
-    required this.messageAr,
-  });
-
-  factory ViolationsListModel.fromJson(Map<String, dynamic> json) {
-    final rawList = json['violations'];
-    final violations = rawList is List
-        ? rawList
-            .map((e) => ViolationModel.fromJson(e as Map<String, dynamic>))
-            .toList()
-        : <ViolationModel>[];
-
-    return ViolationsListModel(
-      violations: violations,
-      totalCount: json['totalCount'] as int? ?? 0,
-      unpaidCount: json['unpaidCount'] as int? ?? 0,
-      totalPayableAmount:
-          (json['totalPayableAmount'] as num?)?.toDouble() ?? 0.0,
-      message: json['message'] as String? ?? '',
-      messageAr: json['messageAr'] as String? ?? '',
-    );
-  }
+  factory ViolationsListModel.fromJson(Map<String, dynamic> json) =>
+      _$ViolationsListModelFromJson(json);
 }

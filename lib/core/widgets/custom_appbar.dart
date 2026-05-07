@@ -28,7 +28,6 @@ class CustomAppbar extends StatelessWidget {
           children: [
             Flexible(
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 textDirection: TextDirection.rtl,
                 children: [
                   GestureDetector(

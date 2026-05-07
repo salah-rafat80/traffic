@@ -7,6 +7,8 @@ import 'package:traffic/features/driving_license/data/models/driving_license_mod
 import '../widgets/selection_option_card.dart';
 import 'delivery_method_screen.dart';
 
+import 'package:traffic/core/widgets/app_drawer.dart';
+
 // ── Enum ──────────────────────────────────────────────────────────────────────
 
 /// Represents the two possible replacement types for a driving licence.
@@ -39,6 +41,8 @@ class ReplacementTypeSelectionScreen extends StatefulWidget {
 
 class _ReplacementTypeSelectionScreenState
     extends State<ReplacementTypeSelectionScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   /// Currently selected replacement type; `null` means nothing is selected yet.
   ReplacementType? selectedType;
 
@@ -67,11 +71,16 @@ class _ReplacementTypeSelectionScreenState
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5F5F5),
+        drawer: const AppDrawer(),
         body: Column(
           children: [
             // ── App bar ──────────────────────────────────────────────────────
-            const ServiceScreenAppBar(title: 'اصدار بدل فاقد / تالف رخصة قيادة'),
+            ServiceScreenAppBar(
+              title: 'اصدار بدل فاقد / تالف رخصة قيادة',
+              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            ),
 
             // ── Scrollable body ──────────────────────────────────────────────
             Expanded(

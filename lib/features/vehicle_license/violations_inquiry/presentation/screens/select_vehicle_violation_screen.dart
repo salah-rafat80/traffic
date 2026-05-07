@@ -8,6 +8,7 @@ import 'package:traffic/features/vehicle_license/violations_inquiry/data/models/
 import 'package:traffic/features/vehicle_license/violations_inquiry/data/repositories/vehicle_violation_license_repository.dart';
 import '../widgets/vehicle_violation_card.dart';
 import 'vehicle_violations_list_screen.dart';
+import 'package:traffic/injection_container.dart';
 
 /// Step 1 – Select the vehicle to query violations for.
 /// Loads real data from GET /VehicleLicense/my-licenses using cache-first strategy,
@@ -36,30 +37,11 @@ class _SelectVehicleViolationScreenState
   Future<void> _loadVehicles() async {
     setState(() => _isLoading = true);
     try {
-      final repository = VehicleViolationLicenseRepository(ApiClient());
+      final repository = getIt<VehicleViolationLicenseRepository>();
 
-      // Cache-first: show cached data immediately, then refresh in background
-      final cached = await repository.getLocalLicenses();
-      if (cached.isNotEmpty) {
-        setState(() {
-          _vehicles = cached;
-          _isLoading = false;
-        });
-        // Soft background refresh
-        final result = await repository.getMyLicenses();
-        if (result.isSuccess && result.data != null) {
-          await repository.saveLicensesLocal(result.data!);
-          if (mounted) {
-            setState(() => _vehicles = result.data!);
-          }
-        }
-        return;
-      }
-
-      // No cache: fetch from API
+      // Fetch fresh from API directly
       final result = await repository.getMyLicenses();
       if (result.isSuccess && result.data != null) {
-        await repository.saveLicensesLocal(result.data!);
         if (mounted) {
           setState(() {
             _vehicles = result.data!;
@@ -67,7 +49,12 @@ class _SelectVehicleViolationScreenState
           });
         }
       } else {
-        if (mounted) setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result.error ?? 'فشل تحميل الرخص')),
+          );
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);

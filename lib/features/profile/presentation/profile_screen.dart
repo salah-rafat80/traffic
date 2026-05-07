@@ -11,6 +11,7 @@ import 'widgets/contact_info_card.dart';
 import 'widgets/personal_info_card.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/security_card.dart';
+import 'package:traffic/injection_container.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -18,8 +19,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          ProfileCubit(ProfileRepository(ApiClient()))..loadProfile(),
+      create: (_) => getIt<ProfileCubit>()..loadProfile(),
       child: const _ProfileScreenBody(),
     );
   }

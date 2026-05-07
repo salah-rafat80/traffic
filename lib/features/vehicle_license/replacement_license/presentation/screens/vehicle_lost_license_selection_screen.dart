@@ -10,6 +10,7 @@ import 'package:traffic/features/vehicle_license/data/models/vehicle_license_mod
 import '../../data/models/vehicle_license_model.dart';
 import '../widgets/vehicle_license_card.dart';
 import 'vehicle_license_details_screen.dart';
+import 'package:traffic/injection_container.dart';
 
 class VehicleLostLicenseSelectionScreen extends StatefulWidget {
   const VehicleLostLicenseSelectionScreen({super.key});
@@ -35,26 +36,11 @@ class _VehicleLostLicenseSelectionScreenState
   Future<void> _loadVehicles() async {
     setState(() => _isLoading = true);
     try {
-      final repository = VehicleLicenseRepository(ApiClient());
+      final repository = getIt<VehicleLicenseRepository>();
 
-      // Cache-first
-      final cached = await repository.getLocalLicenses();
-      if (cached.isNotEmpty) {
-        setState(() {
-          _vehicles = cached;
-          _isLoading = false;
-        });
-        final result = await repository.getMyLicenses();
-        if (result.isSuccess && result.data != null) {
-          await repository.saveLicensesLocal(result.data!);
-          if (mounted) setState(() => _vehicles = result.data!);
-        }
-        return;
-      }
-
+      // Fetch fresh from API directly
       final result = await repository.getMyLicenses();
       if (result.isSuccess && result.data != null) {
-        await repository.saveLicensesLocal(result.data!);
         if (mounted) {
           setState(() {
             _vehicles = result.data!;
@@ -62,7 +48,12 @@ class _VehicleLostLicenseSelectionScreenState
           });
         }
       } else {
-        if (mounted) setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result.error ?? 'فشل تحميل الرخص')),
+          );
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);

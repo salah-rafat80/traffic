@@ -7,7 +7,7 @@ import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:traffic/features/auth/presentation/cubits/auth_state.dart';
 import 'package:traffic/features/auth/presentation/screens/otp_screen/otp_screen.dart';
-import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
+import 'package:traffic/injection_container.dart';
 import 'widgets/signup_step1_form/signup_step1_form.dart';
 import 'widgets/signup_step2_form/signup_step2_form.dart';
 import 'widgets/signup_step3_form/signup_step3_form.dart';
@@ -59,11 +59,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void initState() {
     super.initState();
-    final apiClient = ApiClient();
-    _authCubit = AuthCubit(
-      authRepository: AuthRepository(apiClient),
-      drivingLicenseRepository: DrivingLicenseRepository(apiClient),
-    );
+    _authCubit = getIt<AuthCubit>();
     // Add listeners to Step 2 controllers for real-time validation
     _firstNameController.addListener(() => setState(() {}));
     _familyNameController.addListener(() => setState(() {}));
@@ -378,39 +374,44 @@ class _SignupScreenState extends State<SignupScreen> {
                 onPreviousPressed: _goToPreviousStep,
                 isValid: _isStep2Valid,
               ),
-              SignupStep3Form(
-                passwordController: _passwordController,
-                confirmPasswordController: _confirmPasswordController,
-                obscurePassword: _obscurePassword,
-                obscureConfirmPassword: _obscureConfirmPassword,
-                onToggleObscure: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
+              BlocBuilder<AuthCubit, AuthState>(
+                builder: (context, state) {
+                  return SignupStep3Form(
+                    passwordController: _passwordController,
+                    confirmPasswordController: _confirmPasswordController,
+                    obscurePassword: _obscurePassword,
+                    obscureConfirmPassword: _obscureConfirmPassword,
+                    onToggleObscure: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                    onToggleConfirmObscure: () {
+                      setState(() {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                      });
+                    },
+                    onPasswordChanged: _checkPasswordRequirements,
+                    onConfirmPasswordChanged: (value) {
+                      setState(() {
+                        _passwordsMatch = value == _passwordController.text;
+                      });
+                    },
+                    passwordsMatch: _passwordsMatch,
+                    hasMinLength: _hasMinLength,
+                    hasUppercase: _hasUppercase,
+                    hasLowercase: _hasLowercase,
+                    hasNumber: _hasNumber,
+                    hasSpecialChar: _hasSpecialChar,
+                    notSameAsUsername: _notSameAsUsername,
+                    onNextPressed: _onNextPressed,
+                    onPreviousPressed: _goToPreviousStep,
+                    isValid: _isStep3Valid,
+                    isLoading: state is AuthLoading,
+                  );
                 },
-                onToggleConfirmObscure: () {
-                  setState(() {
-                    _obscureConfirmPassword = !_obscureConfirmPassword;
-                  });
-                },
-                onPasswordChanged: _checkPasswordRequirements,
-                onConfirmPasswordChanged: (value) {
-                  setState(() {
-                    _passwordsMatch =
-                        value == _passwordController.text;
-                  });
-                },
-                passwordsMatch: _passwordsMatch,
-                hasMinLength: _hasMinLength,
-                hasUppercase: _hasUppercase,
-                hasLowercase: _hasLowercase,
-                hasNumber: _hasNumber,
-                hasSpecialChar: _hasSpecialChar,
-                notSameAsUsername: _notSameAsUsername,
-                onNextPressed: _onNextPressed,
-                onPreviousPressed: _goToPreviousStep,
-                isValid: _isStep3Valid,
               ),
+
             ],
           ),
         ),

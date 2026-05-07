@@ -10,6 +10,7 @@ import 'package:traffic/features/orders/presentation/my_orders_screen.dart';
 import 'package:traffic/features/orders/presentation/cubits/my_orders_cubit.dart';
 import 'package:traffic/features/orders/data/repositories/service_requests_repository.dart';
 import 'package:traffic/features/settings/presentation/screens/settings_screen.dart';
+import 'package:traffic/injection_container.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -28,7 +29,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
-    _myOrdersCubit = MyOrdersCubit(ServiceRequestsRepository(ApiClient()));
+    _myOrdersCubit = getIt<MyOrdersCubit>();
     
     _screens = [
       const ProfileScreen(),

@@ -26,10 +26,11 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
         padding: EdgeInsets.symmetric(horizontal: 16.w),
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
-          child: Column(
+          child: Directionality(
             textDirection: TextDirection.rtl,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
             children: [
               CustomAppbar(onBackPressed: onBackPressed, title: "إنشاء حساب"),
               SizedBox(height: 12.h),
@@ -39,7 +40,17 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Next step text - LEFT side
+                  // Step number - RIGHT side (Child 0 in RTL)
+                  Text(
+                    step,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF666666),
+                      fontFamily: 'Tajawal',
+                    ),
+                  ),
+                  // Next step text - LEFT side (Child 1 in RTL)
                   if (nextStepText != null)
                     Flexible(
                       child: Text(
@@ -56,20 +67,10 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
                     )
                   else
                     const SizedBox(),
-                  // Step number
-                  Text(
-                    step,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF666666),
-                      fontFamily: 'Tajawal',
-                    ),
-                  ),
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),
@@ -79,13 +80,11 @@ class SignupAppBar extends StatelessWidget implements PreferredSizeWidget {
   List<Widget> _buildProgressBars() {
     final int currentStep = _getCurrentStep();
     return List.generate(3, (index) {
-      // Reverse index for RTL (3, 2, 1 instead of 1, 2, 3)
-      final int rtlIndex = 2 - index;
-      final bool isActive = rtlIndex < currentStep;
+      final bool isActive = index < currentStep;
       return Expanded(
         child: Container(
           height: 4.h,
-          margin: EdgeInsets.only(left: 3.w),
+          margin: EdgeInsets.only(left: index == 2 ? 0 : 3.w),
           decoration: BoxDecoration(
             color: isActive ? const Color(0xFF27AE60) : const Color(0xFFE0E0E0),
             borderRadius: BorderRadius.circular(2.r),

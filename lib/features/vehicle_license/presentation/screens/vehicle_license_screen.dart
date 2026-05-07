@@ -12,6 +12,7 @@ import 'package:traffic/features/vehicle_license/presentation/cubits/vehicle_lic
 import 'package:traffic/features/vehicle_license/presentation/cubits/vehicle_license_state.dart';
 import 'package:traffic/features/vehicle_license/presentation/screens/vehicle_insurance_screen.dart';
 import 'package:traffic/features/profile/data/repositories/profile_repository.dart';
+import 'package:traffic/injection_container.dart';
 
 import 'package:traffic/features/vehicle_license/replacement_license/presentation/screens/vehicle_lost_license_selection_screen.dart';
 import 'package:traffic/features/vehicle_license/renewal_license/presentation/screens/renewal_vehicle_selection_screen.dart';
@@ -62,10 +63,7 @@ class _VehicleLicenseScreenState extends State<VehicleLicenseScreen> {
   ];
 
   void _onIssuanceTapped() {
-    final cubit = VehicleLicenseCubit(
-      VehicleLicenseRepository(ApiClient()),
-      ProfileRepository(ApiClient()),
-    );
+    final cubit = getIt<VehicleLicenseCubit>();
 
     cubit.fetchInitData();
 
@@ -222,12 +220,12 @@ class _VehicleLicenseScreenState extends State<VehicleLicenseScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.white,
-      drawer: const AppDrawer(),
+      endDrawer: const AppDrawer(),
       body: Column(
         children: [
           ServiceScreenAppBar(
             title: 'رخصة المركبة',
-            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            onMenuPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
           ),
           SizedBox(height: 5.h),
           Expanded(
