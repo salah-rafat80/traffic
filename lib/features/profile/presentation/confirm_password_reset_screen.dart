@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -114,7 +115,7 @@ class _ConfirmPasswordResetScreenState extends State<ConfirmPasswordResetScreen>
                         onPressed: state is ChangePasswordLoading ? null : () => _onConfirm(context),
                       ),
                       if (state is ChangePasswordLoading)
-                        const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                        Center(child: CustomLoadingIndicator(color: AppColors.primary)),
                       SizedBox(height: 16.h),
                       TextButton(
                         onPressed: state is ChangePasswordLoading 

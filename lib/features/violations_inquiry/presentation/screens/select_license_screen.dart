@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
+import 'package:traffic/core/widgets/empty_state_widget.dart';
 import 'package:traffic/features/driving_license/data/models/driving_license_model.dart';
 import 'package:traffic/features/driving_license/data/repositories/driving_license_repository.dart';
 import 'package:traffic/features/violations_inquiry/presentation/screens/violations_list_screen.dart';
-import 'package:traffic/features/violations_inquiry/presentation/widgets/license_details_card.dart';
+import 'package:traffic/features/driving_license/presentation/screens/license_details/widgets/license_info_card.dart';
 import 'package:traffic/injection_container.dart';
 
 class SelectLicenseScreen extends StatefulWidget {
@@ -20,8 +20,9 @@ class SelectLicenseScreen extends StatefulWidget {
 class _SelectLicenseScreenState extends State<SelectLicenseScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<DrivingLicenseModel> _licenses = [];
-  int _selectedIndex = 0;
+  int? _selectedIndex;
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -30,7 +31,10 @@ class _SelectLicenseScreenState extends State<SelectLicenseScreen> {
   }
 
   Future<void> _loadLicenses() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final repository = getIt<DrivingLicenseRepository>();
       final result = await repository.getMyLicenses();
@@ -39,12 +43,25 @@ class _SelectLicenseScreenState extends State<SelectLicenseScreen> {
         setState(() {
           _licenses = result.data!;
           _isLoading = false;
+          if (_licenses.length == 1) {
+            _selectedIndex = 0;
+          } else {
+            _selectedIndex = null;
+          }
         });
       } else {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = result.error ?? 'فشل تحميل الرخص';
+          _selectedIndex = null;
+        });
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'حدث خطأ غير متوقع';
+        _selectedIndex = null;
+      });
     }
   }
 
@@ -88,22 +105,70 @@ class _SelectLicenseScreenState extends State<SelectLicenseScreen> {
                   // ── License cards ──
                   if (_isLoading)
                     const Center(child: CircularProgressIndicator())
-                  else if (_licenses.isEmpty)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20.0),
-                        child: Text(
-                          'لا يوجد رخص مسجلة حالياً',
-                          style: TextStyle(fontFamily: 'Tajawal'),
-                        ),
+                  else if (_errorMessage != null)
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(height: 40.h),
+                          Icon(
+                            _errorMessage!.contains('اتصال')
+                                ? Icons.wifi_off_rounded
+                                : Icons.error_outline_rounded,
+                            size: 64.r,
+                            color: const Color(0xFFE74C3C),
+                          ),
+                          SizedBox(height: 16.h),
+                          Text(
+                            _errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF555555),
+                            ),
+                          ),
+                          SizedBox(height: 20.h),
+                          ElevatedButton.icon(
+                            onPressed: _loadLicenses,
+                            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                            label: Text(
+                              'إعادة المحاولة',
+                              style: TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF27AE60),
+                              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.r),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 40.h),
+                        ],
                       ),
+                    )
+                  else if (_licenses.isEmpty)
+                    const EmptyStateWidget(
+                      message: 'لا توجد رخص مسجلة حالياً',
                     )
                   else
                     ...List.generate(_licenses.length, (index) {
-                      return LicenseDetailsCard(
-                        license: _licenses[index],
-                        isSelected: _selectedIndex == index,
+                      return GestureDetector(
                         onTap: () => setState(() => _selectedIndex = index),
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 12.h),
+                          child: LicenseInfoCard(
+                            data: _licenses[index],
+                            isSelected: _selectedIndex == index,
+                          ),
+                        ),
                       );
                     }),
                   SizedBox(height: 16.h),
@@ -117,14 +182,14 @@ class _SelectLicenseScreenState extends State<SelectLicenseScreen> {
             padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 32.h),
             child: PrimaryButton(
               label: 'التالي',
-              onPressed: _isLoading || _licenses.isEmpty
+              onPressed: _isLoading || _licenses.isEmpty || _selectedIndex == null
                   ? null
                   : () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => ViolationsListScreen(
-                            license: _licenses[_selectedIndex],
+                            license: _licenses[_selectedIndex!],
                           ),
                         ),
                       );

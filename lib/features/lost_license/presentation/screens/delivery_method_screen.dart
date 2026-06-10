@@ -1,6 +1,8 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:traffic/core/constants/colors.dart';
 import 'package:traffic/core/features/checkout/generic_order_review_screen.dart';
 import 'package:traffic/core/features/checkout/models/applicant_details.dart';
@@ -20,8 +22,10 @@ import '../widgets/custom_text_form_field.dart';
 import '../widgets/selection_option_card.dart';
 import 'replacement_type_selection_screen.dart';
 import 'package:traffic/injection_container.dart';
+import 'package:traffic/core/api/order_payment_cache.dart';
 
 import 'package:traffic/core/widgets/app_drawer.dart';
+
 
 // ── Enum ──────────────────────────────────────────────────────────────────────
 
@@ -186,13 +190,8 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
     );
   }
 
-  void _navigateToOrderReview(DrivingReplacementSuccess state) {
-    const applicant = ApplicantDetails(
-      name: 'اميرة عصام حامد',
-      nationalId: '010123456789099',
-      phone: '01013706488',
-      email: 'amirabadreldeen7@icloud.com',
-    );
+  Future<void> _navigateToOrderReview(DrivingReplacementSuccess state) async {
+    final applicant = await ApplicantDetails.getActualDetails();
 
     final String paymentMethodLabel = selectedMethod == DeliveryMethod.delivery
         ? 'التوصيل للعنوان'
@@ -212,6 +211,18 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
     final double deliveryFee = state.response.fees?.deliveryFee ?? 0;
     final double totalAmount = state.response.fees?.totalAmount ?? 0;
 
+    // Cache the payment details
+    await OrderPaymentCache.save(
+      state.response.requestNumber,
+      OrderPaymentCachedData(
+        baseFee: baseFee,
+        deliveryFee: deliveryFee,
+        totalAmount: totalAmount,
+        paymentMethodLabel: paymentMethodLabel,
+        orderType: orderTypeLabel,
+      ),
+    );
+
     final List<FeeItem> items = [
       FeeItem(label: 'الرسوم الأساسية', amount: '$baseFee جنية مصري'),
     ];
@@ -223,6 +234,8 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
     }
 
     final fees = FeesDetails(items: items, total: '$totalAmount جنية مصري');
+
+    if (!mounted) return;
 
     Navigator.push(
       context,
@@ -241,7 +254,7 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
   void _navigateToRenewalOrderReview(
     FinalizeRenewalResponseModel response,
     ProfileModel profile,
-  ) {
+  ) async {
     final applicant = ApplicantDetails(
       name: profile.fullName,
       nationalId: profile.nationalId,
@@ -271,6 +284,18 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
           totalAmount: 0,
         );
 
+    // Cache the payment details
+    await OrderPaymentCache.save(
+      orderId,
+      OrderPaymentCachedData(
+        baseFee: feesPayload.baseFee,
+        deliveryFee: feesPayload.deliveryFee,
+        totalAmount: feesPayload.totalAmount,
+        paymentMethodLabel: paymentMethodLabel,
+        orderType: 'تجديد رخصة قيادة',
+      ),
+    );
+
     final List<FeeItem> items = <FeeItem>[
       FeeItem(
         label: 'الرسوم الأساسية',
@@ -291,6 +316,8 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
       items: items,
       total: _formatCurrency(feesPayload.totalAmount),
     );
+
+    if (!mounted) return;
 
     Navigator.push(
       context,
@@ -343,104 +370,109 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
   Widget build(BuildContext context) {
     final bool isDelivery = selectedMethod == DeliveryMethod.delivery;
 
-    Widget body = Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF5F5F5),
-        drawer: const AppDrawer(),
-        body: Column(
-          children: [
-            // ── App bar ────────────────────────────────────────────────────
-            ServiceScreenAppBar(
-              title: widget._isRenewalFinalizeMode
-                  ? 'استكمال تجديد رخصة القيادة'
-                  : 'اصدار بدل فاقد / تالف رخصة قيادة',
-              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            ),
+    Widget body = Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF5F5F5),
+      drawer: const AppDrawer(),
+      body: Column(
+        children: [
+          // ── App bar ────────────────────────────────────────────────────
+          ServiceScreenAppBar(
+            title: widget._isRenewalFinalizeMode
+                ? 'استكمال تجديد رخصة القيادة'
+                : 'اصدار بدل فاقد / تالف رخصة قيادة',
+            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
 
-            // ── Scrollable body ────────────────────────────────────────────
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // ── Section header ──────────────────────────────────
-                      Text(
-                        'طريقة استلام الرخصة',
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          fontFamily: 'Tajawal',
-                          fontSize: 17.sp,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF222222),
+          // ── Scrollable body ────────────────────────────────────────────
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Section header ──────────────────────────────────
+                    Text(
+                      'طريقة استلام الرخصة',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 17.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF222222),
+                      ),
+                    ),
+
+                    SizedBox(height: 16.h),
+
+                    // ── Option 1: استلام من وحدة المرور (pickup) ─────────
+                    SelectionOptionCard(
+                      title: 'استلام من وحدة المرور',
+                      subtitle:
+                          'استلم الرخصة شخصيًا من وحدة المرور التي تم تسجيلها في بياناتك',
+                      isSelected: selectedMethod == DeliveryMethod.pickup,
+                      onTap: () => _onMethodTap(DeliveryMethod.pickup),
+                      icon: SvgPicture.asset(
+                        'assets/tabler_building-bank.svg',
+                        width: 24.w,
+                        height: 24.w,
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xFF27AE60),
+                          BlendMode.srcIn,
                         ),
                       ),
+                    ),
 
-                      SizedBox(height: 16.h),
+                    SizedBox(height: 12.h),
 
-                      // ── Option 1: استلام من وحدة المرور (pickup) ─────────
-                      SelectionOptionCard(
-                        title: 'استلام من وحدة المرور',
-                        subtitle:
-                            'استلم الرخصة شخصيًا من وحدة المرور التي تم تسجيلها في بياناتك',
-                        isSelected: selectedMethod == DeliveryMethod.pickup,
-                        onTap: () => _onMethodTap(DeliveryMethod.pickup),
-                        icon: Icon(
-                          Icons.account_balance_outlined,
-                          color: const Color(0xFF27AE60),
-                          size: 22.r,
+                    // ── Option 2: التوصيل للعنوان (delivery) ─────────────
+                    SelectionOptionCard(
+                      title: 'التوصيل للعنوان',
+                      subtitle:
+                          'سيتم توصيل رخصتك الجديدة للعنوان الذي تحدده, يرجى التأكد من صحة العنوان لتجنب أي تأخير.',
+                      isSelected: selectedMethod == DeliveryMethod.delivery,
+                      onTap: () => _onMethodTap(DeliveryMethod.delivery),
+                      icon: SvgPicture.asset(
+                        'assets/home2.svg',
+                        width: 24.w,
+                        height: 24.w,
+                        colorFilter: const ColorFilter.mode(
+                          Color(0xFF27AE60),
+                          BlendMode.srcIn,
                         ),
                       ),
+                    ),
 
-                      SizedBox(height: 12.h),
-
-                      // ── Option 2: التوصيل للعنوان (delivery) ─────────────
-                      SelectionOptionCard(
-                        title: 'التوصيل للعنوان',
-                        subtitle:
-                            'سيتم توصيل رخصتك الجديدة للعنوان الذي تحدده, يرجى التأكد من صحة العنوان لتجنب أي تأخير.',
-                        isSelected: selectedMethod == DeliveryMethod.delivery,
-                        onTap: () => _onMethodTap(DeliveryMethod.delivery),
-                        icon: Icon(
-                          Icons.home_outlined,
-                          color: const Color(0xFF27AE60),
-                          size: 22.r,
-                        ),
-                      ),
-
-                      // ── Delivery address form (animated in/out) ──────────
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        child: isDelivery
-                            ? _DeliveryAddressForm(
-                                governorateController: _governorateController,
-                                cityController: _cityController,
-                                addressDetailsController:
-                                    _addressDetailsController,
-                                validateGovernorate: _validateGovernorate,
-                                validateCity: _validateCity,
-                                validateAddressDetails: _validateAddressDetails,
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ],
-                  ),
+                    // ── Delivery address form (animated in/out) ──────────
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      child: isDelivery
+                          ? _DeliveryAddressForm(
+                              governorateController: _governorateController,
+                              cityController: _cityController,
+                              addressDetailsController:
+                                  _addressDetailsController,
+                              validateGovernorate: _validateGovernorate,
+                              validateCity: _validateCity,
+                              validateAddressDetails: _validateAddressDetails,
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
                 ),
               ),
             ),
+          ),
 
-            // ── Sticky bottom button ───────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
-              child: _buildBottomButton(),
-            ),
-          ],
-        ),
+          // ── Sticky bottom button ───────────────────────────────────────
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
+            child: _buildBottomButton(),
+          ),
+        ],
       ),
     );
 
@@ -493,7 +525,7 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
       return BlocBuilder<DrivingRenewalCubit, DrivingRenewalState>(
         builder: (BuildContext ctx, DrivingRenewalState state) {
           if (state is DrivingRenewalFinalizeLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CustomLoadingIndicator());
           }
           return PrimaryButton(
             label: 'التالي',
@@ -509,7 +541,7 @@ class _DeliveryMethodScreenState extends State<DeliveryMethodScreen> {
         bloc: _replacementCubit,
         builder: (ctx, state) {
           if (state is DrivingReplacementLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CustomLoadingIndicator());
           }
           return PrimaryButton(
             label: 'التالي',

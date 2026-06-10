@@ -1,9 +1,10 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// A reusable primary action button with consistent styling.
 /// Used across the app for main actions like "التالي", "حفظ", etc.
-class PrimaryButton extends StatelessWidget {
+class PrimaryButton extends StatefulWidget {
   /// The button label text
   final String label;
 
@@ -45,50 +46,104 @@ class PrimaryButton extends StatelessWidget {
   });
 
   @override
+  State<PrimaryButton> createState() => _PrimaryButtonState();
+}
+
+class _PrimaryButtonState extends State<PrimaryButton> {
+  OverlayEntry? _overlayEntry;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showOverlay());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant PrimaryButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isLoading != oldWidget.isLoading) {
+      if (widget.isLoading) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _showOverlay());
+      } else {
+        _hideOverlay();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _hideOverlay();
+    super.dispose();
+  }
+
+  void _showOverlay() {
+    if (_overlayEntry != null) return;
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Fully transparent touch-absorbing background
+          Positioned.fill(
+            child: AbsorbPointer(
+              absorbing: true,
+              child: Container(
+                color: Colors.black.withOpacity(0.15),
+              ),
+            ),
+          ),
+          const Center(
+            child: CustomLoadingIndicator(
+              width: 180,
+              height: 180,
+            ),
+          ),
+        ],
+      ),
+    );
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _hideOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final bool isEnabled = onPressed != null;
+    final bool isEnabled = widget.onPressed != null;
     final Color currentBackgroundColor = isEnabled
-        ? (backgroundColor ?? const Color(0xFF2E7D32))
-        : (disabledBackgroundColor ?? const Color(0xFFBDBDBD));
+        ? (widget.backgroundColor ?? const Color(0xFF27AE60))
+        : (widget.disabledBackgroundColor ?? const Color(0xFFBDBDBD));
     final Color currentTextColor = isEnabled
-        ? (textColor ?? Colors.white)
-        : (disabledTextColor ?? Colors.white70);
+        ? (widget.textColor ?? Colors.white)
+        : (widget.disabledTextColor ?? Colors.white70);
 
     return InkWell(
-      onTap: isLoading ? null : onPressed,
+      onTap: widget.isLoading ? null : widget.onPressed,
       borderRadius: BorderRadius.circular(12.r),
       child: Container(
         width: double.infinity,
-        height: height ?? 52.h,
+        height: widget.height ?? 52.h,
         decoration: BoxDecoration(
           color: currentBackgroundColor,
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Center(
-          child: isLoading 
-              ? SizedBox(
-                  width: 24.r,
-                  height: 24.r,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3.w,
-                    valueColor: AlwaysStoppedAnimation<Color>(currentTextColor),
-                  ),
-                )
-              : FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: fontSize ?? 18.sp,
-                      fontWeight: FontWeight.w600,
-                      color: currentTextColor,
-                    ),
-                  ),
-                ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              widget.label,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: widget.fontSize ?? 18.sp,
+                fontWeight: FontWeight.w600,
+                color: widget.isLoading ? currentTextColor.withOpacity(0.5) : currentTextColor,
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
-

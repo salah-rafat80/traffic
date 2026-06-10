@@ -1,5 +1,7 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:traffic/core/features/checkout/generic_order_review_screen.dart';
 import 'package:traffic/core/features/checkout/models/applicant_details.dart';
 import 'package:traffic/core/features/checkout/models/fees_details.dart';
@@ -16,8 +18,10 @@ import '../../../presentation/cubits/vehicle_replacement_cubit.dart';
 import '../../../presentation/cubits/vehicle_replacement_state.dart';
 import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/injection_container.dart';
+import 'package:traffic/core/api/order_payment_cache.dart';
 
 import 'package:traffic/core/widgets/app_drawer.dart';
+
 
 enum VehicleDeliveryMethod { pickup, delivery }
 
@@ -83,13 +87,8 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
     );
   }
 
-  void _navigateToOrderReview(VehicleReplacementSuccess state) {
-    const applicant = ApplicantDetails(
-      name: 'اميرة عصام حامد',
-      nationalId: '010123456789099',
-      phone: '01013706488',
-      email: 'amirabadreldeen7@icloud.com',
-    );
+  Future<void> _navigateToOrderReview(VehicleReplacementSuccess state) async {
+    final applicant = await ApplicantDetails.getActualDetails();
 
     final String paymentMethodLabel =
         selectedMethod == VehicleDeliveryMethod.delivery
@@ -111,6 +110,18 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
     final double deliveryFee = state.response.fees?.deliveryFee ?? 0;
     final double totalAmount = state.response.fees?.totalAmount ?? 0;
 
+    // Cache the payment details
+    await OrderPaymentCache.save(
+      state.response.requestNumber,
+      OrderPaymentCachedData(
+        baseFee: baseFee,
+        deliveryFee: deliveryFee,
+        totalAmount: totalAmount,
+        paymentMethodLabel: paymentMethodLabel,
+        orderType: orderTypeLabel,
+      ),
+    );
+
     final List<FeeItem> items = [
       FeeItem(label: 'الرسوم الأساسية', amount: '$baseFee جنية مصري'),
     ];
@@ -122,6 +133,8 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
     }
 
     final fees = FeesDetails(items: items, total: '$totalAmount جنية مصري');
+
+    if (!mounted) return;
 
     Navigator.push(
       context,
@@ -177,8 +190,15 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
                         isSelected: selectedMethod == VehicleDeliveryMethod.pickup,
                         onTap: () =>
                             setState(() => selectedMethod = VehicleDeliveryMethod.pickup),
-                        icon: Icon(Icons.account_balance_outlined,
-                            color: const Color(0xFF27AE60), size: 22.r),
+                        icon: SvgPicture.asset(
+                          'assets/tabler_building-bank.svg',
+                          width: 24.w,
+                          height: 24.w,
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFF27AE60),
+                            BlendMode.srcIn,
+                          ),
+                        ),
                       ),
                       SizedBox(height: 12.h),
                       SelectionOptionCard(
@@ -188,8 +208,15 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
                         isSelected: selectedMethod == VehicleDeliveryMethod.delivery,
                         onTap: () => setState(
                             () => selectedMethod = VehicleDeliveryMethod.delivery),
-                        icon: Icon(Icons.home_outlined,
-                            color: const Color(0xFF27AE60), size: 22.r),
+                        icon: SvgPicture.asset(
+                          'assets/home2.svg',
+                          width: 24.w,
+                          height: 24.w,
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFF27AE60),
+                            BlendMode.srcIn,
+                          ),
+                        ),
                       ),
                       if (selectedMethod == VehicleDeliveryMethod.delivery) ...[
                         SizedBox(height: 20.h),
@@ -269,7 +296,7 @@ class _VehicleDeliveryMethodScreenState extends State<VehicleDeliveryMethodScree
         bloc: _replacementCubit,
         builder: (ctx, state) {
           if (state is VehicleReplacementLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CustomLoadingIndicator());
           }
           return PrimaryButton(
             label: 'التالي',

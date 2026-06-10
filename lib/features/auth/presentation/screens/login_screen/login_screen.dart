@@ -1,7 +1,8 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
+import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:traffic/core/widgets/custom_appbar.dart';
@@ -53,6 +54,14 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _phoneController.addListener(_validatePhone);
     _passwordController.addListener(_validatePassword);
+    _phoneFocus.addListener(() => setState(() {}));
+    _passwordFocus.addListener(() => setState(() {}));
+  }
+
+  Color _getBorderColor(bool hasError, FocusNode focusNode) {
+    if (hasError) return _errorRed;
+    if (focusNode.hasFocus) return _green;
+    return _borderGrey;
   }
 
   @override
@@ -183,6 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(height: 24.h),
                         // _buildOrDivider(),
                         SizedBox(height: 24.h),
+
                         // _buildSocialButtons(),
                         // SizedBox(height: 48.h),
                         _buildFooter(),
@@ -208,7 +218,8 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Text(
           'رقم الهاتف',
-          style: GoogleFonts.cairo(
+          style: TextStyle(
+            fontFamily: 'Cairo',
             fontSize: 16.sp,
             fontWeight: FontWeight.w500,
             color: _textPrimary,
@@ -225,8 +236,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 52.h,
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: hasError ? _errorRed : _borderGrey,
-                    width: hasError ? 1.5 : 1,
+                    color: _getBorderColor(hasError, _phoneFocus),
+                    width: (hasError || _phoneFocus.hasFocus) ? 1.5 : 1,
                   ),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
@@ -234,7 +245,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Text(
                   '+20',
                   textDirection: TextDirection.ltr,
-                  style: GoogleFonts.cairo(
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w500,
                     color: _textPrimary,
@@ -248,8 +260,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 52.h,
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: hasError ? _errorRed : _borderGrey,
-                      width: hasError ? 1.5 : 1,
+                      color: _getBorderColor(hasError, _phoneFocus),
+                      width: (hasError || _phoneFocus.hasFocus) ? 1.5 : 1,
                     ),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -263,17 +275,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(11),
                     ],
-                    style: GoogleFonts.cairo(
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
                       fontSize: 16.sp,
                       color: _textPrimary,
                     ),
                     decoration: InputDecoration(
                       hintText: '000 000 0000',
-                      hintStyle: GoogleFonts.cairo(
+                      hintStyle: TextStyle(
+                        fontFamily: 'Cairo',
                         fontSize: 16.sp,
                         color: _hintColor,
                       ),
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16.w,
                         vertical: 14.h,
@@ -290,7 +308,8 @@ class _LoginScreenState extends State<LoginScreen> {
           SizedBox(height: 6.h),
           Text(
             _phoneError!,
-            style: GoogleFonts.cairo(
+            style: TextStyle(
+              fontFamily: 'Cairo',
               fontSize: 12.sp,
               fontWeight: FontWeight.w400,
               color: _errorRed,
@@ -310,7 +329,8 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Text(
           'كلمة السر',
-          style: GoogleFonts.cairo(
+          style: TextStyle(
+            fontFamily: 'Cairo',
             fontSize: 16.sp,
             fontWeight: FontWeight.w500,
             color: _textPrimary,
@@ -321,8 +341,8 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 52.h,
           decoration: BoxDecoration(
             border: Border.all(
-              color: hasError ? _errorRed : _borderGrey,
-              width: hasError ? 1.5 : 1,
+              color: _getBorderColor(hasError, _passwordFocus),
+              width: (hasError || _passwordFocus.hasFocus) ? 1.5 : 1,
             ),
             borderRadius: BorderRadius.circular(8.r),
           ),
@@ -332,11 +352,23 @@ class _LoginScreenState extends State<LoginScreen> {
             obscureText: _obscurePassword,
             textDirection: TextDirection.ltr,
             textAlign: TextAlign.left,
-            style: GoogleFonts.cairo(fontSize: 16.sp, color: _textPrimary),
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 16.sp,
+              color: _textPrimary,
+            ),
             decoration: InputDecoration(
               hintText: 'ادخل كلمة السر',
-              hintStyle: GoogleFonts.cairo(fontSize: 16.sp, color: _hintColor),
+              hintStyle: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 16.sp,
+                color: _hintColor,
+              ),
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              focusedErrorBorder: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 16.w,
                 vertical: 14.h,
@@ -368,7 +400,8 @@ class _LoginScreenState extends State<LoginScreen> {
               Expanded(
                 child: Text(
                   _passwordError!,
-                  style: GoogleFonts.cairo(
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w400,
                     color: _errorRed,
@@ -384,7 +417,8 @@ class _LoginScreenState extends State<LoginScreen> {
               },
               child: Text(
                 'نسيت كلمة السر ؟',
-                style: GoogleFonts.cairo(
+                style: TextStyle(
+                  fontFamily: 'Cairo',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
                   color: _green,
@@ -401,77 +435,58 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLoginButtons(BuildContext context, bool isLoading) {
     return Column(
       children: [
+        PrimaryButton(
+          label: 'تسجيل الدخول',
+          height: 60.h,
+          onPressed: () => _onLogin(context, requiredRole: 'CITIZEN'),
+          isLoading: isLoading && _loadingRole == 'CITIZEN',
+        ),
+      ],
+    ); /*
+      children: [
         SizedBox(
           height: 60.h,
           width: double.infinity,
-          child: ElevatedButton(
-            onPressed: isLoading
+          //inkwell button
+          child: InkWell(
+            onTap: isLoading
                 ? null
                 : () => _onLogin(context, requiredRole: 'CITIZEN'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _green,
-              foregroundColor: _white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
+            child: Container(
+              decoration: BoxDecoration(
+                color: _green,
                 borderRadius: BorderRadius.circular(12.r),
               ),
-            ),
-            child: (isLoading && _loadingRole == 'CITIZEN')
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: _white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : FittedBox(
-                    fit: BoxFit.fill,
-                    child: Text(
-                      'دخول المواطنين',
-                      style: GoogleFonts.cairo(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
+              child: Center(
+                child: (isLoading && _loadingRole == 'CITIZEN')
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CustomLoadingIndicator(
+                          color: _white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'تسجيل الدخول',
+                          style: TextStyle(
+                            fontFamily: 'Cairo',
+                            color: _white,
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-          ),
-        ),
-        SizedBox(height: 16.h),
-        SizedBox(
-          height: 52.h,
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: isLoading
-                ? null
-                : () => _onLogin(context, requiredRole: 'STAFF'),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: _green, width: 1.5),
-              foregroundColor: _green,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
               ),
             ),
-            child: (isLoading && _loadingRole == 'STAFF')
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: _green,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Text(
-                    'دخول الموظفين / الممتحنين',
-                    style: GoogleFonts.cairo(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
           ),
         ),
+        // SizedBox(height: 16.h),
       ],
     );
+  */
   }
 
   // --- Or Divider ---
@@ -483,7 +498,8 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Text(
             'أو',
-            style: GoogleFonts.cairo(
+            style: TextStyle(
+              fontFamily: 'Cairo',
               fontSize: 14.sp,
               fontWeight: FontWeight.w400,
               color: _textSecondary,
@@ -524,7 +540,7 @@ class _LoginScreenState extends State<LoginScreen> {
   //           child: Center(
   //             child: Text(
   //               'G',
-  //               style: GoogleFonts.cairo(
+  //               style: TextStyle(fontFamily: 'Cairo',
   //                 fontSize: 24.sp,
   //                 fontWeight: FontWeight.w700,
   //                 color: const Color(0xFF4285F4),
@@ -544,7 +560,8 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Text(
           'ليس لديك حساب ؟',
-          style: GoogleFonts.cairo(
+          style: TextStyle(
+            fontFamily: 'Cairo',
             fontSize: 14.sp,
             fontWeight: FontWeight.w400,
             color: _textSecondary,
@@ -560,7 +577,8 @@ class _LoginScreenState extends State<LoginScreen> {
           },
           child: Text(
             'إنشاء حساب',
-            style: GoogleFonts.cairo(
+            style: TextStyle(
+              fontFamily: 'Cairo',
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,
               color: _green,
@@ -585,7 +603,8 @@ class _LoginScreenState extends State<LoginScreen> {
         },
         child: Text(
           '[دخول المُمتحن - تجريبي]',
-          style: GoogleFonts.cairo(
+          style: TextStyle(
+            fontFamily: 'Cairo',
             fontSize: 14.sp,
             fontWeight: FontWeight.w600,
             color: _textSecondary,

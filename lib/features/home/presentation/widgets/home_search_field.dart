@@ -1,56 +1,236 @@
 // path: lib/features/home/presentation/widgets/home_search_field.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:traffic/features/home/bloc/home_search_bloc.dart';
+import 'package:traffic/features/home/bloc/home_search_event_state.dart';
+import 'search_navigation_helper.dart';
+import 'search_suggestions_list.dart';
 
-class HomeSearchField extends StatelessWidget {
+class HomeSearchField extends StatefulWidget {
   const HomeSearchField({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 48.h,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TextField(
-        textDirection: TextDirection.rtl,
-        textAlign: TextAlign.right,
-        style: TextStyle(
-          fontFamily: 'Tajawal',
-          fontSize: 14.sp,
-          color: const Color(0xFF1A1A1A),
-          fontWeight: FontWeight.w400,
-        ),
-        decoration: InputDecoration(
-          hintText: 'ما الخدمة التي تريدها؟',
-          hintTextDirection: TextDirection.rtl,
-          hintStyle: TextStyle(
-            fontFamily: 'Tajawal',
-            fontSize: 14.sp,
-            color: const Color(0xFFAAAAAA),
-            fontWeight: FontWeight.w400,
-          ),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-          prefixIcon: Padding(
-            padding: EdgeInsets.only(left: 12.w),
-            child: Icon(
-              Icons.search,
-              color: const Color(0xFF9CA3AF),
-              size: 22.sp,
+  State<HomeSearchField> createState() => _HomeSearchFieldState();
+}
+
+class _HomeSearchFieldState extends State<HomeSearchField> {
+  final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChange);
+    _controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    _hideOverlay();
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (_focusNode.hasFocus) {
+      _showOverlay();
+    } else {
+      _hideOverlay();
+    }
+  }
+
+  void _onTextChanged() {
+    context.read<HomeSearchBloc>().add(SearchQueryChanged(_controller.text));
+    _overlayEntry?.markNeedsBuild();
+  }
+
+  void _showOverlay() {
+    if (_overlayEntry != null) return;
+    _overlayEntry = _createOverlayEntry();
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _hideOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  OverlayEntry _createOverlayEntry() {
+    final renderBox = context.findRenderObject() as RenderBox?;
+    final size = renderBox?.size ?? Size(double.infinity, 48.h);
+
+    return OverlayEntry(
+      builder: (_) {
+        return Positioned(
+          width: size.width,
+          child: CompositedTransformFollower(
+            link: _layerLink,
+            showWhenUnlinked: false,
+            offset: Offset(0, size.height + 8.h),
+            child: Material(
+              color: Colors.transparent,
+              child: TapRegion(
+                onTapOutside: (_) {
+                  _focusNode.unfocus();
+                },
+                child: Container(
+                  constraints: BoxConstraints(maxHeight: 280.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: const Color(0xFFF3F4F6), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: BlocBuilder<HomeSearchBloc, HomeSearchState>(
+                      bloc: BlocProvider.of<HomeSearchBloc>(context),
+                      builder: (blocContext, state) {
+                        if (state is HomeSearchLoading) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24.0),
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF27AE60),
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (state is HomeSearchSuccess) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.only(right: 16.w, left: 16.w, top: 12.h, bottom: 6.h),
+                                child: Text(
+                                  state.query.isEmpty ? 'الخدمات الأكثر طلباً ✨' : 'نتائج البحث 🔍',
+                                  style: TextStyle(
+                                    fontFamily: 'Tajawal',
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF9CA3AF),
+                                  ),
+                                ),
+                              ),
+                              Flexible(
+                                child: SearchSuggestionsList(
+                                  suggestions: state.suggestions,
+                                  onSuggestionSelected: (item) {
+                                    _focusNode.unfocus();
+                                    _controller.clear();
+                                    context.read<HomeSearchBloc>().add(const SearchQueryChanged(''));
+                                    SearchNavigationHelper.navigateToService(context, item.serviceType);
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+
+                        if (state is HomeSearchFailure) {
+                          return Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 24.h),
+                              child: Text(
+                                state.errorMessage,
+                                style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontSize: 13.sp,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-          suffixIconConstraints: BoxConstraints(
-            minHeight: 22.sp,
-            minWidth: 34.w,
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: Container(
+        height: 48.h,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          textDirection: TextDirection.rtl,
+          textAlign: TextAlign.right,
+          style: TextStyle(
+            fontFamily: 'Tajawal',
+            fontSize: 14.sp,
+            color: const Color(0xFF1A1A1A),
+            fontWeight: FontWeight.w400,
+          ),
+          decoration: InputDecoration(
+            hintText: 'ما الخدمة التي تريدها؟',
+            hintTextDirection: TextDirection.rtl,
+            hintStyle: TextStyle(
+              fontFamily: 'Tajawal',
+              fontSize: 14.sp,
+              color: const Color(0xFFAAAAAA),
+              fontWeight: FontWeight.w400,
+            ),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            prefixIcon: Padding(
+              padding: EdgeInsets.only(left: 12.w),
+              child: Icon(
+                Icons.search,
+                color: const Color(0xFF9CA3AF),
+                size: 22.sp,
+              ),
+            ),
+            suffixIcon: _controller.text.isNotEmpty
+                ? IconButton(
+                    icon: Icon(
+                      Icons.cancel_rounded,
+                      color: const Color(0xFF9CA3AF),
+                      size: 20.sp,
+                    ),
+                    onPressed: () {
+                      _controller.clear();
+                    },
+                  )
+                : null,
+            suffixIconConstraints: BoxConstraints(
+              minHeight: 22.sp,
+              minWidth: 34.w,
+            ),
           ),
         ),
       ),

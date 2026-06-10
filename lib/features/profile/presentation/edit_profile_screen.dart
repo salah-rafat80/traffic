@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -100,7 +101,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           SecurityCard(email: widget.profile.email),
                           SizedBox(height: 32.h),
                           if (isLoading)
-                            const Center(child: CircularProgressIndicator())
+                            Center(child: CustomLoadingIndicator())
                           else
                             PrimaryButton(
                               label: 'حفظ التغيرات',

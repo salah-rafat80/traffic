@@ -35,7 +35,7 @@ class InspectionBulletPoint extends StatelessWidget {
           child: Icon(
             Icons.check_circle,
             size: 20.w,
-            color: const Color(0xFF2E7D32),
+            color: const Color(0xFF27AE60),
           ),
         ),
       ],

@@ -28,22 +28,9 @@ It operates in **two phases**:
 - ✅ If asked about an endpoint, give exact field names, types, and structure
 - ✅ If you notice something unclear in the docs, flag it as a ⚠️ question
 
-## What You Must Understand
+## Reference Source
 
-| Aspect | Check |
-|--------|-------|
-| Every endpoint | method, full URL, purpose |
-| Request structure | body (JSON or form-data), URL params, query params |
-| Authentication | which endpoints require Bearer Token, which don't |
-| Response shapes | fields, types, nesting |
-| Flow dependencies | upload → requestNumber → finalize chains |
-| File uploads | multipart/form-data vs JSON |
-
-## Reference Sources
-
-1. **Primary**: `morourak_api_docs.md` (root of project)
-2. **Detailed**: `Morourak.postman_collection.json` (includes response examples, field descriptions)
-3. **Existing code**: `lib/features/auth/data/repositories/auth_repository.dart` (reference implementation)
+**Primary**: `Api/Morourak.postman_collection.json` — always use this as source of truth.
 
 ---
 
@@ -57,7 +44,7 @@ It operates in **two phases**:
 http://morourak.runasp.net/api/v1
 ```
 
-Every repository MUST use the shared `ApiClient` (below) instead of creating their own `Dio` instance.
+Every repository MUST use the shared `ApiClient` instead of creating their own `Dio` instance.
 
 ---
 
@@ -92,7 +79,6 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Skip auth for public endpoints
     final publicPaths = [
       '/Auth/register',
       '/Auth/verify-otp',
@@ -101,6 +87,8 @@ class _AuthInterceptor extends Interceptor {
       '/Auth/reset-password',
       '/VehicleTypes',
       '/appointments/available-slots',
+      '/governorates',
+      '/VehicleLicense/insurance-companies',
     ];
 
     final isPublic = publicPaths.any(
@@ -120,97 +108,13 @@ class _AuthInterceptor extends Interceptor {
 }
 ```
 
-### `lib/core/api/api_error_handler.dart`
-
-```dart
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-
-/// Centralized API error extraction — returns Arabic user-facing messages.
-class ApiErrorHandler {
-  /// Extracts a user-facing error message from a [DioException].
-  static String extractMessage(DioException e, {String? fallback}) {
-    if (e.response?.data != null) {
-      final errorData = e.response!.data;
-
-      if (errorData is Map<String, dynamic>) {
-        // Shape: {"message": "..."}
-        if (errorData['message'] != null) {
-          return errorData['message'].toString();
-        }
-        // Shape: {"errors": {"field": ["error1", "error2"]}}
-        if (errorData['errors'] != null && errorData['errors'] is Map) {
-          final errors = errorData['errors'] as Map;
-          final msgs = <String>[];
-          for (final entry in errors.entries) {
-            if (entry.value is List) {
-              for (final msg in entry.value as List) {
-                msgs.add(msg.toString());
-              }
-            }
-          }
-          if (msgs.isNotEmpty) return msgs.join('\n');
-        }
-        // Shape: {"detail": "..."}
-        if (errorData['detail'] != null) {
-          return errorData['detail'].toString();
-        }
-        // Shape: {"title": "..."}
-        if (errorData['title'] != null) {
-          return errorData['title'].toString();
-        }
-      }
-
-      if (errorData is List) {
-        return errorData.map((e) => e.toString()).join('\n');
-      }
-
-      if (errorData is String && errorData.isNotEmpty) {
-        return errorData;
-      }
-    }
-
-    return fallback ??
-        'فشل العملية. (${e.response?.statusCode ?? 'no status'})';
-  }
-
-  /// Logs the error in debug mode.
-  static void logError(String tag, DioException e) {
-    debugPrint('$tag error: ${e.response?.statusCode}');
-    debugPrint('$tag body: ${e.response?.data}');
-  }
-}
-```
-
-### `lib/core/api/api_result.dart`
-
-```dart
-/// Generic result wrapper for API calls.
-/// 
-/// Use [ApiResult.success] when the call succeeds, passing the data.
-/// Use [ApiResult.failure] when it fails, passing the error message.
-class ApiResult<T> {
-  final T? data;
-  final String? error;
-  final bool isSuccess;
-
-  const ApiResult._({this.data, this.error, required this.isSuccess});
-
-  factory ApiResult.success([T? data]) =>
-      ApiResult._(data: data, isSuccess: true);
-
-  factory ApiResult.failure(String error) =>
-      ApiResult._(error: error, isSuccess: false);
-}
-```
-
 ---
 
-## Step 1 — Repository (Data Layer)
+## Step 1 — Repository Template
 
 **File**: `lib/features/<feature>/data/repositories/<feature>_repository.dart`
 
-### Template — JSON endpoint (GET/POST)
+### JSON endpoint (GET/POST)
 
 ```dart
 import 'package:dio/dio.dart';
@@ -220,52 +124,18 @@ import '../../../../core/api/api_result.dart';
 
 class FeatureRepository {
   final ApiClient _apiClient;
-
   FeatureRepository(this._apiClient);
 
-  /// Fetches data from the API.
-  /// Returns [ApiResult.success] with data on success,
-  /// [ApiResult.failure] with Arabic error message on failure.
-  Future<ApiResult<List<FeatureModel>>> fetchItems() async {
-    try {
-      final response = await _apiClient.dio.get('/Endpoint/path');
-      final data = response.data;
-      
-      if (data is List) {
-        final items = data
-            .map((json) => FeatureModel.fromJson(json as Map<String, dynamic>))
-            .toList();
-        return ApiResult.success(items);
-      }
-      
-      return ApiResult.failure('لم يتم استلام بيانات صحيحة');
-    } on DioException catch (e) {
-      ApiErrorHandler.logError('FetchItems', e);
-      return ApiResult.failure(ApiErrorHandler.extractMessage(e));
-    } catch (e) {
-      return ApiResult.failure('حدث خطأ غير متوقع.');
-    }
-  }
-
-  /// Submits data to the API (POST with JSON body).
-  Future<ApiResult<ResponseModel>> submitAction({
-    required String param1,
-    required String param2,
-  }) async {
+  Future<ApiResult<ResponseModel>> submitAction({required String param}) async {
     try {
       final response = await _apiClient.dio.post(
         '/Endpoint/path',
-        data: {
-          'param1': param1,
-          'param2': param2,
-        },
+        data: {'param': param},
       );
-      
       final data = response.data;
       if (data is Map<String, dynamic>) {
         return ApiResult.success(ResponseModel.fromJson(data));
       }
-      
       return ApiResult.success();
     } on DioException catch (e) {
       ApiErrorHandler.logError('SubmitAction', e);
@@ -277,37 +147,41 @@ class FeatureRepository {
 }
 ```
 
-### Template — File upload (multipart/form-data)
+### File upload (multipart/form-data)
 
 ```dart
-/// Uploads documents using multipart/form-data.
 Future<ApiResult<String>> uploadDocuments({
   required String category,
-  required String governorate,
-  required String licensingUnit,
   required String personalPhotoPath,
+  required String educationalCertificatePath,
   required String idCardPath,
+  String? residenceProofPath,
+  String? medicalCertificatePath,
 }) async {
   try {
-    final formData = FormData.fromMap({
+    final map = <String, dynamic>{
       'category': category,
-      'governorate': governorate,
-      'licensingUnit': licensingUnit,
       'personalPhoto': await MultipartFile.fromFile(personalPhotoPath),
+      'educationalCertificate': await MultipartFile.fromFile(educationalCertificatePath),
       'idCard': await MultipartFile.fromFile(idCardPath),
-    });
+    };
+    if (residenceProofPath != null) {
+      map['residenceProof'] = await MultipartFile.fromFile(residenceProofPath);
+    }
+    if (medicalCertificatePath != null) {
+      map['medicalCertificate'] = await MultipartFile.fromFile(medicalCertificatePath);
+    }
 
     final response = await _apiClient.dio.post(
-      '/Endpoint/upload-documents',
-      data: formData,
+      '/DrivingLicense/upload-documents',
+      data: FormData.fromMap(map),
       options: Options(contentType: 'multipart/form-data'),
     );
 
     final data = response.data;
-    if (data is Map<String, dynamic> && data['requestNumber'] != null) {
-      return ApiResult.success(data['requestNumber'].toString());
+    if (data is Map<String, dynamic> && data['details']?['requestNumber'] != null) {
+      return ApiResult.success(data['details']['requestNumber'].toString());
     }
-
     return ApiResult.failure('لم يتم استلام رقم الطلب');
   } on DioException catch (e) {
     ApiErrorHandler.logError('UploadDocuments', e);
@@ -322,77 +196,32 @@ Future<ApiResult<String>> uploadDocuments({
 
 ## Step 2 — State Classes
 
-**File**: `lib/features/<feature>/presentation/cubits/<feature>_state.dart`
-
 ```dart
 abstract class FeatureState {}
-
 class FeatureInitial extends FeatureState {}
-
 class FeatureLoading extends FeatureState {}
-
-/// Use one success state per distinct action in the cubit.
-/// Include response data as fields when the UI needs it.
-class FeatureFetchSuccess extends FeatureState {
-  final List<FeatureModel> items;
-  FeatureFetchSuccess({required this.items});
-}
-
 class FeatureSubmitSuccess extends FeatureState {
-  final String? requestNumber; // optional — for chained flows
+  final String? requestNumber;
   FeatureSubmitSuccess({this.requestNumber});
 }
-
 class FeatureFailure extends FeatureState {
   final String message;
   FeatureFailure({required this.message});
 }
 ```
 
-### Naming Convention
-
-| State | When |
-|-------|------|
-| `<Feature>Initial` | Before any action |
-| `<Feature>Loading` | During API call |
-| `<Feature><Action>Success` | Action specific success (e.g., `DrivingLicenseUploadSuccess`) |
-| `<Feature>Failure` | Any failure — carries `message` |
-
 ---
 
 ## Step 3 — Cubit
 
-**File**: `lib/features/<feature>/presentation/cubits/<feature>_cubit.dart`
-
 ```dart
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/repositories/feature_repository.dart';
-import 'feature_state.dart';
-
 class FeatureCubit extends Cubit<FeatureState> {
   final FeatureRepository _repository;
-
   FeatureCubit(this._repository) : super(FeatureInitial());
 
-  Future<void> fetchItems() async {
+  Future<void> submitAction({required String param}) async {
     emit(FeatureLoading());
-    final result = await _repository.fetchItems();
-    if (result.isSuccess) {
-      emit(FeatureFetchSuccess(items: result.data ?? []));
-    } else {
-      emit(FeatureFailure(message: result.error ?? 'حدث خطأ غير متوقع.'));
-    }
-  }
-
-  Future<void> submitAction({
-    required String param1,
-    required String param2,
-  }) async {
-    emit(FeatureLoading());
-    final result = await _repository.submitAction(
-      param1: param1,
-      param2: param2,
-    );
+    final result = await _repository.submitAction(param: param);
     if (result.isSuccess) {
       emit(FeatureSubmitSuccess(requestNumber: result.data?.requestNumber));
     } else {
@@ -402,102 +231,9 @@ class FeatureCubit extends Cubit<FeatureState> {
 }
 ```
 
-### Cubit Rules
-1. The cubit does **not** call Dio directly — it delegates to the Repository.
-2. The cubit does **not** handle navigation — that belongs in `BlocListener` in the UI.
-3. Each public method follows: `emit(Loading) → call repo → emit(Success | Failure)`.
-4. Use `ApiResult` from the repository — no more `String?` null-means-success pattern.
-
 ---
 
-## Step 4 — Screen Wiring
-
-```dart
-// In the screen that triggers the feature:
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-// Provide the Cubit at the screen level
-BlocProvider(
-  create: (_) => FeatureCubit(
-    FeatureRepository(ApiClient()),
-  ),
-  child: const FeatureScreen(),
-)
-
-// Inside FeatureScreen build():
-BlocConsumer<FeatureCubit, FeatureState>(
-  listener: (context, state) {
-    if (state is FeatureSubmitSuccess) {
-      // Navigate forward
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const NextScreen()),
-      );
-    } else if (state is FeatureFailure) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.message)),
-      );
-    }
-  },
-  builder: (context, state) {
-    if (state is FeatureLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (state is FeatureFetchSuccess) {
-      return ListView.builder(
-        itemCount: state.items.length,
-        itemBuilder: (_, i) => FeatureCard(item: state.items[i]),
-      );
-    }
-    return const SizedBox.shrink();
-  },
-)
-```
-
----
-
-## Step 5 — Model (Data Layer)
-
-**File**: `lib/features/<feature>/data/models/<model>_model.dart`
-
-```dart
-class FeatureModel {
-  final int id;
-  final String name;
-  final String status;
-
-  const FeatureModel({
-    required this.id,
-    required this.name,
-    required this.status,
-  });
-
-  factory FeatureModel.fromJson(Map<String, dynamic> json) {
-    return FeatureModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      status: json['status'] as String,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'status': status,
-    };
-  }
-
-  /// Keep dummy data for local dev fallback
-  static List<FeatureModel> get dummyItems => const [
-    FeatureModel(id: 1, name: 'عنصر تجريبي', status: 'نشط'),
-  ];
-}
-```
-
----
-
-# API Reference (Embedded)
+# API Reference (Morourak.postman_collection.json — Updated)
 
 ## Base URL
 ```
@@ -506,139 +242,273 @@ http://morourak.runasp.net/api/v1
 
 ## Authentication
 - **Bearer Token** required for most endpoints
-- Token obtained from `POST /Auth/login` response
-- Store in `SharedPreferences` key: `'token'`
-- **Public endpoints** (no auth): Register, Verify OTP, Login, Forgot Password, Reset Password, Get Vehicle Types, Get Available Slots
+- Token obtained from `POST /Auth/login`
+- Stored in `SharedPreferences` key: `'token'`
+- **Public endpoints** (no auth): Register, Verify OTP, Login, Forgot Password, Reset Password, Get Vehicle Types, Get Available Slots, Get Governorates, Get Insurance Companies
 
-## Endpoint Catalog
+## Roles
+| Role | Description |
+|------|-------------|
+| `CITIZEN` | Apply for services, book appointments, make payments |
+| `STAFF / DOCTOR / INSPECTOR / EXAMINATOR` | Manage examination results |
+| `ADMIN` | Manage users and seed data |
 
-### 1. Auth (Public — no token needed)
+---
 
-| Method | Path | Purpose | Body Type |
-|--------|------|---------|-----------|
-| POST | `/Auth/register` | Create account | JSON |
-| POST | `/Auth/verify-otp` | Verify OTP code | JSON |
-| POST | `/Auth/login` | Login → token | JSON |
-| POST | `/Auth/forgot-password` | Request reset code | JSON |
-| POST | `/Auth/reset-password` | Set new password | JSON |
+## 1. Authentication
 
-### 2. Driving License (🔒 Auth Required)
+| Method | Path | Purpose | Body | Auth |
+|--------|------|---------|------|------|
+| POST | `/Auth/register` | Create account | JSON | Public |
+| POST | `/Auth/verify-otp` | Verify OTP | JSON | Public |
+| POST | `/Auth/login` | Login → token | JSON | Public |
+| GET | `/auth/profile` | View Profile | — | 🔒 Yes |
+| POST | `/Auth/forgot-password` | Request reset | JSON | Public |
+| POST | `/Auth/reset-password` | Set new password | JSON | Public |
+| POST | `/auth/change-email/request` | Request email change | JSON | 🔒 Yes |
+| POST | `/auth/change-email/confirm` | Confirm email change | JSON | 🔒 Yes |
 
-| Method | Path | Purpose | Body Type |
-|--------|------|---------|-----------|
-| POST | `/DrivingLicense/upload-documents` | First-time issuance docs | form-data (files) |
-| POST | `/DrivingLicense/finalize/{requestNumber}` | Finalize issuance | JSON |
-| POST | `/DrivingLicense/renewal-request` | Renew license | No body |
-| POST | `/DrivingLicense/finalize-renewal/{requestNumber}` | Finalize renewal | JSON |
-| POST | `/DrivingLicense/issue-replacement/{licenseNumber}` | Lost/damaged replacement | JSON |
-| GET | `/DrivingLicense/my-licenses` | Get citizen's licenses | — |
+### Register Body
+```json
+{
+  "nationalId": "29801012345678",
+  "mobileNumber": "01012345678",
+  "firstName": "أحمد",
+  "lastName": "علي",
+  "Email": "user@example.com",
+  "username": "ahmed",
+  "password": "Password123!",
+  "confirmPassword": "Password123!"
+}
+```
 
-### 3. Vehicle License (🔒 Auth Required)
+---
 
-| Method | Path | Purpose | Body Type |
-|--------|------|---------|-----------|
-| POST | `/VehicleLicense/upload-documents` | First-time issuance docs | form-data (files) |
-| POST | `/VehicleLicense/finalize/{requestNumber}` | Finalize issuance | JSON |
-| POST | `/VehicleLicense/renew` | Renew license | form-data |
-| POST | `/VehicleLicense/finalize-renewal/{requestNumber}` | Finalize renewal | JSON |
-| POST | `/VehicleLicense/replacement/{licenseNumber}?type=lost\|damaged` | Replacement | JSON |
-| GET | `/VehicleLicense/my-licenses` | Get citizen's licenses | — |
-| GET | `/VehicleTypes` | Get vehicle types (Public) | — |
+## 2. Driving License (🔒 CITIZEN)
 
-### 4. Traffic Violations (🔒 Auth Required)
+### 2a. Issuance (First Time)
+
+**Upload Documents** — `POST /DrivingLicense/upload-documents`
+- **Content-Type**: `multipart/form-data`
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `category` | text (int enum) | ✅ | e.g. `1` |
+| `personalPhoto` | file | ✅ | |
+| `educationalCertificate` | file | ✅ | |
+| `idCard` | file | ✅ | |
+| `residenceProof` | file | ❌ | Optional |
+| `medicalCertificate` | file | ❌ | If uploaded → skips medical appointment |
+
+**Finalize License** — `POST /DrivingLicense/finalize/{requestNumber}`
+- **Content-Type**: `application/json`
+- `method`: `1` (TrafficUnit), `2` (HomeDelivery)
+
+---
+
+### 2b. Renewal
+
+**Renewal-Request** — `POST /DrivingLicense/renewal-request`
+- **Content-Type**: `multipart/form-data`
+- Body: `LicenseNumber` (String), `NewCategory` (String, Optional)
+
+**Finalize-Renewal** — `POST /DrivingLicense/finalize-renewal/{requestNumber}`
+- **Content-Type**: `application/json`
+- `method`: `1` (TrafficUnit), `2` (HomeDelivery)
+
+---
+
+### 2c. Replacement
+
+**Issue-Replacement** — `POST /DrivingLicense/issue-replacement/{licenseNumber}`
+- **Content-Type**: `application/json`
+- Body: `replacementtype` ("Lost", "Damaged"), `delivery` { `method` (1, 2), `address` }
+
+---
+
+### 2d. Management
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/DrivingLicense/my-licenses` | Get citizen's licenses |
+
+---
+
+## 3. Vehicle License (🔒 CITIZEN)
+
+### 3a. Issuance
+
+**Upload Initial Documents** — `POST /VehicleLicense/upload-documents`
+- **Content-Type**: `multipart/form-data`
+- `VehicleType`: 0=Private, 1=Truck, 2=Taxi, 3=Motorcycle, 4=Bus, 5=PrivateBus, 6=Trailer
+- `InsuranceCompanyId`: Fetch from `/insurance-companies`
+
+**Finalize License** — `POST /VehicleLicense/finalize/{requestNumber}`
+- `method`: `1` (TrafficUnit), `2` (HomeDelivery)
+
+---
+
+### 3b. Renewal
+
+**Renew** — `POST /VehicleLicense/renew`
+- Body: `VehicleLicenseNumber` (form-data)
+
+**Finalize Renewal** — `POST /VehicleLicense/finalize-renewal/{requestNumber}`
+
+---
+
+### 3c. Replacement
+
+**Replace lost/damaged** — `POST /VehicleLicense/issue-replacement/{licenseNumber}`
+- `replacementtype`: "بدل فاقد" (0), "بدل تالف" (1)
+- `delivery.method`: "وحدة المرور" (1), "توصيل للمنزل" (2)
+
+---
+
+### 3d. Management
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| GET | `/VehicleTypes` | Public | Get vehicle types + brands + models |
+| GET | `/VehicleLicense/my-licenses` | 🔒 | Citizen's vehicle licenses |
+| GET | `/VehicleLicense/insurance-companies` | Public | Insurance companies list |
+
+---
+
+## 4. Traffic Violations (🔒 CITIZEN)
 
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | `/TrafficViolations/driving-license/{licenseNumber}` | Violations for driving license |
 | GET | `/TrafficViolations/vehicle-license/{licenseNumber}` | Violations for vehicle license |
-| GET | `/TrafficViolations/license/{licenseNumber}/details?licenseType=Driving\|Vehicle` | Detailed violations |
+| GET | `/TrafficViolations/license/{licenseNumber}/details?licenseType=Driving|Vehicle` | Detailed violations |
 
-### 5. Appointments
+---
 
-| Method | Path | Purpose | Auth |
-|--------|------|---------|------|
-| POST | `/appointments/book` | Book appointment | 🔒 Yes |
-| GET | `/appointments/available-slots?date=YYYY-MM-DD&type=Medical` | Available slots | Public |
-| GET | `/appointments/my` | My appointments | 🔒 Yes |
+## 5. Appointments & Locations
 
-### 6. Payments (🔒 Auth Required)
+### Lookups (Public)
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| POST | `/payment/create` | Create payment (violationIds) |
-| GET | `/Payment/status/{orderId}` | Payment status |
-| GET | `/Payment/receipt/{orderId}` | Payment receipt |
+| GET | `/governorates` | All governorates |
+| GET | `/governorates/{id}/traffic-units` | Traffic units by governorate |
 
-### 7. Service Requests (🔒 Auth Required)
+### Booking Flow
+
+**Get Available Slots** — `GET /appointments/available-slots?date=YYYY-MM-DD&type=Medical`
+- `type`: Medical, Technical, Driving
+
+**Book Appointment** — `POST /appointments/book` (🔒 CITIZEN)
+- `requestNumber` (Optional): specific request to link to
+- `appointmentType` (int) or `serviceType` (string Arabic/English)
+
+---
+
+## 6. Payments (🔒 CITIZEN)
+
+**Create Payment** — `POST /payment/create`
+- `ServiceRequestNumber` OR `violationIds`
+
+**Payment Status** — `GET /Payment/status/{merchantOrderId}`
+
+**Get Receipt** — `GET /Payment/receipt/{merchantOrderId}`
+
+---
+
+## 7. Service Requests (🔒 CITIZEN)
 
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | `/servicerequests/my-requests` | All my requests |
 | GET | `/service-requests/{requestNumber}` | Request details |
 
-## Flow Dependencies
+---
 
-```
-┌─ upload-documents ─┐
-│   Returns: requestNumber (e.g. "DL-500")
-└────────┬───────────┘
-         ▼
-┌─ finalize/{requestNumber} ─┐
-│   Returns: Full license data
-└────────────────────────────┘
+## 8. Staff (🔒 STAFF roles)
 
-┌─ renewal-request ───────┐
-│   Returns: requestNumber (e.g. "DR-800")
-└────────┬────────────────┘
-         ▼
-┌─ finalize-renewal/{requestNumber} ─┐
-│   Returns: Updated license data
-└────────────────────────────────────┘
+| Method | Path | Role | Purpose |
+|--------|------|------|---------|
+| GET | `/Staff` | DOCTOR/INSPECTOR/EXAMINATOR | Get assigned appointments |
+| POST | `/Staff/submit` | DOCTOR/INSPECTOR/EXAMINATOR | Submit examination result |
 
-┌─ TrafficViolations ───┐
-│   Returns: violationIds
-└────────┬──────────────┘
-         ▼
-┌─ payment/create ──────┐
-│   Body: { violationIds: [...] }
-│   Returns: orderId (e.g. "MOR-...")
-└────────┬──────────────┘
-         ▼
-┌─ Payment/status/{orderId} ─┐
-│   Returns: payment status
-└────────────────────────────┘
-```
+---
+
+## 9. Admin (🔒 ADMIN)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/AdminSeedData/citizens` | Get citizens |
+| GET | `/AdminSeedData/vehicle-licenses` | Get vehicle licenses |
+| GET | `/AdminSeedData/driving-licenses` | Get driving licenses |
+| GET | `/adminusers` | List users |
+| POST | `/adminusers` | Create user |
+| PUT | `/adminusers/{id}` | Update user |
+| DELETE | `/adminusers/{id}` | Delete user |
+
+---
 
 ## Delivery Method Values
 
 | Value | Meaning | Address Required? |
 |-------|---------|-------------------|
-| `1` | وحدة المرور (Traffic Unit pickup) | ❌ No |
-| `2` | توصيل منزلي (Home Delivery) | ✅ Yes |
-
-## Important Notes
-
-1. **Token storage**: `SharedPreferences` with key `'token'`
-2. **Form-data uploads**: `upload-documents` endpoints use `multipart/form-data`, not JSON
-3. **Request numbers**: Returned by `upload-documents`, used in `finalize` — **must be passed between screens**
-4. **Payment order IDs**: Start with `MOR-`, returned from backend
-5. **Response language**: Some fields come in Arabic from the backend (status, category, citizenName)
-6. **Renewal-request body**: The `DrivingLicense/renewal-request` has optional `NewCategory` field in form-data, **not JSON**
+| `1` | TrafficUnit (وحدة المرور) | ❌ No |
+| `2` | HomeDelivery (توصيل منزلي) | ✅ Yes |
 
 ---
 
-# Integration Checklist
+## Flow Dependencies
 
-When integrating a new feature, create these files in order:
+```
+Driving License Issuance:
+  upload-documents → requestNumber (LR-XXXXXX)
+    └─ finalize/{requestNumber} → full license
 
-- [ ] Verify `lib/core/api/api_client.dart` exists (create once)
-- [ ] Verify `lib/core/api/api_error_handler.dart` exists (create once)
-- [ ] Verify `lib/core/api/api_result.dart` exists (create once)
+Driving License Renewal:
+  renewal-request (form-data: LicenseNumber) → requestNumber (DR-XXX)
+    └─ finalize-renewal/{requestNumber} → updated license
+
+Vehicle License Issuance:
+  upload-documents → requestNumber (REQ-VL-XXXX)
+    └─ finalize/{requestNumber} → license issued
+
+Vehicle License Renewal:
+  renew (form-data: VehicleLicenseNumber) → requestNumber (VR-XXXX)
+    └─ finalize-renewal/{requestNumber} → renewed
+
+Payment:
+  payment/create (ServiceRequestNumber or violationIds)
+    → merchantOrderId (MOR-...) + paymentUrl
+      └─ Payment/status/{merchantOrderId} → status
+        └─ Payment/receipt/{merchantOrderId} → receipt
+```
+
+---
+
+## Important Notes
+
+1. **Token storage**: `SharedPreferences` key `'token'`
+2. **Public endpoints**: Register, Verify OTP, Login, Forgot Password, Reset Password, Get Vehicle Types, Get Available Slots, Get Governorates, Get Insurance Companies
+3. **XOR Logic**: `medicalCertificate` upload skips medical appointment.
+4. **Replacement APIs**: Use `/DrivingLicense/issue-replacement/{licenseNumber}` and `/VehicleLicense/issue-replacement/{licenseNumber}`.
+5. **Vehicle License Renewal**: Requires `VehicleLicenseNumber` in form-data.
+6. **Appointments**: Booking supports optional `requestNumber` linking.
+7. **Payments**: Supports both service requests and violation payments.
+8. **Driving License Issuance**: `educationalCertificate` is now **mandatory** for first-time issuance.
+9. **Response Structure**: Most successful requests return a wrapper with `{ "isSuccess": true, "details": { ... } }`. Always check `details` for the actual payload.
+
+---
+
+## Integration Checklist
+
+- [ ] Verify `lib/core/api/api_client.dart` exists (public paths updated)
+- [ ] Verify `lib/core/api/api_error_handler.dart` exists
+- [ ] Verify `lib/core/api/api_result.dart` exists
 - [ ] `lib/features/<feature>/data/models/<model>_model.dart` — with `fromJson`/`toJson`
-- [ ] `lib/features/<feature>/data/repositories/<feature>_repository.dart` — uses `ApiClient`
+- [ ] `lib/features/<feature>/data/repositories/<feature>_repository.dart`
 - [ ] `lib/features/<feature>/presentation/cubits/<feature>_state.dart`
-- [ ] `lib/features/<feature>/presentation/cubits/<feature>_cubit.dart` — uses `ApiResult`
-- [ ] Wire `BlocProvider` in the screen that navigates to this feature
+- [ ] `lib/features/<feature>/presentation/cubits/<feature>_cubit.dart`
+- [ ] Wire `BlocProvider` in the screen
 - [ ] Add `BlocConsumer` in the feature screen
 - [ ] Validate with `flutter analyze`
 - [ ] Test the flow end-to-end

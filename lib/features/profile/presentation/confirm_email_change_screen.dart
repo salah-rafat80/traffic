@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -99,7 +100,7 @@ class _ConfirmEmailChangeScreenState extends State<ConfirmEmailChangeScreen> {
                         ),
                         SizedBox(height: 32.h),
                         if (state is ProfileLoading)
-                          const Center(child: CircularProgressIndicator())
+                          Center(child: CustomLoadingIndicator())
                         else
                           PrimaryButton(
                             label: 'تأكيد',

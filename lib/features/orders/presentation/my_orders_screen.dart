@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 import 'package:traffic/features/profile/presentation/widgets/profile_header.dart';
+import 'package:traffic/core/widgets/empty_state_widget.dart';
 import 'cubits/my_orders_cubit.dart';
 import 'cubits/my_orders_state.dart';
 import 'order_details_screen.dart';
@@ -32,34 +34,32 @@ class _MyOrdersScreenView extends StatelessWidget {
             child: BlocBuilder<MyOrdersCubit, MyOrdersState>(
               builder: (context, state) {
                 if (state is MyOrdersLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: Lottie.asset(
+                      'assets/animations/Sandy Loading.json',
+                      width: 200.w,
+                      height: 200.h,
+                    ),
+                  );
                 } else if (state is MyOrdersFailure) {
                   return Center(
                     child: Text(
                       state.message,
-                      style: TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 16.sp,
-                      ),
+                      style: TextStyle(fontFamily: 'Cairo', fontSize: 16.sp),
                     ),
                   );
                 } else if (state is MyOrdersFetchSuccess) {
                   final orders = state.orders;
                   if (orders.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'لا توجد طلبات/مواعيد حالياً',
-                        style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 16.sp,
-                        ),
-                      ),
+                    return const EmptyStateWidget(
+                      message: 'لا توجد طلبات أو مواعيد حالياً',
                     );
                   }
                   return ListView.separated(
                     padding: EdgeInsets.all(16.r),
                     itemCount: orders.length,
-                    separatorBuilder: (context, index) => SizedBox(height: 16.h),
+                    separatorBuilder: (context, index) =>
+                        SizedBox(height: 16.h),
                     itemBuilder: (context, index) {
                       return OrderItemCard(
                         order: orders[index],
@@ -67,8 +67,9 @@ class _MyOrdersScreenView extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => OrderDetailsScreen(order: orders[index]),
-                            )
+                              builder: (context) =>
+                                  OrderDetailsScreen(order: orders[index]),
+                            ),
                           );
                         },
                       );

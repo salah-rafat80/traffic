@@ -1,6 +1,8 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:traffic/core/constants/colors.dart';
 import 'package:traffic/core/features/checkout/generic_order_review_screen.dart';
 import 'package:traffic/core/features/checkout/models/applicant_details.dart';
@@ -13,6 +15,8 @@ import 'package:traffic/features/lost_license/presentation/widgets/custom_text_f
 import 'package:traffic/features/lost_license/presentation/widgets/selection_option_card.dart';
 import 'package:traffic/features/vehicle_license/presentation/cubits/vehicle_license_cubit.dart';
 import 'package:traffic/features/vehicle_license/presentation/cubits/vehicle_license_state.dart';
+import 'package:traffic/core/api/order_payment_cache.dart';
+
 
 /// Delivery method picker for vehicle license issuance.
 /// Works exactly like [FinalizeDrivingLicenseScreen] but wired to
@@ -67,7 +71,7 @@ class _FinalizeVehicleLicenseScreenState
         );
   }
 
-  void _navigateToOrderReview(VehicleLicenseFinalizeSuccess state) {
+  void _navigateToOrderReview(VehicleLicenseFinalizeSuccess state) async {
     final applicant = ApplicantDetails(
       name: state.profile.fullName,
       nationalId: state.profile.nationalId,
@@ -92,24 +96,42 @@ class _FinalizeVehicleLicenseScreenState
 
     // Use real fees returned by the API.
     final feesPayload = state.response.fees;
+    final double baseFee = feesPayload?.baseFee ?? 0;
+    final double deliveryFee = feesPayload?.deliveryFee ?? 0;
+    final double totalAmount = feesPayload?.totalAmount ?? 0;
+
+    // Cache the payment details
+    await OrderPaymentCache.save(
+      orderId,
+      OrderPaymentCachedData(
+        baseFee: baseFee,
+        deliveryFee: deliveryFee,
+        totalAmount: totalAmount,
+        paymentMethodLabel: paymentMethodLabel,
+        orderType: 'إصدار رخصة مركبة',
+      ),
+    );
+
     final List<FeeItem> items = <FeeItem>[
       FeeItem(
         label: 'الرسوم الأساسية',
-        amount: _formatCurrency(feesPayload?.baseFee ?? 0),
+        amount: _formatCurrency(baseFee),
       ),
     ];
 
-    if ((feesPayload?.deliveryFee ?? 0) > 0) {
+    if (deliveryFee > 0) {
       items.add(FeeItem(
         label: 'رسوم التوصيل',
-        amount: _formatCurrency(feesPayload!.deliveryFee),
+        amount: _formatCurrency(deliveryFee),
       ));
     }
 
     final fees = FeesDetails(
       items: items,
-      total: _formatCurrency(feesPayload?.totalAmount ?? 0),
+      total: _formatCurrency(totalAmount),
     );
+
+    if (!mounted) return;
 
     Navigator.push(
       context,
@@ -120,7 +142,7 @@ class _FinalizeVehicleLicenseScreenState
           orderSummary: orderSummary,
           feesDetails: fees,
           serviceRequestNumber: orderId,
-          paymentAmountOverride: feesPayload?.totalAmount ?? 0,
+          paymentAmountOverride: totalAmount,
         ),
       ),
     );
@@ -175,7 +197,7 @@ class _FinalizeVehicleLicenseScreenState
                     textDirection: TextDirection.rtl,
                     style: TextStyle(fontFamily: 'Cairo', fontSize: 13.sp),
                   ),
-                  backgroundColor: Colors.green,
+                  backgroundColor: const Color(0xFF27AE60),
                 ),
               );
               _navigateToOrderReview(state);
@@ -229,10 +251,14 @@ class _FinalizeVehicleLicenseScreenState
                             isSelected: _deliveryMethod == 1,
                             onTap: () =>
                                 setState(() => _deliveryMethod = 1),
-                            icon: Icon(
-                              Icons.account_balance_outlined,
-                              color: const Color(0xFF27AE60),
-                              size: 22.r,
+                            icon: SvgPicture.asset(
+                              'assets/tabler_building-bank.svg',
+                              width: 24.w,
+                              height: 24.w,
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFF27AE60),
+                                BlendMode.srcIn,
+                              ),
                             ),
                           ),
                           SizedBox(height: 12.h),
@@ -243,10 +269,14 @@ class _FinalizeVehicleLicenseScreenState
                             isSelected: _deliveryMethod == 2,
                             onTap: () =>
                                 setState(() => _deliveryMethod = 2),
-                            icon: Icon(
-                              Icons.home_outlined,
-                              color: const Color(0xFF27AE60),
-                              size: 22.r,
+                            icon: SvgPicture.asset(
+                              'assets/home2.svg',
+                              width: 24.w,
+                              height: 24.w,
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFF27AE60),
+                                BlendMode.srcIn,
+                              ),
                             ),
                           ),
                           AnimatedSize(
@@ -297,7 +327,7 @@ class _FinalizeVehicleLicenseScreenState
                 Padding(
                   padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
                   child: isLoading
-                      ? const Center(child: CircularProgressIndicator())
+                      ? Center(child: CustomLoadingIndicator())
                       : PrimaryButton(
                           label: 'إنهاء وإصدار الرخصة',
                           onPressed: isButtonEnabled

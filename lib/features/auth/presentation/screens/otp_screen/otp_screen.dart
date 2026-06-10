@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:traffic/core/widgets/custom_appbar.dart';
 import 'package:traffic/features/auth/presentation/screens/login_screen/login_screen.dart';
@@ -152,7 +153,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           return Container(
                             color: Colors.black26,
                             child: const Center(
-                              child: CircularProgressIndicator(),
+                              child: CustomLoadingIndicator(),
                             ),
                           );
                         }

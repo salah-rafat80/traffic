@@ -34,7 +34,6 @@ class OrderSummaryHeaderCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _OrderStatusBadge(status: order.status),
               Expanded(
                 child: Text(
                   order.title,
@@ -49,7 +48,25 @@ class OrderSummaryHeaderCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 8.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+            children: [
+              _OrderStatusBadge(order: order),
+              SizedBox(width: 8.w),
+              Text(
+                ": الحالة ",
+                style: TextStyle(
+                  color: const Color(0xFF707070),
+                  fontSize: 12.sp,
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -104,46 +121,48 @@ class OrderSummaryHeaderCard extends StatelessWidget {
 }
 
 class _OrderStatusBadge extends StatelessWidget {
-  final OrderStatus status;
+  final OrderModel order;
 
-  const _OrderStatusBadge({required this.status});
+  const _OrderStatusBadge({required this.order});
 
   @override
   Widget build(BuildContext context) {
     Color bgColor;
     Color textColor;
-    String text;
+    String text = order.statusLabel.isNotEmpty
+        ? order.statusLabel
+        : 'قيد التنفيذ';
 
-    switch (status) {
+    switch (order.status) {
       case OrderStatus.pending:
         bgColor = const Color(0xFFA5D4FF);
         textColor = const Color(0xFF3B82F6);
-        text = 'قيد التنفيذ';
+        if (order.statusLabel.isEmpty) text = 'قيد التنفيذ';
         break;
       case OrderStatus.completed:
         bgColor = const Color(0xFFD4ECDE);
         textColor = const Color(0xFF27AE60);
-        text = 'مكتمل';
+        if (order.statusLabel.isEmpty) text = 'مكتمل';
         break;
       case OrderStatus.needsData:
         bgColor = const Color(0xFFFFDAB9);
         textColor = const Color(0xFFE67E22);
-        text = 'بحاجة لبيانات';
+        if (order.statusLabel.isEmpty) text = 'بحاجة لبيانات';
         break;
       case OrderStatus.awaitingService:
         bgColor = const Color(0xFFA5D4FF);
         textColor = const Color(0xFF3B82F6);
-        text = 'بانتظار الموعد';
+        if (order.statusLabel.isEmpty) text = 'بانتظار الموعد';
         break;
       case OrderStatus.passed:
         bgColor = const Color(0xFFD4ECDE);
         textColor = const Color(0xFF27AE60);
-        text = 'ناجح';
+        if (order.statusLabel.isEmpty) text = 'ناجح';
         break;
       case OrderStatus.failed:
         bgColor = const Color(0xFFFFCDD2);
         textColor = const Color(0xFFF44336);
-        text = 'راسب';
+        if (order.statusLabel.isEmpty) text = 'راسب';
         break;
     }
 
@@ -158,6 +177,8 @@ class _OrderStatusBadge extends StatelessWidget {
       child: Text(
         text,
         textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: textColor,
           fontSize: 14.sp,

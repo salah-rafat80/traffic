@@ -45,7 +45,7 @@ class RenewalVehicleLicenseCard extends StatelessWidget {
               ),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (_canSelect) RadioDot(isSelected: isSelected),
                 SizedBox(height: 10.h),
@@ -69,9 +69,15 @@ class RenewalVehicleLicenseCard extends StatelessWidget {
                   ],
                 ),
                 const RenewalDivider(),
-                RenewalInfoRow(label: 'نوع المركبة', value: vehicle.vehicleType),
+                RenewalInfoRow(
+                  label: 'نوع المركبة',
+                  value: vehicle.vehicleType,
+                ),
                 const RenewalDivider(),
-                RenewalInfoRow(label: 'تاريخ انتهاء', value: vehicle.expiryDate),
+                RenewalInfoRow(
+                  label: 'تاريخ انتهاء',
+                  value: vehicle.expiryDate,
+                ),
                 const RenewalDivider(),
                 RenewalInfoRow(
                   label: 'حالة الرخصة',
@@ -100,6 +106,19 @@ class RenewalVehicleLicenseCard extends StatelessWidget {
                     message: 'اكتمل ملف التأمين، يرجى التأكد قبل الاستمرار',
                     color: Color(0xFFFFF3E0),
                     textColor: Color(0xFFE65100),
+                  ),
+                ],
+                if (vehicle.status == RenewalLicenseStatus.valid) ...[
+                  SizedBox(height: 8.h),
+                  Text(
+                    'لا يمكن تجديد رخصة المركبة لأنها ما زالت سارية.',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFE53935),
+                    ),
                   ),
                 ],
                 if (_isRestricted) ...[

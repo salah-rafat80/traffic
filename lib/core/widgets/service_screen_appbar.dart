@@ -44,19 +44,14 @@ class ServiceScreenAppBar extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           child: Row(
             children: [
-              // ── Back Button (Left) ──
-              if (showBackButton)
-                GestureDetector(
-                  onTap: onBackPressed ?? () => Navigator.pop(context),
-                  child: SvgPicture.asset(
-                    'assets/weui_arrow-filled.svg',
-                    width: 24.w,
-                    height: 24.w,
-                  ),
-                )
-              else
-                SizedBox(width: 24.w),
-
+              GestureDetector(
+                onTap: onMenuPressed,
+                child: Icon(
+                  Icons.menu,
+                  size: 24.w,
+                  color: const Color(0xFF222222),
+                ),
+              ),
               // ── Title (Center) ──
               Expanded(
                 child: Text(
@@ -71,15 +66,17 @@ class ServiceScreenAppBar extends StatelessWidget {
                 ),
               ),
 
-              // ── Hamburger Menu (Right) ──
-              GestureDetector(
-                onTap: onMenuPressed,
-                child: Icon(
-                  Icons.menu,
-                  size: 24.w,
-                  color: const Color(0xFF222222),
-                ),
-              ),
+              if (showBackButton)
+                GestureDetector(
+                  onTap: onBackPressed ?? () => Navigator.pop(context),
+                  child: SvgPicture.asset(
+                    'assets/weui_arrow-filled.svg',
+                    width: 24.w,
+                    height: 24.w,
+                  ),
+                )
+              else
+                SizedBox(width: 24.w),
             ],
           ),
         ),

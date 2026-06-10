@@ -82,7 +82,7 @@ class ViolationListItem extends StatelessWidget {
                   child: SvgPicture.asset(
                     'assets/license.svg', // Fallback icon
                     colorFilter: const ColorFilter.mode(
-                      Color(0xFF2E7D32),
+                      Color(0xFF27AE60),
                       BlendMode.srcIn,
                     ),
                   ),
@@ -114,7 +114,7 @@ class ViolationListItem extends StatelessWidget {
                         fontFamily: 'Cairo',
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF2E7D32),
+                        color: const Color(0xFF27AE60),
                       ),
                     ),
                   ],
@@ -148,8 +148,7 @@ class ViolationListItem extends StatelessWidget {
               else
                 // Spacer or Paid Badge if needed, but for now just empty space to keep layout if necessary
                 // though Expanded will take it.
-                SizedBox(width: 18.w), 
-
+                SizedBox(width: 18.w),
             ],
           ),
 
@@ -166,12 +165,9 @@ class ViolationListItem extends StatelessWidget {
             children: [
               // Green badge
               Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 10.w,
-                  vertical: 4.h,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2E7D32),
+                  color: const Color(0xFF27AE60),
                   borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Text(
@@ -209,33 +205,40 @@ class ViolationListItem extends StatelessWidget {
                     ),
                   );
                 },
-                child:               SvgPicture.asset("assets/mingcute_ticket-line.svg", width: 25.w, height: 25.h),
-
+                child: SvgPicture.asset(
+                  "assets/mingcute_ticket-line.svg",
+                  width: 25.w,
+                  height: 25.h,
+                ),
               ),
             ],
           ),
           SizedBox(height: 10.h),
 
-          // ── Location row ──
           Row(
             textDirection: TextDirection.ltr,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Text(
-                violation.location,
-                textDirection: TextDirection.rtl,
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF555555),
+              Flexible(
+                child: Text(
+                  violation.location,
+                  textAlign: TextAlign.right,
+                  textDirection: TextDirection.rtl,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF555555),
+                  ),
                 ),
               ),
               SizedBox(width: 6.w),
               Icon(
                 Icons.location_on,
                 size: 25.w,
-                color: const Color(0xFF2E7D32),
+                color: const Color(0xFF27AE60),
               ),
             ],
           ),
@@ -256,7 +259,11 @@ class ViolationListItem extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 8.w),
-              SvgPicture.asset("assets/stash_data-date-light.svg", width: 25.w, height: 25.h),
+              SvgPicture.asset(
+                "assets/stash_data-date-light.svg",
+                width: 25.w,
+                height: 25.h,
+              ),
             ],
           ),
           SizedBox(height: 10.h),
@@ -272,9 +279,9 @@ class ViolationListItem extends StatelessWidget {
                   fontFamily: 'Cairo',
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2E7D32),
+                  color: const Color(0xFF27AE60),
                   decoration: TextDecoration.underline,
-                  decorationColor: const Color(0xFF2E7D32),
+                  decorationColor: const Color(0xFF27AE60),
                   decorationThickness: 0.5,
                 ),
               ),

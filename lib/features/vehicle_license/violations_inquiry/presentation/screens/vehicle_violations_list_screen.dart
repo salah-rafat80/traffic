@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +8,7 @@ import 'package:traffic/core/features/payment/models/payment_intent.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
+import 'package:traffic/core/widgets/empty_state_widget.dart';
 import 'package:traffic/features/vehicle_license/violations_inquiry/data/models/vehicle_license_violation_model.dart';
 import 'package:traffic/features/violations_inquiry/data/models/violation_model.dart';
 import 'package:traffic/features/violations_inquiry/data/repositories/violations_repository.dart';
@@ -182,7 +184,7 @@ class _VehicleViolationsListViewState
     required double totalAmt,
   }) {
     if (state is ViolationsLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(child: CustomLoadingIndicator());
     }
 
     if (state is ViolationsFailure && allViolations.isEmpty) {
@@ -258,19 +260,8 @@ class _VehicleViolationsListViewState
             ),
             SizedBox(height: 16.h),
             if (filtered.isEmpty)
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 40.h),
-                child: Center(
-                  child: Text(
-                    'لا توجد مخالفات',
-                    style: TextStyle(
-                      fontFamily: 'Tajawal',
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF999999),
-                    ),
-                  ),
-                ),
+              const EmptyStateWidget(
+                message: 'لا توجد مخالفات مسجلة حالياً',
               )
             else
               ...filtered.map(

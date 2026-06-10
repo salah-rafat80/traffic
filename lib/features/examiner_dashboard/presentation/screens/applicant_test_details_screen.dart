@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -151,7 +152,7 @@ class ApplicantTestDetailsScreen extends StatelessWidget {
                           ),
                           SizedBox(height: 24.h),
                           if (state is ExaminerSubmitLoading)
-                            const Center(child: CircularProgressIndicator())
+                            Center(child: CustomLoadingIndicator())
                           else if (appointment.status == 'محجوز')
                             TestResultButtons(
                               passLabel: config.passButtonText,

@@ -1,9 +1,11 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
+import 'package:traffic/core/widgets/empty_state_widget.dart';
 import 'package:traffic/features/vehicle_license/violations_inquiry/data/models/vehicle_license_violation_model.dart';
 import 'package:traffic/features/vehicle_license/violations_inquiry/data/repositories/vehicle_violation_license_repository.dart';
 import '../widgets/vehicle_violation_card.dart';
@@ -95,16 +97,10 @@ class _SelectVehicleViolationScreenState
                   SizedBox(height: 20.h),
 
                   if (_isLoading)
-                    const Center(child: CircularProgressIndicator())
+                    Center(child: CustomLoadingIndicator())
                   else if (_vehicles.isEmpty)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20.0),
-                        child: Text(
-                          'لا يوجد رخص مركبات مسجلة حالياً',
-                          style: TextStyle(fontFamily: 'Tajawal'),
-                        ),
-                      ),
+                    const EmptyStateWidget(
+                      message: 'لا توجد رخص مركبات مسجلة حالياً',
                     )
                   else
                     ...List.generate(_vehicles.length, (index) {

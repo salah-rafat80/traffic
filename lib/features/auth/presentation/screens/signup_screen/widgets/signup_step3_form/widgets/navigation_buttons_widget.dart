@@ -1,7 +1,8 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class NavigationButtonsWidget extends StatelessWidget {
+class NavigationButtonsWidget extends StatefulWidget {
   final VoidCallback onNextPressed;
   final VoidCallback onPreviousPressed;
   final bool isValid;
@@ -18,40 +19,95 @@ class NavigationButtonsWidget extends StatelessWidget {
   });
 
   @override
+  State<NavigationButtonsWidget> createState() => _NavigationButtonsWidgetState();
+}
+
+class _NavigationButtonsWidgetState extends State<NavigationButtonsWidget> {
+  OverlayEntry? _overlayEntry;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showOverlay());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant NavigationButtonsWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isLoading != oldWidget.isLoading) {
+      if (widget.isLoading) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _showOverlay());
+      } else {
+        _hideOverlay();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _hideOverlay();
+    super.dispose();
+  }
+
+  void _showOverlay() {
+    if (_overlayEntry != null) return;
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: AbsorbPointer(
+              absorbing: true,
+              child: Container(
+                color: Colors.black.withOpacity(0.15),
+              ),
+            ),
+          ),
+          const Center(
+            child: CustomLoadingIndicator(
+              width: 180,
+              height: 180,
+            ),
+          ),
+        ],
+      ),
+    );
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _hideOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bool isClickable = widget.isValid && !widget.isLoading;
     return Row(
       children: [
         // Next button
         Expanded(
           child: InkWell(
-            onTap: (isValid && !isLoading) ? onNextPressed : null,
+            onTap: isClickable ? widget.onNextPressed : null,
             child: Container(
-              height: buttonHeight,
+              height: widget.buttonHeight,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8.r),
-                color: (isValid && !isLoading)
+                color: isClickable
                     ? const Color(0xFF27AE60)
                     : const Color(0xFFBDBDBD),
               ),
               child: Center(
-                child: isLoading
-                    ? SizedBox(
-                        height: 24.h,
-                        width: 24.h,
-                        child: const CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Text(
-                        'التالي',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'Tajawal',
-                        ),
-                      ),
+                child: Text(
+                  'التالي',
+                  style: TextStyle(
+                    color: widget.isLoading ? Colors.white.withOpacity(0.5) : Colors.white,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Tajawal',
+                  ),
+                ),
               ),
             ),
           ),
@@ -60,9 +116,9 @@ class NavigationButtonsWidget extends StatelessWidget {
         // Previous button
         Expanded(
           child: SizedBox(
-            height: buttonHeight,
+            height: widget.buttonHeight,
             child: OutlinedButton(
-              onPressed: isLoading ? null : onPreviousPressed,
+              onPressed: widget.isLoading ? null : widget.onPreviousPressed,
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF27AE60),
                 side: const BorderSide(color: Color(0xFF27AE60)),
@@ -85,4 +141,3 @@ class NavigationButtonsWidget extends StatelessWidget {
     );
   }
 }
-

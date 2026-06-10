@@ -27,6 +27,7 @@ class VehicleLicenseModel with _$VehicleLicenseModel {
   const factory VehicleLicenseModel({
     @Default(0) int id,
     @JsonKey(name: 'vehicleLicenseNumber') @Default('') String vehicleLicenseNumber,
+    String? plateNumber,
     @JsonKey(name: 'category') @Default('') String category,
     @Default('') String brand,
     @Default('') String model,
@@ -52,6 +53,7 @@ class VehicleLicenseModel with _$VehicleLicenseModel {
         const VehicleLicenseModel(
           id: 1,
           vehicleLicenseNumber: 'VL-100001',
+          plateNumber: '٤٢١٣ س ج ر',
           category: 'ملاكي',
           brand: 'تويوتا',
           model: 'كورولا',

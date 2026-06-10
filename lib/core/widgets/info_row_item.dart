@@ -52,7 +52,7 @@ class InfoRowItem extends StatelessWidget {
                     fontFamily: 'Cairo',
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF707070),
+                    color: const Color(0xFF222222),
                   ),
                 ),
               ),

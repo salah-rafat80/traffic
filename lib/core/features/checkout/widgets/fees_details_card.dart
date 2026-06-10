@@ -93,15 +93,20 @@ class _TotalFooter extends StatelessWidget {
               color: const Color(0xFF222222),
             ),
           ),
+          SizedBox(width: 8.w),
           // Amount – left (RTL end), highlighted in green
-          Text(
-            total,
-            textDirection: TextDirection.rtl,
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF27AE60),
+          Flexible(
+            child: Text(
+              total,
+              textDirection: TextDirection.rtl,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF27AE60),
+              ),
             ),
           ),
         ],

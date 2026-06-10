@@ -20,7 +20,8 @@ class LostLicenseDetailsScreen extends StatefulWidget {
   const LostLicenseDetailsScreen({super.key, required this.license});
 
   @override
-  State<LostLicenseDetailsScreen> createState() => _LostLicenseDetailsScreenState();
+  State<LostLicenseDetailsScreen> createState() =>
+      _LostLicenseDetailsScreenState();
 }
 
 class _LostLicenseDetailsScreenState extends State<LostLicenseDetailsScreen> {
@@ -41,62 +42,59 @@ class _LostLicenseDetailsScreenState extends State<LostLicenseDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF5F5F5),
-        drawer: const AppDrawer(),
-        body: Column(
-          children: [
-            // ── App bar ──────────────────────────────────────────────────────
-            ServiceScreenAppBar(
-              title: 'استخراج بدل فاقد / تالف',
-              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            ),
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF5F5F5),
+      drawer: const AppDrawer(),
+      body: Column(
+        children: [
+          // ── App bar ──────────────────────────────────────────────────────
+          ServiceScreenAppBar(
+            title: 'استخراج بدل فاقد / تالف',
+            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
 
-            // ── Scrollable body ──────────────────────────────────────────────
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ── Section header ────────────────────────────────────────
-                    Text(
-                      'تفاصيل رخصة القيادة',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF222222),
-                      ),
+          // ── Scrollable body ──────────────────────────────────────────────
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ── Section header ────────────────────────────────────────
+                  Text(
+                    'تفاصيل رخصة القيادة',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 17.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF222222),
                     ),
+                  ),
 
-                    SizedBox(height: 12.h),
+                  SizedBox(height: 12.h),
 
-                    // ── Confirmed licence card ────────────────────────────────
-                    // Green-bordered container replicates the "selected" visual
-                    // state to confirm the user's choice.
-                    _ConfirmedLicenseCard(data: widget.license),
+                  // ── Confirmed licence card ────────────────────────────────
+                  // Green-bordered container replicates the "selected" visual
+                  // state to confirm the user's choice.
+                  _ConfirmedLicenseCard(data: widget.license),
 
-                    SizedBox(height: 24.h),
+                  SizedBox(height: 24.h),
 
-                    // ── Primary action button ─────────────────────────────────
-                    PrimaryButton(
-                      label: 'التالي',
-                      onPressed: () => _onNextPressed(context),
-                      height: 48.h,
-                    ),
+                  // ── Primary action button ─────────────────────────────────
+                  PrimaryButton(
+                    label: 'التالي',
+                    onPressed: () => _onNextPressed(context),
+                    height: 48.h,
+                  ),
 
-                    SizedBox(height: 24.h),
-                  ],
-                ),
+                  SizedBox(height: 24.h),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -104,8 +102,8 @@ class _LostLicenseDetailsScreenState extends State<LostLicenseDetailsScreen> {
 
 // ── Private sub-widget ────────────────────────────────────────────────────────
 
-/// Renders [LicenseInfoCard] inside a green selected border, mimicking the
-/// visual state of a confirmed / selected licence without any tap interactions.
+/// Renders [LicenseInfoCard] in a selected state (green border) mimicking the
+/// visual state of a confirmed / selected licence.
 class _ConfirmedLicenseCard extends StatelessWidget {
   final DrivingLicenseModel data;
 
@@ -113,17 +111,9 @@ class _ConfirmedLicenseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: const Color(0xFF27AE60), width: 2.w),
-      ),
-      child: LicenseInfoCard(
-        data: data,
-        // Pass isSelected: true so the RadioDot renders as filled green
-        // and LicenseStatusBadge uses the correct valid colour.
-        isSelected: true,
-      ),
+    return LicenseInfoCard(
+      data: data,
+      isSelected: true,
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -100,8 +101,8 @@ class CameraPreviewWithViewfinder extends StatelessWidget {
               SizedBox(
                 width: 40.w,
                 height: 40.w,
-                child: const CircularProgressIndicator(
-                  color: Color(0xFF2E7D32),
+                child: CustomLoadingIndicator(
+                  color: Color(0xFF27AE60),
                   strokeWidth: 3,
                 ),
               ),

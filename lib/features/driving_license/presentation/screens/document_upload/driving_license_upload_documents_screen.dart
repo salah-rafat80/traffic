@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +37,7 @@ class _UploadContent extends StatefulWidget {
 class _UploadContentState extends State<_UploadContent> {
   late final List<DocumentItemModel> _documents;
   late final FirstLicenseBookingHelper _booking;
+  bool _isBookingLoading = false;
 
   @override
   void initState() {
@@ -92,6 +94,8 @@ class _UploadContentState extends State<_UploadContent> {
 
     if (medicalData == null || !ctx.mounted) return;
 
+    setState(() => _isBookingLoading = true);
+
     try {
       await _booking.submitMedicalAppointment(
         medicalData.selectedGovernorateId ?? '',
@@ -102,6 +106,7 @@ class _UploadContentState extends State<_UploadContent> {
       );
     } catch (e) {
       if (ctx.mounted) {
+        setState(() => _isBookingLoading = false);
         ScaffoldMessenger.of(ctx).showSnackBar(
           SnackBar(
             content: Text(
@@ -115,6 +120,7 @@ class _UploadContentState extends State<_UploadContent> {
     }
 
     if (!ctx.mounted) return;
+    setState(() => _isBookingLoading = false);
     _goToPractical(ctx, requestNumber);
   }
 
@@ -133,6 +139,8 @@ class _UploadContentState extends State<_UploadContent> {
 
     if (practicalData == null || !ctx.mounted) return;
 
+    setState(() => _isBookingLoading = true);
+
     try {
       await _booking.submitDrivingAppointment(
         practicalData.selectedGovernorateId ?? '',
@@ -143,6 +151,7 @@ class _UploadContentState extends State<_UploadContent> {
       );
     } catch (e) {
       if (ctx.mounted) {
+        setState(() => _isBookingLoading = false);
         ScaffoldMessenger.of(ctx).showSnackBar(
           SnackBar(
             content: Text(
@@ -156,6 +165,7 @@ class _UploadContentState extends State<_UploadContent> {
     }
 
     if (!ctx.mounted) return;
+    setState(() => _isBookingLoading = false);
     _goToOrders(ctx);
   }
 
@@ -234,10 +244,10 @@ class _UploadContentState extends State<_UploadContent> {
               documents: _documents,
               onNextPressed: _onProceed,
             ),
-            if (state is DrivingLicenseLoading)
+            if (state is DrivingLicenseLoading || _isBookingLoading)
               Container(
                 color: Colors.black.withValues(alpha: 0.3),
-                child: const Center(child: CircularProgressIndicator()),
+                child: Center(child: CustomLoadingIndicator()),
               ),
           ],
         );

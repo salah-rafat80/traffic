@@ -43,6 +43,8 @@ class ReviewSummaryCard extends StatelessWidget {
                 Text(
                   'اجمالي المخالفات',
                   textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 15.sp,
@@ -54,6 +56,8 @@ class ReviewSummaryCard extends StatelessWidget {
                 Text(
                   '$totalViolations مخالفات',
                   textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 18.sp,
@@ -80,6 +84,8 @@ class ReviewSummaryCard extends StatelessWidget {
                 Text(
                   'اجمالي المبلغ المستحق',
                   textAlign: TextAlign.left,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 15.sp,
@@ -91,6 +97,8 @@ class ReviewSummaryCard extends StatelessWidget {
                 Text(
                   '${totalAmount.toInt()} جنية مصري',
                   textAlign: TextAlign.left,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 18.sp,

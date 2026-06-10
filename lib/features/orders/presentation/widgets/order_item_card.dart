@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:traffic/core/constants/colors.dart';
 import '../../domain/entities/order_model.dart';
 
 class OrderItemCard extends StatelessWidget {
@@ -37,17 +38,25 @@ class OrderItemCard extends StatelessWidget {
                     textDirection: TextDirection.rtl,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        order.title,
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          color: const Color(0xFF222222),
-                          fontSize: 15.sp,
-                          fontFamily: 'Cairo',
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          order.title,
+                          textAlign: TextAlign.right,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: const Color(0xFF222222),
+                            fontSize: 15.sp,
+                            fontFamily: 'Cairo',
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      _buildStatusBadge(order.status),
+                      SizedBox(width: 8.w),
+                      SizedBox(
+                        width: 200.w,
+                        child: _buildStatusBadge(order.status),
+                      ),
                     ],
                   ),
                   SizedBox(height: 8.h),
@@ -57,11 +66,11 @@ class OrderItemCard extends StatelessWidget {
                       Icon(
                         Icons.calendar_today_outlined,
                         size: 14.r,
-                        color: const Color(0xFF444444),
+                        color: AppColors.primary,
                       ),
                       SizedBox(width: 4.w),
                       Text(
-                        'التاريخ : ${order.date}',
+                        '${order.date} : التاريخ ',
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           color: const Color(0xFF444444),
@@ -107,9 +116,18 @@ class OrderItemCard extends StatelessWidget {
   Widget _buildStatusBadge(OrderStatus status) {
     final (bgColor, textColor) = switch (status) {
       OrderStatus.pending => (const Color(0xFFA5D4FF), const Color(0xFF3B82F6)),
-      OrderStatus.completed => (const Color(0xFFD4ECDE), const Color(0xFF27AE60)),
-      OrderStatus.needsData => (const Color(0xFFFFE3CF), const Color(0xFFDD8C50)),
-      OrderStatus.awaitingService => (const Color(0xFFA5D4FF), const Color(0xFF3B82F6)),
+      OrderStatus.completed => (
+        const Color(0xFFD4ECDE),
+        const Color(0xFF27AE60),
+      ),
+      OrderStatus.needsData => (
+        const Color(0xFFFFE3CF),
+        const Color(0xFFDD8C50),
+      ),
+      OrderStatus.awaitingService => (
+        const Color(0xFFA5D4FF),
+        const Color(0xFF3B82F6),
+      ),
       OrderStatus.passed => (const Color(0xFFD4ECDE), const Color(0xFF27AE60)),
       OrderStatus.failed => (const Color(0xFFFFE9E9), const Color(0xFFE53935)),
     };
@@ -123,6 +141,8 @@ class OrderItemCard extends StatelessWidget {
       child: Text(
         order.statusLabel,
         textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: textColor,
           fontSize: 12.sp,

@@ -115,8 +115,8 @@ class _LicenseDetailsConfirmationScreenState extends State<LicenseDetailsConfirm
 
 // ── Private sub-widget ────────────────────────────────────────────────────────
 
-/// Renders [LicenseInfoCard] inside a green selected border, mimicking the
-/// visual state of a confirmed / selected licence without any tap interactions.
+/// Renders [LicenseInfoCard] in a selected state (green border) mimicking the
+/// visual state of a confirmed / selected licence.
 class _ConfirmedLicenseCard extends StatelessWidget {
   final DrivingLicenseModel data;
 
@@ -124,20 +124,9 @@ class _ConfirmedLicenseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(
-          color: const Color(0xFF27AE60),
-          width: 2.w,
-        ),
-      ),
-      child: LicenseInfoCard(
-        data: data,
-        // Pass isSelected: true so the RadioDot renders as filled green
-        // and LicenseStatusBadge uses the correct valid colour.
-        isSelected: true,
-      ),
+    return LicenseInfoCard(
+      data: data,
+      isSelected: true,
     );
   }
 }

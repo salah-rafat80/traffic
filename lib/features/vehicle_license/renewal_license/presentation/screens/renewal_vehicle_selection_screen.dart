@@ -1,9 +1,10 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/primary_button.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
+import 'package:traffic/core/widgets/empty_state_widget.dart';
 import 'package:traffic/features/vehicle_license/data/models/vehicle_license_model.dart';
 import 'package:traffic/features/vehicle_license/data/repositories/vehicle_license_repository.dart';
 import '../../data/models/renewal_vehicle_license_model.dart';
@@ -50,11 +51,24 @@ class _RenewalVehicleSelectionScreenState
           setState(() {
             _vehicles = result.data!;
             _isLoading = false;
+            if (_vehicles.length == 1) {
+              final firstModel = _toRenewalModel(_vehicles[0]);
+              if (firstModel.canRenew) {
+                _selectedIndex = 0;
+              } else {
+                _selectedIndex = null;
+              }
+            } else {
+              _selectedIndex = null;
+            }
           });
         }
       } else {
         if (mounted) {
-          setState(() => _isLoading = false);
+          setState(() {
+            _isLoading = false;
+            _selectedIndex = null;
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(result.error ?? 'فشل تحميل الرخص')),
           );
@@ -62,6 +76,24 @@ class _RenewalVehicleSelectionScreenState
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _formatVehicleType(String category, String brand, String model) {
+    final cleanCategory = category.trim();
+    final cleanBrand = brand.trim();
+    final cleanModel = model.trim();
+
+    final brandModel = [cleanBrand, cleanModel]
+        .where((s) => s.isNotEmpty)
+        .join(' ');
+
+    if (cleanCategory.isNotEmpty && brandModel.isNotEmpty) {
+      return '$cleanCategory - $brandModel';
+    } else if (cleanCategory.isNotEmpty) {
+      return cleanCategory;
+    } else {
+      return brandModel;
     }
   }
 
@@ -79,8 +111,8 @@ class _RenewalVehicleSelectionScreenState
         renewalStatus = RenewalLicenseStatus.valid;
     }
     return RenewalVehicleLicenseModel(
-      plateNumber: v.vehicleLicenseNumber,
-      vehicleType: '${v.category} – ${v.brand} ${v.model}',
+      plateNumber: (v.plateNumber != null && v.plateNumber!.isNotEmpty) ? v.plateNumber! : v.vehicleLicenseNumber,
+      vehicleType: _formatVehicleType(v.category, v.brand, v.model),
       expiryDate: v.expiryDate,
       status: renewalStatus,
       hasUnpaidViolations: v.hasUnpaidViolations,
@@ -165,16 +197,10 @@ class _RenewalVehicleSelectionScreenState
                               SizedBox(height: 12.h),
                               if (_isLoading)
                                 const Center(
-                                    child: CircularProgressIndicator())
+                                    child: CustomLoadingIndicator())
                               else if (_vehicles.isEmpty)
-                                const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(20.0),
-                                    child: Text(
-                                      'لا يوجد رخص مركبات مسجلة حالياً',
-                                      style: TextStyle(fontFamily: 'Tajawal'),
-                                    ),
-                                  ),
+                                const EmptyStateWidget(
+                                  message: 'لا توجد رخص مركبات مسجلة حالياً',
                                 )
                               else
                                 ..._vehicles.asMap().entries.map((entry) {

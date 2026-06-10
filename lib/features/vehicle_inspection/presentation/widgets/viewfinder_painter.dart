@@ -8,7 +8,7 @@ class ViewfinderPainter extends CustomPainter {
   final double cornerRadius;
 
   ViewfinderPainter({
-    this.color = const Color(0xFF2E7D32),
+    this.color = const Color(0xFF27AE60),
     this.strokeWidth = 3.0,
     this.cornerLength = 30.0,
     this.cornerRadius = 12.0,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// A rounded card row used in service screens (رخصة القيادة, رخصة المركبة).
 ///
@@ -64,7 +63,7 @@ class ServiceListItem extends StatelessWidget {
                 title,
                 textAlign: TextAlign.right,
                 textDirection: TextDirection.rtl,
-                style: GoogleFonts.cairo(
+                style: TextStyle(fontFamily: 'Cairo', 
                   fontSize: 15.sp,
                   // letterSpacing: -0.5,
                   fontWeight: FontWeight.w600,

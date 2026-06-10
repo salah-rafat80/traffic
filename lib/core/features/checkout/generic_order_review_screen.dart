@@ -129,65 +129,62 @@ class _GenericOrderReviewScreenState extends State<GenericOrderReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF5F5F5),
-        drawer: const AppDrawer(),
-        body: Column(
-          children: [
-            // ── App bar ─────────────────────────────────────────────────
-            ServiceScreenAppBar(
-              title: widget.appBarTitle,
-              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            ),
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF5F5F5),
+      drawer: const AppDrawer(),
+      body: Column(
+        children: [
+          // ── App bar ─────────────────────────────────────────────────
+          ServiceScreenAppBar(
+            title: widget.appBarTitle,
+            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
 
-            // ── Scrollable body ─────────────────────────────────────────
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Section title
-                    Text(
-                      widget.sectionTitle,
-                      textDirection: TextDirection.rtl,
-                      style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF222222),
-                      ),
+          // ── Scrollable body ─────────────────────────────────────────
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Section title
+                  Text(
+                    widget.sectionTitle,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 17.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF222222),
                     ),
-                    SizedBox(height: 16.h),
+                  ),
+                  SizedBox(height: 16.h),
 
-                    // Applicant card
-                    ApplicantDetailsCard(
-                      details: _applicantDetails,
-                      onEditPressed: widget.showEditApplicant
-                          ? _onEditApplicant
-                          : null,
-                    ),
-                    SizedBox(height: 16.h),
+                  // Applicant card
+                  ApplicantDetailsCard(
+                    details: _applicantDetails,
+                    onEditPressed: widget.showEditApplicant
+                        ? _onEditApplicant
+                        : null,
+                  ),
+                  SizedBox(height: 16.h),
 
-                    // Order summary card
-                    OrderSummaryCard(summary: widget.orderSummary),
-                    SizedBox(height: 16.h),
+                  // Order summary card
+                  OrderSummaryCard(summary: widget.orderSummary),
+                  SizedBox(height: 16.h),
 
-                    // Fees details card
-                    FeesDetailsCard(fees: widget.feesDetails),
-                    SizedBox(height: 32.h),
+                  // Fees details card
+                  FeesDetailsCard(fees: widget.feesDetails),
+                  SizedBox(height: 32.h),
 
-                    // Submit button
-                    PrimaryButton(label: 'التالي', onPressed: _handleSubmit),
-                  ],
-                ),
+                  // Submit button
+                  PrimaryButton(label: 'التالي', onPressed: _handleSubmit),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

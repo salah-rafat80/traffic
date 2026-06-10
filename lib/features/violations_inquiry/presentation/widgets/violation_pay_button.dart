@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// The "سداد المخالفات" (Pay Violations) primary action button.
 /// Only shown for unpaid violations.
@@ -40,7 +39,7 @@ class ViolationPayButton extends StatelessWidget {
                 fit: BoxFit.scaleDown,
                 child: Text(
                   label,
-                  style: GoogleFonts.cairo(
+                  style: TextStyle(fontFamily: 'Cairo', 
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFFF8F9F9),

@@ -68,94 +68,91 @@ class _ReplacementTypeSelectionScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF5F5F5),
-        drawer: const AppDrawer(),
-        body: Column(
-          children: [
-            // ── App bar ──────────────────────────────────────────────────────
-            ServiceScreenAppBar(
-              title: 'اصدار بدل فاقد / تالف رخصة قيادة',
-              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            ),
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF5F5F5),
+      drawer: const AppDrawer(),
+      body: Column(
+        children: [
+          // ── App bar ──────────────────────────────────────────────────────
+          ServiceScreenAppBar(
+            title: 'اصدار بدل فاقد / تالف رخصة قيادة',
+            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
 
-            // ── Scrollable body ──────────────────────────────────────────────
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ── Section header ────────────────────────────────────────
-                    Text(
-                      'نوع طلب الاستبدال',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF222222),
+          // ── Scrollable body ──────────────────────────────────────────────
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ── Section header ────────────────────────────────────────
+                  Text(
+                    'نوع طلب الاستبدال',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 17.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF222222),
+                    ),
+                  ),
+
+                  SizedBox(height: 16.h),
+
+                  // ── Option: بدل فاقد (Lost) ──────────────────────────────
+                  SelectionOptionCard(
+                    title: 'بدل فاقد',
+                    subtitle: 'استبدال الرخصة المفقودة',
+                    isSelected: selectedType == ReplacementType.lost,
+                    onTap: () => _onOptionTap(ReplacementType.lost),
+                    icon: SvgPicture.asset(
+                      'assets/file.svg',
+                      width: 24.w,
+                      height: 24.w,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF27AE60),
+                        BlendMode.srcIn,
                       ),
                     ),
+                  ),
 
-                    SizedBox(height: 16.h),
+                  SizedBox(height: 12.h),
 
-                    // ── Option: بدل فاقد (Lost) ──────────────────────────────
-                    SelectionOptionCard(
-                      title: 'بدل فاقد',
-                      subtitle: 'استبدال الرخصة المفقودة',
-                      isSelected: selectedType == ReplacementType.lost,
-                      onTap: () => _onOptionTap(ReplacementType.lost),
-                      icon: SvgPicture.asset(
-                        'assets/file.svg',
-                        width: 24.w,
-                        height: 24.w,
-                        colorFilter: const ColorFilter.mode(
-                          Color(0xFF27AE60),
-                          BlendMode.srcIn,
-                        ),
+                  // ── Option: بدل تالف (Damaged) ───────────────────────────
+                  SelectionOptionCard(
+                    title: 'بدل تالف',
+                    subtitle: 'استبدال الرخصة التالفة',
+                    isSelected: selectedType == ReplacementType.damaged,
+                    onTap: () => _onOptionTap(ReplacementType.damaged),
+                    icon: SvgPicture.asset(
+                      'assets/file.svg',
+                      width: 24.w,
+                      height: 24.w,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF27AE60),
+                        BlendMode.srcIn,
                       ),
                     ),
-
-                    SizedBox(height: 12.h),
-
-                    // ── Option: بدل تالف (Damaged) ───────────────────────────
-                    SelectionOptionCard(
-                      title: 'بدل تالف',
-                      subtitle: 'استبدال الرخصة التالفة',
-                      isSelected: selectedType == ReplacementType.damaged,
-                      onTap: () => _onOptionTap(ReplacementType.damaged),
-                      icon: SvgPicture.asset(
-                        'assets/file.svg',
-                        width: 24.w,
-                        height: 24.w,
-                        colorFilter: const ColorFilter.mode(
-                          Color(0xFF27AE60),
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+          ),
 
-            // ── Sticky bottom button ──────────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
-              child: PrimaryButton(
-                label: 'التالي',
-                // Pass null when nothing is selected so PrimaryButton renders
-                // in its disabled (grey) state automatically.
-                onPressed: selectedType != null ? _onNextPressed : null,
-                height: 48.h,
-              ),
+          // ── Sticky bottom button ──────────────────────────────────────────
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
+            child: PrimaryButton(
+              label: 'التالي',
+              // Pass null when nothing is selected so PrimaryButton renders
+              // in its disabled (grey) state automatically.
+              onPressed: selectedType != null ? _onNextPressed : null,
+              height: 48.h,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

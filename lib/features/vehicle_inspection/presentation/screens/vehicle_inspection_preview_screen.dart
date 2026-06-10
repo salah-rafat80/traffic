@@ -60,7 +60,7 @@ class _VehicleInspectionPreviewScreenState
                             textDirection: TextDirection.rtl,
                             style: TextStyle(fontFamily: 'Tajawal'),
                           ),
-                          backgroundColor: Color(0xFF2E7D32),
+                          backgroundColor: Color(0xFF27AE60),
                         ),
                       );
                     },

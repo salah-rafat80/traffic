@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -39,7 +40,8 @@ class _PaymentMethodScreenContent extends StatefulWidget {
       _PaymentMethodScreenContentState();
 }
 
-class _PaymentMethodScreenContentState extends State<_PaymentMethodScreenContent> {
+class _PaymentMethodScreenContentState
+    extends State<_PaymentMethodScreenContent> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isVisaSelected = true;
   DateTime? _lastClickTime;
@@ -48,30 +50,39 @@ class _PaymentMethodScreenContentState extends State<_PaymentMethodScreenContent
     final now = DateTime.now();
     developer.log('Button Click Timestamp: $now', name: 'PaymentMethodScreen');
 
-    if (_lastClickTime != null && now.difference(_lastClickTime!) < const Duration(seconds: 2)) {
-      developer.log('Ignored duplicate button click (debounced)', name: 'PaymentMethodScreen');
+    if (_lastClickTime != null &&
+        now.difference(_lastClickTime!) < const Duration(seconds: 2)) {
+      developer.log(
+        'Ignored duplicate button click (debounced)',
+        name: 'PaymentMethodScreen',
+      );
       return;
     }
     _lastClickTime = now;
 
     if (_isVisaSelected) {
-      final hasServiceRequest = widget.paymentIntent.serviceRequestNumber != null &&
+      final hasServiceRequest =
+          widget.paymentIntent.serviceRequestNumber != null &&
           widget.paymentIntent.serviceRequestNumber!.isNotEmpty;
-      final hasViolations = widget.paymentIntent.violationIds != null &&
+      final hasViolations =
+          widget.paymentIntent.violationIds != null &&
           widget.paymentIntent.violationIds!.isNotEmpty;
 
       if (!hasServiceRequest && !hasViolations) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('بيانات الطلب غير متاحة')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('بيانات الطلب غير متاحة')));
         return;
       }
-      developer.log('Initiating payment for: ${widget.paymentIntent.serviceRequestNumber} or ${widget.paymentIntent.violationIds}', name: 'PaymentMethodScreen');
+      developer.log(
+        'Initiating payment for: ${widget.paymentIntent.serviceRequestNumber} or ${widget.paymentIntent.violationIds}',
+        name: 'PaymentMethodScreen',
+      );
       context.read<PaymentCubit>().initiatePayment(
-            serviceRequestNumber: widget.paymentIntent.serviceRequestNumber,
-            violationIds: widget.paymentIntent.violationIds,
-            amount: widget.paymentIntent.amount,
-          );
+        serviceRequestNumber: widget.paymentIntent.serviceRequestNumber,
+        violationIds: widget.paymentIntent.violationIds,
+        amount: widget.paymentIntent.amount,
+      );
     }
   }
 
@@ -83,8 +94,10 @@ class _PaymentMethodScreenContentState extends State<_PaymentMethodScreenContent
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('تم إلغاء عملية الدفع أو فشلت',
-                textDirection: TextDirection.rtl),
+            content: Text(
+              'تم إلغاء عملية الدفع أو فشلت',
+              textDirection: TextDirection.rtl,
+            ),
             backgroundColor: Color(0xFFE53935),
           ),
         );
@@ -97,8 +110,9 @@ class _PaymentMethodScreenContentState extends State<_PaymentMethodScreenContent
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.r),
+        ),
         title: Text(
           'تم الدفع بنجاح',
           textAlign: TextAlign.center,
@@ -111,8 +125,11 @@ class _PaymentMethodScreenContentState extends State<_PaymentMethodScreenContent
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_outline,
-                color: const Color(0xFF27AE60), size: 64.w),
+            Icon(
+              Icons.check_circle_outline,
+              color: const Color(0xFF27AE60),
+              size: 64.w,
+            ),
             SizedBox(height: 16.h),
             Text(
               'تم استلام المبلغ بنجاح، وتأكيد طلبك.',
@@ -147,109 +164,109 @@ class _PaymentMethodScreenContentState extends State<_PaymentMethodScreenContent
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF5F5F5),
-        drawer: const AppDrawer(),
-        body: BlocConsumer<PaymentCubit, PaymentState>(
-          listener: (context, state) async {
-            developer.log('State Transition: ${state.runtimeType}', name: 'PaymentMethodScreen');
-            if (state is PaymentInitSuccess) {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PaymentWebviewScreen(
-                    paymentUrl: state.response.paymentUrl,
-                    merchantOrderId: state.response.merchantOrderId,
-                    paymentId: state.response.paymentId.toString(),
-                    requestNumber: widget.paymentIntent.serviceRequestNumber,
-                  ),
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF5F5F5),
+      drawer: const AppDrawer(),
+      body: BlocConsumer<PaymentCubit, PaymentState>(
+        listener: (context, state) async {
+          developer.log(
+            'State Transition: ${state.runtimeType}',
+            name: 'PaymentMethodScreen',
+          );
+          if (state is PaymentInitSuccess) {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PaymentWebviewScreen(
+                  paymentUrl: state.response.paymentUrl,
+                  merchantOrderId: state.response.merchantOrderId,
+                  paymentId: state.response.paymentId.toString(),
+                  requestNumber: widget.paymentIntent.serviceRequestNumber,
                 ),
-              );
-              _handlePaymentResult(result);
-            } else if (state is PaymentFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content:
-                      Text(state.message, textDirection: TextDirection.rtl),
-                  backgroundColor: const Color(0xFFE53935),
-                ),
-              );
-            }
-          },
-          builder: (context, state) {
-            final isLoading = state is PaymentLoading;
-
-            return Column(
-              children: [
-                // App bar
-                ServiceScreenAppBar(
-                  title: widget.paymentIntent.orderType,
-                  onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                ),
-
-                // Scrollable body
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Section title
-                        Text(
-                          'تأكيد وسيلة دفع',
-                          style: TextStyle(
-                            fontFamily: 'Tajawal',
-                            fontSize: 17.sp,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF222222),
-                          ),
-                        ),
-                        SizedBox(height: 16.h),
-
-                        // Summary card
-                        PaymentSummaryCard(paymentIntent: widget.paymentIntent),
-                        SizedBox(height: 16.h),
-
-                        // Payment option (Visa/MC)
-                        PaymentOptionCard(
-                          title: 'فيزا/ ماستر كارد',
-                          subtitle: 'Visa/Mastercard',
-                          logoAssetPath: 'assets/visa_mc_logo.png',
-                          isSelected: _isVisaSelected,
-                          onTap: () {
-                            setState(() {
-                              _isVisaSelected = true;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Bottom action
-                Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-                  child: isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                              color: Color(0xFF27AE60)))
-                      : PrimaryButton(
-                          label: 'التالي',
-                          onPressed: _isVisaSelected
-                              ? () => _onNextPressed(context)
-                              : null,
-                        ),
-                ),
-              ],
+              ),
             );
-          },
-        ),
+            _handlePaymentResult(result);
+          } else if (state is PaymentFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message, textDirection: TextDirection.rtl),
+                backgroundColor: const Color(0xFFE53935),
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          final isLoading = state is PaymentLoading;
+
+          return Column(
+            children: [
+              // App bar
+              ServiceScreenAppBar(
+                title: widget.paymentIntent.orderType,
+                onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              ),
+
+              // Scrollable body
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 24.h,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Section title
+                      Text(
+                        'تأكيد وسيلة دفع',
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 17.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF222222),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // Summary card
+                      PaymentSummaryCard(paymentIntent: widget.paymentIntent),
+                      SizedBox(height: 16.h),
+
+                      // Payment option (Visa/MC)
+                      PaymentOptionCard(
+                        title: 'فيزا/ ماستر كارد',
+                        subtitle: 'Visa/Mastercard',
+                        logoAssetPath: 'assets/visa_mc_logo.png',
+                        isSelected: _isVisaSelected,
+                        onTap: () {
+                          setState(() {
+                            _isVisaSelected = true;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Bottom action
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+                child: isLoading
+                    ? const Center(
+                        child: CustomLoadingIndicator(color: Color(0xFF27AE60)),
+                      )
+                    : PrimaryButton(
+                        label: 'التالي',
+                        onPressed: _isVisaSelected
+                            ? () => _onNextPressed(context)
+                            : null,
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -85,6 +85,7 @@ class OrderModel {
   final String? citizenNationalId;
   final String? lastUpdatedAt;
   final int? referenceId;
+  final String? stepCode;
   final OrderFees? fees;
   final OrderDelivery? delivery;
   final OrderPayment? payment;
@@ -98,6 +99,7 @@ class OrderModel {
     this.citizenNationalId,
     this.lastUpdatedAt,
     this.referenceId,
+    this.stepCode,
     this.fees,
     this.delivery,
     this.payment,
@@ -114,6 +116,7 @@ class OrderModel {
       citizenNationalId: json['citizenNationalId']?.toString(),
       lastUpdatedAt: json['lastUpdatedAt']?.toString(),
       referenceId: json['referenceId'] as int?,
+      stepCode: json['stepCode']?.toString(),
       fees: json['fees'] is Map<String, dynamic>
           ? OrderFees.fromJson(json['fees'] as Map<String, dynamic>)
           : null,

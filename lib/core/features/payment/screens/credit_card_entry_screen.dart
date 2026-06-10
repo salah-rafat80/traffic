@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/features/payment/models/payment_intent.dart';
@@ -249,7 +250,7 @@ class _CreditCardEntryScreenState extends State<CreditCardEntryScreen> {
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
               child: _isLoading
                   ? const Center(
-                      child: CircularProgressIndicator(
+                      child: CustomLoadingIndicator(
                         color: Color(0xFF27AE60),
                       ),
                     )

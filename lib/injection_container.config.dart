@@ -37,10 +37,15 @@ import 'package:traffic/features/examiner_dashboard/data/repositories/examiner_r
     as _i624;
 import 'package:traffic/features/examiner_dashboard/presentation/cubits/examiner_cubit.dart'
     as _i677;
+import 'package:traffic/features/home/bloc/home_search_bloc.dart' as _i608;
+import 'package:traffic/features/home/services/home_search_service.dart'
+    as _i862;
 import 'package:traffic/features/orders/data/repositories/service_requests_repository.dart'
     as _i1034;
 import 'package:traffic/features/orders/presentation/cubits/my_orders_cubit.dart'
     as _i329;
+import 'package:traffic/features/orders/presentation/cubits/order_details_cubit.dart'
+    as _i1040;
 import 'package:traffic/features/profile/data/repositories/profile_repository.dart'
     as _i1041;
 import 'package:traffic/features/profile/presentation/cubits/change_password_cubit.dart'
@@ -70,6 +75,7 @@ extension GetItInjectableX on _i174.GetIt {
   }) {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     gh.lazySingleton<_i649.TokenStorage>(() => _i649.TokenStorage());
+    gh.lazySingleton<_i862.HomeSearchService>(() => _i862.HomeSearchService());
     gh.lazySingleton<_i827.ApiClient>(
       () => _i827.ApiClient(gh<_i649.TokenStorage>()),
     );
@@ -122,6 +128,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1041.ProfileRepository>(),
       ),
     );
+    gh.factory<_i608.HomeSearchBloc>(
+      () => _i608.HomeSearchBloc(gh<_i862.HomeSearchService>()),
+    );
     gh.factory<_i590.ChangePasswordCubit>(
       () => _i590.ChangePasswordCubit(gh<_i1041.ProfileRepository>()),
     );
@@ -164,6 +173,9 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i840.FirstLicenseBookingHelper(
         gh<_i977.DrivingLicenseRenewalDataHandler>(),
       ),
+    );
+    gh.factory<_i1040.OrderDetailsCubit>(
+      () => _i1040.OrderDetailsCubit(gh<_i840.FirstLicenseBookingHelper>()),
     );
     return this;
   }

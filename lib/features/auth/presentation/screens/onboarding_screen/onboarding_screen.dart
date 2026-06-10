@@ -19,10 +19,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, String>> _onboardingData = [
     {
-      "image": "assets/Chat bot-rafiki (1) 1.svg",
-      "title": "مساعدك الشخصي لخدمات المرور",
-    },
-    {
       "image": "assets/Hello-rafiki (2) 1.svg",
       "title": "مرحباً بك في منصة مرورنا الذكية",
     },
@@ -33,6 +29,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       "image": "assets/Schedule-rafiki 2.svg",
       "title": "احجز (كشف طبي - اختبار قيادة)",
+    },
+    {
+      "image": "assets/Chat bot-rafiki (1) 1.svg",
+      "title": "مساعدك الشخصي لخدمات المرور",
     },
   ];
 
@@ -59,22 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.primary,
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size(50.w, 30.h),
-                ),
-                child: Text(
-                  'English',
-                  style: TextStyle(
-                    fontSize: context.isTablet ? 18.sp : 16.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
+              Spacer(),
               SizedBox(
                 width: logoHeight * 2,
                 height: logoHeight,
@@ -209,9 +194,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             );
                           },
                           style: TextButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 4.w,
-                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 4.w),
                             minimumSize: Size(0, 30.h),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),

@@ -5,6 +5,14 @@ import 'package:flutter/foundation.dart';
 class ApiErrorHandler {
   /// Extracts a user-facing error message from a [DioException].
   static String extractMessage(DioException e, {String? fallback}) {
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.connectionError ||
+        e.message?.contains('SocketException') == true) {
+      return 'لا يوجد اتصال بالإنترنت. يرجى التحقق من الشبكة وإعادة المحاولة.';
+    }
+
     if (e.response?.data != null) {
       final errorData = e.response!.data;
 

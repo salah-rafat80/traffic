@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -63,7 +64,7 @@ class _DailyTestsScreenState extends State<DailyTestsScreen> {
       return const Scaffold(
         backgroundColor: Color(0xFFF5F5F5),
         body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF27AE60)),
+          child: CustomLoadingIndicator(color: Color(0xFF27AE60)),
         ),
       );
     }
@@ -146,7 +147,7 @@ class _DailyTestsScreenState extends State<DailyTestsScreen> {
                             builder: (context, state) {
                               if (state is ExaminerLoading) {
                                 return const Center(
-                                  child: CircularProgressIndicator(),
+                                  child: CustomLoadingIndicator(),
                                 );
                               } else if (state is ExaminerFailure) {
                                 return Center(child: Text(state.message));

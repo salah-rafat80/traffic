@@ -53,27 +53,19 @@ class SelectionOptionCard extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 45.w,
-                height: 45.w,
-                decoration: ShapeDecoration(
-                  color: _iconBackground,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25.r),
-                  ),
-                ),
-                child: Center(child: icon),
-              ),
+              RadioDot(isSelected: isSelected),
               SizedBox(width: 10.w),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       title,
                       textAlign: TextAlign.right,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'Cairo',
                         fontSize: 16.sp,
@@ -85,6 +77,8 @@ class SelectionOptionCard extends StatelessWidget {
                     Text(
                       subtitle,
                       textAlign: TextAlign.right,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'Cairo',
                         fontSize: 10.sp,
@@ -96,7 +90,17 @@ class SelectionOptionCard extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 10.w),
-              RadioDot(isSelected: isSelected),
+              Container(
+                width: 45.w,
+                height: 45.w,
+                decoration: ShapeDecoration(
+                  color: _iconBackground,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25.r),
+                  ),
+                ),
+                child: Center(child: icon),
+              ),
             ],
           ),
         ),

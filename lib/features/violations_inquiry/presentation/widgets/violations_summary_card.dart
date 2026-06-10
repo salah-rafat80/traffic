@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:traffic/core/constants/colors.dart';
 
 /// Summary card at the top of violations list screen.
@@ -38,17 +37,22 @@ class ViolationsSummaryCard extends StatelessWidget {
             textDirection: TextDirection.rtl,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _SummaryItem(
-                label12: "",
-                label11: " مخالفات",
-                label: 'اجمالي المخالفات',
-                value: '$totalViolations',
+              Expanded(
+                child: _SummaryItem(
+                  label12: "",
+                  label11: " مخالفات",
+                  label: 'اجمالي المخالفات',
+                  value: '$totalViolations',
+                ),
               ),
-              _SummaryItem(
-                label12: "جنية مصري",
-                label11: "",
-                label: 'المبلغ الاجمالي المستحق',
-                value: '${totalAmount.toInt()} ',
+              SizedBox(width: 8.w),
+              Expanded(
+                child: _SummaryItem(
+                  label12: "جنية مصري",
+                  label11: "",
+                  label: 'المبلغ الاجمالي المستحق',
+                  value: '${totalAmount.toInt()} ',
+                ),
               ),
             ],
           ),
@@ -56,6 +60,8 @@ class ViolationsSummaryCard extends StatelessWidget {
           Text(
             'اخر تحديث:$lastUpdate',
             textDirection: TextDirection.rtl,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: 'Tajawal',
               fontSize: 11.sp,
@@ -85,12 +91,15 @@ class _SummaryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
           textAlign: TextAlign.center,
-          style: GoogleFonts.cairo(
-            fontSize: 15.sp,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontFamily: 'Cairo', 
+            fontSize: 12.sp,
             fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
           ),
@@ -101,36 +110,48 @@ class _SummaryItem extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           textDirection: TextDirection.rtl,
           children: [
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.cairo(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+            Flexible(
+              child: Text(
+                value,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontFamily: 'Cairo', 
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             if (label12.isNotEmpty) const SizedBox(width: 2),
             if (label12.isNotEmpty)
-              Text(
-                label12,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.cairo(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+              Flexible(
+                child: Text(
+                  label12,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontFamily: 'Cairo', 
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             if (label11.isNotEmpty) const SizedBox(width: 2),
 
             if (label11.isNotEmpty)
-              Text(
-                label11,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.cairo(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+              Flexible(
+                child: Text(
+                  label11,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontFamily: 'Cairo', 
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
           ],

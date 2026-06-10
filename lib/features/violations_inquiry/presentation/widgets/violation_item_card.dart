@@ -74,6 +74,8 @@ class ViolationItemCard extends StatelessWidget {
                 Text(
                   title,
                   textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 13.sp,
@@ -85,6 +87,8 @@ class ViolationItemCard extends StatelessWidget {
                 Text(
                   violationNumber,
                   textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Cairo',
                     fontSize: 12.sp,

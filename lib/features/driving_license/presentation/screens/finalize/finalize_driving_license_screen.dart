@@ -1,6 +1,8 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/constants/colors.dart';
 import '../../../../../core/features/checkout/generic_order_review_screen.dart';
 import '../../../../../core/features/checkout/models/applicant_details.dart';
@@ -13,14 +15,13 @@ import '../../../../lost_license/presentation/widgets/custom_text_form_field.dar
 import '../../../../lost_license/presentation/widgets/selection_option_card.dart';
 import '../../cubits/driving_license_cubit.dart';
 import '../../cubits/driving_license_state.dart';
+import 'package:traffic/core/api/order_payment_cache.dart';
+
 
 class FinalizeDrivingLicenseScreen extends StatefulWidget {
   final String requestNumber;
 
-  const FinalizeDrivingLicenseScreen({
-    super.key,
-    required this.requestNumber,
-  });
+  const FinalizeDrivingLicenseScreen({super.key, required this.requestNumber});
 
   @override
   State<FinalizeDrivingLicenseScreen> createState() =>
@@ -54,18 +55,19 @@ class _FinalizeDrivingLicenseScreenState
     }
 
     context.read<DrivingLicenseCubit>().finalizeDrivingLicense(
-          requestNumber: widget.requestNumber,
-          method: _deliveryMethod ?? 1,
-          governorate:
-              _deliveryMethod == 2 ? _governorateController.text.trim() : null,
-          city: _deliveryMethod == 2 ? _cityController.text.trim() : null,
-          details: _deliveryMethod == 2
-              ? _addressDetailsController.text.trim()
-              : null,
-        );
+      requestNumber: widget.requestNumber,
+      method: _deliveryMethod ?? 1,
+      governorate: _deliveryMethod == 2
+          ? _governorateController.text.trim()
+          : null,
+      city: _deliveryMethod == 2 ? _cityController.text.trim() : null,
+      details: _deliveryMethod == 2
+          ? _addressDetailsController.text.trim()
+          : null,
+    );
   }
 
-  void _navigateToOrderReview(DrivingLicenseFinalizeSuccess state) {
+  void _navigateToOrderReview(DrivingLicenseFinalizeSuccess state) async {
     final applicant = ApplicantDetails(
       name: state.profile.fullName,
       nationalId: state.profile.nationalId,
@@ -90,24 +92,44 @@ class _FinalizeDrivingLicenseScreenState
 
     // Use real fees returned by the API.
     final feesPayload = state.response.fees;
+    final double baseFee = feesPayload?.baseFee ?? 0;
+    final double deliveryFee = feesPayload?.deliveryFee ?? 0;
+    final double totalAmount = feesPayload?.totalAmount ?? 0;
+
+    // Cache the payment details
+    await OrderPaymentCache.save(
+      orderId,
+      OrderPaymentCachedData(
+        baseFee: baseFee,
+        deliveryFee: deliveryFee,
+        totalAmount: totalAmount,
+        paymentMethodLabel: paymentMethodLabel,
+        orderType: 'إصدار رخصة قيادة',
+      ),
+    );
+
     final List<FeeItem> items = <FeeItem>[
       FeeItem(
         label: 'الرسوم الأساسية',
-        amount: _formatCurrency(feesPayload?.baseFee ?? 0),
+        amount: _formatCurrency(baseFee),
       ),
     ];
 
-    if ((feesPayload?.deliveryFee ?? 0) > 0) {
-      items.add(FeeItem(
-        label: 'رسوم التوصيل',
-        amount: _formatCurrency(feesPayload!.deliveryFee),
-      ));
+    if (deliveryFee > 0) {
+      items.add(
+        FeeItem(
+          label: 'رسوم التوصيل',
+          amount: _formatCurrency(deliveryFee),
+        ),
+      );
     }
 
     final fees = FeesDetails(
       items: items,
-      total: _formatCurrency(feesPayload?.totalAmount ?? 0),
+      total: _formatCurrency(totalAmount),
     );
+
+    if (!mounted) return;
 
     Navigator.push(
       context,
@@ -118,7 +140,7 @@ class _FinalizeDrivingLicenseScreenState
           orderSummary: orderSummary,
           feesDetails: fees,
           serviceRequestNumber: orderId,
-          paymentAmountOverride: feesPayload?.totalAmount ?? 0,
+          paymentAmountOverride: totalAmount,
         ),
       ),
     );
@@ -157,144 +179,145 @@ class _FinalizeDrivingLicenseScreenState
     final bool isDelivery = _deliveryMethod == 2;
     final bool isButtonEnabled = _deliveryMethod != null;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF5F5F5),
-        drawer: const AppDrawer(),
-        body: BlocConsumer<DrivingLicenseCubit, DrivingLicenseState>(
-          listener: (context, state) {
-            if (state is DrivingLicenseFinalizeSuccess) {
-              _navigateToOrderReview(state);
-            } else if (state is DrivingLicenseFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message,
-                      textDirection: TextDirection.rtl),
-                  backgroundColor: AppColors.error,
-                ),
-              );
-            }
-          },
-          builder: (context, state) {
-            final bool isLoading = state is DrivingLicenseFinalizeLoading;
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF5F5F5),
+      drawer: const AppDrawer(),
+      body: BlocConsumer<DrivingLicenseCubit, DrivingLicenseState>(
+        listener: (context, state) {
+          if (state is DrivingLicenseFinalizeSuccess) {
+            _navigateToOrderReview(state);
+          } else if (state is DrivingLicenseFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message, textDirection: TextDirection.rtl),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          final bool isLoading = state is DrivingLicenseFinalizeLoading;
 
-            return Column(
-              children: [
-                ServiceScreenAppBar(
-                  title: 'استكمال الطلب',
-                  onMenuPressed: () =>
-                      _scaffoldKey.currentState?.openDrawer(),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 16.w, vertical: 16.h),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'طريقة استلام الرخصة',
-                            textAlign: TextAlign.right,
-                            style: TextStyle(
-                              fontFamily: 'Tajawal',
-                              fontSize: 17.sp,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF222222),
+          return Column(
+            children: [
+              ServiceScreenAppBar(
+                title: 'استكمال الطلب',
+                onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 16.h,
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'طريقة استلام الرخصة',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 17.sp,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF222222),
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        SelectionOptionCard(
+                          title: 'استلام من وحدة المرور',
+                          subtitle:
+                              'استلم الرخصة شخصيًا من وحدة المرور التي تم تسجيلها في بياناتك',
+                          isSelected: _deliveryMethod == 1,
+                          onTap: () => setState(() => _deliveryMethod = 1),
+                          icon: SvgPicture.asset(
+                            'assets/tabler_building-bank.svg',
+                            width: 24.w,
+                            height: 24.w,
+                            colorFilter: const ColorFilter.mode(
+                              Color(0xFF27AE60),
+                              BlendMode.srcIn,
                             ),
                           ),
-                          SizedBox(height: 16.h),
-                          SelectionOptionCard(
-                            title: 'استلام من وحدة المرور',
-                            subtitle:
-                                'استلم الرخصة شخصيًا من وحدة المرور التي تم تسجيلها في بياناتك',
-                            isSelected: _deliveryMethod == 1,
-                            onTap: () =>
-                                setState(() => _deliveryMethod = 1),
-                            icon: Icon(
-                              Icons.account_balance_outlined,
-                              color: const Color(0xFF27AE60),
-                              size: 22.r,
+                        ),
+                        SizedBox(height: 12.h),
+                        SelectionOptionCard(
+                          title: 'التوصيل للعنوان',
+                          subtitle:
+                              'سيتم توصيل رخصتك الجديدة للعنوان الذي تحدده, يرجى التأكد من صحة العنوان لتجنب أي تأخير.',
+                          isSelected: _deliveryMethod == 2,
+                          onTap: () => setState(() => _deliveryMethod = 2),
+                          icon: SvgPicture.asset(
+                            'assets/home2.svg',
+                            width: 24.w,
+                            height: 24.w,
+                            colorFilter: const ColorFilter.mode(
+                              Color(0xFF27AE60),
+                              BlendMode.srcIn,
                             ),
                           ),
-                          SizedBox(height: 12.h),
-                          SelectionOptionCard(
-                            title: 'التوصيل للعنوان',
-                            subtitle:
-                                'سيتم توصيل رخصتك الجديدة للعنوان الذي تحدده, يرجى التأكد من صحة العنوان لتجنب أي تأخير.',
-                            isSelected: _deliveryMethod == 2,
-                            onTap: () =>
-                                setState(() => _deliveryMethod = 2),
-                            icon: Icon(
-                              Icons.home_outlined,
-                              color: const Color(0xFF27AE60),
-                              size: 22.r,
-                            ),
-                          ),
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                            child: isDelivery
-                                ? Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      SizedBox(height: 20.h),
-                                      CustomTextFormField(
-                                        labelText: 'المحافظة',
-                                        hintText: 'اكتب المحافظة',
-                                        controller: _governorateController,
-                                        validator: _validateGovernorate,
-                                      ),
-                                      SizedBox(height: 16.h),
-                                      CustomTextFormField(
-                                        labelText: 'المدينة / المركز',
-                                        hintText: 'اكتب المدينة / المركز',
-                                        controller: _cityController,
-                                        validator: _validateCity,
-                                      ),
-                                      SizedBox(height: 16.h),
-                                      CustomTextFormField(
-                                        labelText: 'تفاصيل إضافية للعنوان',
-                                        hintText: 'اكتب تفاصيل العنوان....',
-                                        controller:
-                                            _addressDetailsController,
-                                        validator: _validateAddressDetails,
-                                        minLines: 3,
-                                        maxLines: 5,
-                                        keyboardType:
-                                            TextInputType.multiline,
-                                      ),
-                                      SizedBox(height: 8.h),
-                                    ],
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                          SizedBox(height: 32.h),
-                        ],
-                      ),
+                        ),
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          child: isDelivery
+                              ? Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    SizedBox(height: 20.h),
+                                    CustomTextFormField(
+                                      labelText: 'المحافظة',
+                                      hintText: 'اكتب المحافظة',
+                                      controller: _governorateController,
+                                      validator: _validateGovernorate,
+                                    ),
+                                    SizedBox(height: 16.h),
+                                    CustomTextFormField(
+                                      labelText: 'المدينة / المركز',
+                                      hintText: 'اكتب المدينة / المركز',
+                                      controller: _cityController,
+                                      validator: _validateCity,
+                                    ),
+                                    SizedBox(height: 16.h),
+                                    CustomTextFormField(
+                                      labelText: 'تفاصيل إضافية للعنوان',
+                                      hintText: 'اكتب تفاصيل العنوان....',
+                                      controller: _addressDetailsController,
+                                      validator: _validateAddressDetails,
+                                      minLines: 3,
+                                      maxLines: 5,
+                                      keyboardType: TextInputType.multiline,
+                                    ),
+                                    SizedBox(height: 8.h),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        SizedBox(height: 32.h),
+                      ],
                     ),
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
-                  child: isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : PrimaryButton(
-                          label: 'إنهاء وإصدار الرخصة',
-                          onPressed: isButtonEnabled
-                              ? () => _onFinalize(context)
-                              : null,
-                          height: 48.h,
-                        ),
-                ),
-              ],
-            );
-          },
-        ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
+                child: isLoading
+                    ? Center(child: CustomLoadingIndicator())
+                    : PrimaryButton(
+                        label: 'إنهاء وإصدار الرخصة',
+                        onPressed: isButtonEnabled
+                            ? () => _onFinalize(context)
+                            : null,
+                        height: 48.h,
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

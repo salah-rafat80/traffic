@@ -130,7 +130,7 @@ class GenericBookingScreen extends StatefulWidget {
 
   final Future<List<BookingSelectionOption>> Function()? loadGovernorates;
   final Future<List<BookingSelectionOption>> Function(String governorateId)?
-      loadSecondaryOptions;
+  loadSecondaryOptions;
   final Future<List<String>> Function(DateTime selectedDate)? loadSlotsForDate;
 
   const GenericBookingScreen({
@@ -172,9 +172,7 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
 
   /// "التالي" is active only when both fields are selected AND a booking exists.
   bool get _canProceed =>
-      _selectedGovernorate != null &&
-      _selectedSecondary != null &&
-      _isBooked;
+      _selectedGovernorate != null && _selectedSecondary != null && _isBooked;
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -189,7 +187,9 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
       isScrollControlled: true,
       builder: (_) => GenericListBottomSheet(
         title: 'اختر محافظتك',
-        items: options.map((BookingSelectionOption item) => item.label).toList(),
+        items: options
+            .map((BookingSelectionOption item) => item.label)
+            .toList(),
         onItemSelected: (value) {
           final BookingSelectionOption? selected = _findOptionByLabel(
             options,
@@ -215,7 +215,8 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
       return;
     }
 
-    final List<BookingSelectionOption> options = await _resolveSecondaryOptions();
+    final List<BookingSelectionOption> options =
+        await _resolveSecondaryOptions();
     showModalBottomSheet<void>(
       context: context,
       shape: RoundedRectangleBorder(
@@ -225,7 +226,9 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
       isScrollControlled: true,
       builder: (_) => GenericListBottomSheet(
         title: widget.secondaryDropdown.sheetTitle,
-        items: options.map((BookingSelectionOption item) => item.label).toList(),
+        items: options
+            .map((BookingSelectionOption item) => item.label)
+            .toList(),
         onItemSelected: (value) {
           final BookingSelectionOption? selected = _findOptionByLabel(
             options,
@@ -353,7 +356,8 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
       return _governorateOptions!;
     }
 
-    final Future<List<BookingSelectionOption>> Function()? loader = widget.loadGovernorates;
+    final Future<List<BookingSelectionOption>> Function()? loader =
+        widget.loadGovernorates;
     if (loader == null) {
       _governorateOptions = kDefaultGovernorates
           .map((String item) => BookingSelectionOption(id: item, label: item))
@@ -365,8 +369,11 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
       final List<BookingSelectionOption> loaded = await loader();
       _governorateOptions = loaded.isEmpty
           ? kDefaultGovernorates
-              .map((String item) => BookingSelectionOption(id: item, label: item))
-              .toList(growable: false)
+                .map(
+                  (String item) =>
+                      BookingSelectionOption(id: item, label: item),
+                )
+                .toList(growable: false)
           : loaded;
       return _governorateOptions!;
     } catch (error) {
@@ -392,8 +399,8 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
       return _secondaryOptions!;
     }
 
-    final Future<List<BookingSelectionOption>> Function(String governorateId)? loader =
-        widget.loadSecondaryOptions;
+    final Future<List<BookingSelectionOption>> Function(String governorateId)?
+    loader = widget.loadSecondaryOptions;
     if (loader == null || _selectedGovernorateId == null) {
       _secondaryOptions = widget.secondaryDropdown.items
           .map((String item) => BookingSelectionOption(id: item, label: item))
@@ -402,11 +409,16 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
     }
 
     try {
-      final List<BookingSelectionOption> loaded = await loader(_selectedGovernorateId!);
+      final List<BookingSelectionOption> loaded = await loader(
+        _selectedGovernorateId!,
+      );
       _secondaryOptions = loaded.isEmpty
           ? widget.secondaryDropdown.items
-              .map((String item) => BookingSelectionOption(id: item, label: item))
-              .toList(growable: false)
+                .map(
+                  (String item) =>
+                      BookingSelectionOption(id: item, label: item),
+                )
+                .toList(growable: false)
           : loaded;
       return _secondaryOptions!;
     } catch (error) {
@@ -431,111 +443,111 @@ class _GenericBookingScreenState extends State<GenericBookingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF5F5F5),
-        drawer: const AppDrawer(),
-        body: Stack(
-          children: [
-            Column(
-              children: [
-                // ── App bar ────────────────────────────────────────────────────
-                ServiceScreenAppBar(
-                  title: widget.appBarTitle,
-                  onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                ),
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF5F5F5),
+      drawer: const AppDrawer(),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              // ── App bar ────────────────────────────────────────────────────
+              ServiceScreenAppBar(
+                title: widget.appBarTitle,
+                onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              ),
 
-                // ── Scrollable body ────────────────────────────────────────────
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+              // ── Scrollable body ────────────────────────────────────────────
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: 16.h),
+
+                      // ── Section title ────────────────────────────────────
+                      Text(
+                        widget.headerTitle,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: const Color(0xFF222222),
+                          fontSize: 17.sp,
+                          fontFamily: 'Tajawal',
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // ── Governorate picker ───────────────────────────────
+                      CustomDropdownField(
+                        label: 'المحافظة',
+                        hint: 'اختر محافظتك',
+                        value: _selectedGovernorate,
+                        onTap: _showGovernorateSheet,
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // ── Secondary picker (traffic unit / medical centre) ─
+                      CustomDropdownField(
+                        label: widget.secondaryDropdown.label,
+                        hint: widget.secondaryDropdown.hint,
+                        value: _selectedSecondary,
+                        onTap: _showSecondarySheet,
+                      ),
+                      SizedBox(height: 16.h),
+
+                      // ── Booking card ─────────────────────────────────────
+                      _BookingCard(
+                        title: widget.bookingCardTitle,
+                        isBooked: _isBooked,
+                        onBookPressed: _onBookAppointmentPressed,
+                      ),
+
+                      // ── Post-booking info (conditional) ──────────────────
+                      if (_isBooked && _bookingResult != null) ...[
                         SizedBox(height: 16.h),
 
-                        // ── Section title ────────────────────────────────────
-                        Text(
-                          widget.headerTitle,
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            color: const Color(0xFF222222),
-                            fontSize: 17.sp,
-                            fontFamily: 'Tajawal',
-                            fontWeight: FontWeight.w700,
-                          ),
+                        // Facility info card
+                        MedicalCenterInfoCard(
+                          centerName: _selectedSecondary ?? '',
+                          address:
+                              _bookingResult!.trafficUnitAddress ??
+                              'وحدة مرور ${_selectedSecondary ?? ''} - محافظة ${_selectedGovernorate ?? ''}',
+                          workingHours:
+                              _bookingResult!.workingHours ??
+                              'من 9 صباحاً حتى 3 مساءً',
                         ),
                         SizedBox(height: 16.h),
 
-                        // ── Governorate picker ───────────────────────────────
-                        CustomDropdownField(
-                          label: 'المحافظة',
-                          hint: 'اختر محافظتك',
-                          value: _selectedGovernorate,
-                          onTap: _showGovernorateSheet,
+                        // Booking summary card
+                        AppointmentDetailsCard(
+                          title: widget.appointmentCardTitle,
+                          date: _formatDate(_bookingResult!.selectedDate),
+                          time: _formatTime(_bookingResult!.selectedSlot),
+                          bookingNumber: _bookingResult!.bookingNumber ?? '',
+                          requestNumber: _bookingResult!.requestNumber ?? '',
                         ),
-                        SizedBox(height: 16.h),
-
-                        // ── Secondary picker (traffic unit / medical centre) ─
-                        CustomDropdownField(
-                          label: widget.secondaryDropdown.label,
-                          hint: widget.secondaryDropdown.hint,
-                          value: _selectedSecondary,
-                          onTap: _showSecondarySheet,
-                        ),
-                        SizedBox(height: 16.h),
-
-                        // ── Booking card ─────────────────────────────────────
-                        _BookingCard(
-                          title: widget.bookingCardTitle,
-                          isBooked: _isBooked,
-                          onBookPressed: _onBookAppointmentPressed,
-                        ),
-
-                        // ── Post-booking info (conditional) ──────────────────
-                        if (_isBooked && _bookingResult != null) ...[
-                          SizedBox(height: 16.h),
-
-                          // Facility info card
-                          MedicalCenterInfoCard(
-                            centerName: _selectedSecondary ?? '',
-                            address: _bookingResult!.trafficUnitAddress ??
-                                'وحدة مرور ${_selectedSecondary ?? ''} - محافظة ${_selectedGovernorate ?? ''}',
-                            workingHours: _bookingResult!.workingHours ?? 'من 9 صباحاً حتى 3 مساءً',
-                          ),
-                          SizedBox(height: 16.h),
-
-                          // Booking summary card
-                          AppointmentDetailsCard(
-                            title: widget.appointmentCardTitle,
-                            date: _formatDate(_bookingResult!.selectedDate),
-                            time: _formatTime(_bookingResult!.selectedSlot),
-                            bookingNumber: _bookingResult!.bookingNumber ?? '',
-                            requestNumber: _bookingResult!.requestNumber ?? '',
-                          ),
-                        ],
-
-                        SizedBox(height: 24.h),
                       ],
-                    ),
-                  ),
-                ),
 
-                // ── Bottom action ──────────────────────────────────────────────
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
-                  child: PrimaryButton(
-                    label: 'تأكيد الموعد',
-                    onPressed: _canProceed ? _onNextTapped : null,
-                    height: 48.h,
+                      SizedBox(height: 24.h),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+
+              // ── Bottom action ──────────────────────────────────────────────
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
+                child: PrimaryButton(
+                  label: 'تأكيد الموعد',
+                  onPressed: _canProceed ? _onNextTapped : null,
+                  height: 48.h,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -636,4 +648,3 @@ class _BookingCard extends StatelessWidget {
     );
   }
 }
-

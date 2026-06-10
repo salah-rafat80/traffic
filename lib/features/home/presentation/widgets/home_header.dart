@@ -1,6 +1,9 @@
-// path: lib/features/home/presentation/widgets/home_header.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:traffic/injection_container.dart';
+import 'package:traffic/features/home/bloc/home_search_bloc.dart';
+import 'package:traffic/features/home/bloc/home_search_event_state.dart';
 import 'package:traffic/features/home/presentation/widgets/home_search_field.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -16,7 +19,10 @@ class HomeHeader extends StatelessWidget {
           bottom: 20.h,
           left: 20.w,
           right: 20.w,
-          child: const HomeSearchField(),
+          child: BlocProvider<HomeSearchBloc>(
+            create: (_) => getIt<HomeSearchBloc>()..add(const SearchQueryChanged('')),
+            child: const HomeSearchField(),
+          ),
         ),
       ],
     );

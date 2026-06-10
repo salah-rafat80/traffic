@@ -26,7 +26,7 @@ class InspectionCameraIconCard extends StatelessWidget {
           child: Icon(
             Icons.camera_alt_outlined,
             size: 40.w,
-            color: const Color(0xFF2E7D32),
+            color: const Color(0xFF27AE60),
           ),
         ),
       ),

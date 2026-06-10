@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -47,7 +48,7 @@ class _ProfileScreenBody extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, ProfileState state) {
     if (state is ProfileLoading || state is ProfileInitial) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(child: CustomLoadingIndicator());
     }
 
     if (state is ProfileFailure) {

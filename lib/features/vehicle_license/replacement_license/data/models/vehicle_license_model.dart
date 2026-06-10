@@ -24,32 +24,32 @@ class VehicleLicenseModel {
   static List<VehicleLicenseModel> get dummyVehicles => [
         const VehicleLicenseModel(
           plateNumber: 'س ج ر ٤٢١٣',
-          vehicleType: 'ملاكي – هيونداي إلنترا',
+          vehicleType: 'ملاكي - هيونداي إلنترا',
           expiryDate: '12/3/2026',
           status: VehicleLicenseStatus.valid,
         ),
         const VehicleLicenseModel(
           plateNumber: 'س ج ر ٤٢١٣',
-          vehicleType: 'ملاكي – هيونداي إلنترا',
+          vehicleType: 'ملاكي - هيونداي إلنترا',
           expiryDate: '12/3/2026',
           status: VehicleLicenseStatus.expired,
         ),
         const VehicleLicenseModel(
           plateNumber: 'س ج ر ٤٢١٣',
-          vehicleType: 'ملاكي – هيونداي إلنترا',
+          vehicleType: 'ملاكي - هيونداي إلنترا',
           expiryDate: '12/3/2026',
           status: VehicleLicenseStatus.valid,
           hasUnpaidViolations: true,
         ),
         const VehicleLicenseModel(
           plateNumber: 'س ج ر ٤٢١٣',
-          vehicleType: 'ملاكي – هيونداي إلنترا',
+          vehicleType: 'ملاكي - هيونداي إلنترا',
           expiryDate: '12/3/2026',
           status: VehicleLicenseStatus.suspended,
         ),
         const VehicleLicenseModel(
           plateNumber: 'س ج ر ٤٢١٣',
-          vehicleType: 'ملاكي – هيونداي إلنترا',
+          vehicleType: 'ملاكي - هيونداي إلنترا',
           expiryDate: '12/3/2026',
           status: VehicleLicenseStatus.withdrawn,
         ),

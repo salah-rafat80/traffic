@@ -1,7 +1,9 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:traffic/core/widgets/app_drawer.dart';
 import 'package:traffic/core/widgets/service_screen_appbar.dart';
+import 'package:traffic/core/widgets/empty_state_widget.dart';
 import 'package:traffic/features/auth/presentation/screens/signup_screen/widgets/signup_step1_form/widgets/next_button_widget.dart';
 import 'package:traffic/features/driving_license/domain/enums/license_status.dart';
 import 'package:traffic/features/driving_license/presentation/screens/license_details/widgets/license_info_card.dart';
@@ -55,28 +57,38 @@ class _LostLicenseSelectionScreenState
     setState(() => _isLoading = true);
     try {
       final repository = getIt<DrivingLicenseRepository>();
-      
+
       // Always fetch fresh from API
       final result = await repository.getMyLicenses();
-      
+
       if (result.isSuccess && result.data != null) {
         setState(() {
           _licenses = result.data!;
           _isLoading = false;
+          if (_licenses.length == 1) {
+            _selectedIndex = 0;
+          } else {
+            _selectedIndex = null;
+          }
         });
       } else {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _selectedIndex = null;
+        });
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _selectedIndex = null;
+      });
     }
   }
 
   // ── Derived state ──────────────────────────────────────────────────────────
 
-  DrivingLicenseModel? get _selectedLicense => _selectedIndex != null
-      ? _licenses[_selectedIndex!]
-      : null;
+  DrivingLicenseModel? get _selectedLicense =>
+      _selectedIndex != null ? _licenses[_selectedIndex!] : null;
 
   /// The "التالي" button is active only when a licence is selected AND it has
   /// no unpaid violations (withdrawn licences cannot be selected at all).
@@ -99,9 +111,7 @@ class _LostLicenseSelectionScreenState
     if (lic == null) return;
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => LostLicenseDetailsScreen(license: lic),
-      ),
+      MaterialPageRoute(builder: (_) => LostLicenseDetailsScreen(license: lic)),
     );
   }
 
@@ -109,95 +119,86 @@ class _LostLicenseSelectionScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF5F5F5),
-        drawer: const AppDrawer(),
-        body: Column(
-          children: [
-            // ── App bar ──────────────────────────────────────────────────────
-            ServiceScreenAppBar(
-              title: 'استخراج بدل فاقد / تالف',
-              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            ),
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF5F5F5),
+      drawer: const AppDrawer(),
+      body: Column(
+        children: [
+          // ── App bar ──────────────────────────────────────────────────────
+          ServiceScreenAppBar(
+            title: 'استخراج بدل فاقد / تالف',
+            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
 
-            // ── Scrollable licence list ───────────────────────────────────────
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _licenses.isEmpty
-                      ? Center(
-                          child: Text(
-                            'لا توجد رخص قيادة مسجلة',
-                            style: TextStyle(
-                              fontFamily: 'Tajawal',
-                              fontSize: 16.sp,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 16.w, vertical: 16.h),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // ── Section header ────────────────────────────────────────
-                              Text(
-                                'تفاصيل رخصة القيادة',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  fontFamily: 'Tajawal',
-                                  fontSize: 17.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF222222),
-                                ),
-                              ),
-
-                              SizedBox(height: 12.h),
-
-                              // ── Licence cards ─────────────────────────────────────────
-                              ..._licenses.asMap().entries.map((entry) {
-                                final index = entry.key;
-                                final lic = entry.value;
-                                final bool isWithdrawn =
-                                    lic.status == LicenseStatus.withdrawn;
-                                final bool isSelected = _selectedIndex == index;
-
-                                return Padding(
-                                  padding: EdgeInsets.only(bottom: 12.h),
-                                  child: _SelectableLicenseCard(
-                                    data: lic,
-                                    isSelected: isSelected,
-                                    isDisabled: isWithdrawn,
-                                    onTap: () => _onCardTap(index),
-                                  ),
-                                );
-                              }),
-
-                              SizedBox(height: 12.h),
-
-                              // ── Primary action button ─────────────────────────────────
-                              NextButtonWidget(
-                                onPressed: _onNextPressed,
-                                isValid: _canProceed,
-                                height: 48.h,
-                              ),
-
-                              SizedBox(height: 24.h),
-                            ],
+          // ── Scrollable licence list ───────────────────────────────────────
+          Expanded(
+            child: _isLoading
+                ? Center(child: CustomLoadingIndicator())
+                : _licenses.isEmpty
+                ? const EmptyStateWidget(
+                    message: 'لا توجد رخص قيادة مسجلة حالياً',
+                  )
+                : SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 16.h,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // ── Section header ────────────────────────────────────────
+                        Text(
+                          'تفاصيل رخصة القيادة',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 17.sp,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF222222),
                           ),
                         ),
-            ),
-          ],
-        ),
+
+                        SizedBox(height: 12.h),
+
+                        // ── Licence cards ─────────────────────────────────────────
+                        ..._licenses.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final lic = entry.value;
+                          final bool isWithdrawn =
+                              lic.status == LicenseStatus.withdrawn;
+                          final bool isSelected = _selectedIndex == index;
+
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: 12.h),
+                            child: _SelectableLicenseCard(
+                              data: lic,
+                              isSelected: isSelected,
+                              isDisabled: isWithdrawn,
+                              onTap: () => _onCardTap(index),
+                            ),
+                          );
+                        }),
+
+                        SizedBox(height: 12.h),
+
+                        // ── Primary action button ─────────────────────────────────
+                        NextButtonWidget(
+                          onPressed: _onNextPressed,
+                          isValid: _canProceed,
+                          height: 48.h,
+                        ),
+
+                        SizedBox(height: 24.h),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
       ),
     );
   }
 }
-
 
 // ── Selectable card widget ────────────────────────────────────────────────────
 
@@ -225,49 +226,30 @@ class _SelectableLicenseCard extends StatelessWidget {
       opacity: isDisabled ? 0.45 : 1.0,
       child: GestureDetector(
         onTap: isDisabled ? null : onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(
-              color: isSelected
-                  ? const Color(0xFF27AE60)
-                  : const Color(0xFFDADADA),
-              width: isSelected ? 2.w : 1.w,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Info card ─────────────────────────────────────────────────
-              LicenseInfoCard(data: data, isSelected: isSelected),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Info card ─────────────────────────────────────────────────
+            LicenseInfoCard(data: data, isSelected: isSelected),
 
-              // ── Warning banner (shown inside card when violations exist) ──
-              if (isSelected && data.hasUnpaidViolations) ...[
-                const SizedBox(height: 0),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 8.h,
-                  ),
-                  child: WarningBanner(
-                    license: data,
-                    onViewViolationsTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ViolationsListScreen(license: data),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+            // ── Warning banner (shown below card when violations exist) ──
+            if (isSelected && data.hasUnpaidViolations) ...[
+              SizedBox(height: 12.h),
+              WarningBanner(
+                license: data,
+                onViewViolationsTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ViolationsListScreen(license: data),
+                    ),
+                  );
+                },
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 }
-

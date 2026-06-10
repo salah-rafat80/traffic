@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Sticky bottom input bar for the chat screen.
 ///
@@ -57,7 +56,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
                 minLines: 1,
                 maxLines: 5, // Grow up to 5 lines then scroll
                 keyboardType: TextInputType.multiline,
-                style: GoogleFonts.cairo(
+                style: TextStyle(fontFamily: 'Cairo', 
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
                   color: const Color(0xFF222222),
@@ -65,7 +64,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
                 decoration: InputDecoration(
                   hintText: 'اكتب سؤالك هنا......',
                   hintTextDirection: TextDirection.rtl,
-                  hintStyle: GoogleFonts.cairo(
+                  hintStyle: TextStyle(fontFamily: 'Cairo', 
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w400,
                     color: const Color(0xFF9CA3AF),

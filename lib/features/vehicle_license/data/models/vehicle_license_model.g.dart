@@ -11,6 +11,7 @@ _$VehicleLicenseModelImpl _$$VehicleLicenseModelImplFromJson(
 ) => _$VehicleLicenseModelImpl(
   id: (json['id'] as num?)?.toInt() ?? 0,
   vehicleLicenseNumber: json['vehicleLicenseNumber'] as String? ?? '',
+  plateNumber: json['plateNumber'] as String?,
   category: json['category'] as String? ?? '',
   brand: json['brand'] as String? ?? '',
   model: json['model'] as String? ?? '',
@@ -33,6 +34,7 @@ Map<String, dynamic> _$$VehicleLicenseModelImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'vehicleLicenseNumber': instance.vehicleLicenseNumber,
+  'plateNumber': instance.plateNumber,
   'category': instance.category,
   'brand': instance.brand,
   'model': instance.model,

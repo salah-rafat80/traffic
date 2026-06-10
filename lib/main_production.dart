@@ -7,8 +7,17 @@ import 'package:traffic/features/main/presentation/screens/splash_screen.dart';
 
 import 'package:traffic/injection_container.dart';
 
+import 'package:flutter/services.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // جعل شريط الحالة شفافاً
+      statusBarIconBrightness: Brightness.dark, // أيقونات داكنة (بطارية، واي فاي، إلخ)
+    ),
+  );
 
   // Catch Flutter framework errors
   FlutterError.onError = (details) {

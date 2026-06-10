@@ -7,6 +7,7 @@ class TimelineStepItem extends StatelessWidget {
   final String descSubtitle;
   final bool isCompleted;
   final bool isCurrent;
+  final bool isFailed;
   final bool isLastStep;
 
   const TimelineStepItem({
@@ -16,6 +17,7 @@ class TimelineStepItem extends StatelessWidget {
     required this.descSubtitle,
     this.isCompleted = false,
     this.isCurrent = false,
+    this.isFailed = false,
     this.isLastStep = false,
   });
 
@@ -33,7 +35,7 @@ class TimelineStepItem extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    color: Colors.black,
+                    color: isFailed ? const Color(0xFFE02424) : Colors.black,
                     fontSize: 14.sp,
                     fontFamily: 'Cairo',
                     fontWeight: FontWeight.w600,
@@ -43,21 +45,28 @@ class TimelineStepItem extends StatelessWidget {
                 Text(
                   dateSubtitle,
                   style: TextStyle(
-                    color: const Color(0xFF707070),
+                    color: isFailed
+                        ? const Color(0xFFE02424)
+                        : const Color(0xFF707070),
                     fontSize: 12.sp,
                     fontFamily: 'Cairo',
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 if (descSubtitle.isNotEmpty) ...[
-                  SizedBox(height: 2.h),
-                  Text(
-                    descSubtitle,
-                    style: TextStyle(
-                      color: const Color(0xFF707070),
-                      fontSize: 12.sp,
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.w500,
+                  // SizedBox(height: 2.h),
+                  Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Text(
+                      descSubtitle,
+                      style: TextStyle(
+                        color: isFailed
+                            ? const Color(0xFF9B1C1C)
+                            : const Color(0xFF707070),
+                        fontSize: 12.sp,
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
@@ -72,32 +81,40 @@ class TimelineStepItem extends StatelessWidget {
                 width: 20.w,
                 height: 20.w,
                 decoration: ShapeDecoration(
-                  color: isCompleted
+                  color: isFailed
+                      ? const Color(0xFFFDE8E8)
+                      : isCompleted
                       ? const Color(0xFFD4ECDE)
                       : isCurrent
-                          ? const Color(0xFFA5D4FF)
-                          : const Color(0xFFE0E0E0),
+                      ? const Color(0xFFA5D4FF)
+                      : const Color(0xFFE0E0E0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.r),
                   ),
                 ),
                 child: Center(
-                  child: isCompleted
+                  child: isFailed
+                      ? Icon(
+                          Icons.cancel,
+                          color: const Color(0xFFE02424),
+                          size: 16.r,
+                        )
+                      : isCompleted
                       ? Icon(
                           Icons.check_circle,
                           color: const Color(0xFF27AE60),
                           size: 16.r,
                         )
                       : isCurrent
-                          ? Container(
-                              width: 14.w,
-                              height: 14.w,
-                              decoration: const ShapeDecoration(
-                                color: Color(0xFF3B82F6),
-                                shape: OvalBorder(),
-                              ),
-                            )
-                          : const SizedBox.shrink(),
+                      ? Container(
+                          width: 14.w,
+                          height: 14.w,
+                          decoration: const ShapeDecoration(
+                            color: Color(0xFF3B82F6),
+                            shape: OvalBorder(),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ),
               if (!isLastStep)
@@ -106,6 +123,8 @@ class TimelineStepItem extends StatelessWidget {
                     width: 2.w,
                     color: isCompleted
                         ? const Color(0xFFD4ECDE) // completed line color
+                        : isFailed
+                        ? const Color(0xFFFDE8E8) // failed line color
                         : const Color(0xFFE0E0E0), // inactive line color
                   ),
                 ),

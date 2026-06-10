@@ -11,7 +11,14 @@ class MyOrdersCubit extends Cubit<MyOrdersState> {
 
   Future<void> fetchMyOrders() async {
     emit(MyOrdersLoading());
-    final result = await _repository.fetchMyRequests();
+    
+    // Force a 5-second delay concurrently with the data fetching
+    final fetchFuture = _repository.fetchMyRequests();
+    final delayFuture = Future.delayed(const Duration(seconds: 5));
+    
+    await Future.wait([fetchFuture, delayFuture]);
+    final result = await fetchFuture;
+
     if (result.isSuccess) {
       emit(MyOrdersFetchSuccess(orders: result.data ?? []));
     } else {

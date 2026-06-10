@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -122,7 +123,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: AppColors.primary),
+            CustomLoadingIndicator(color: AppColors.primary),
             SizedBox(height: 16),
             Text(
               'جاري إرسال رمز التحقق...',

@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -132,7 +133,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                 textDirection: TextDirection.rtl,
                 style: TextStyle(fontFamily: 'Cairo', fontSize: 13.sp),
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: const Color(0xFF27AE60),
             ),
           );
           Navigator.pushAndRemoveUntil(
@@ -171,11 +172,11 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
               ),
               if (isUploadLoading)
                 const Expanded(
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Center(child: CustomLoadingIndicator()),
                 )
               else if (isInsuranceLoading)
                 const Expanded(
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Center(child: CustomLoadingIndicator()),
                 )
               else
                 Expanded(

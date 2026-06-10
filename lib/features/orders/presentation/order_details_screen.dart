@@ -2,167 +2,151 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/api/api_client.dart';
 import '../../../core/widgets/app_drawer.dart';
-import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/service_screen_appbar.dart';
 import 'package:traffic/injection_container.dart';
-import '../../vehicle_license/renewal_license/presentation/screens/vehicle_renewal_delivery_screen.dart';
-import '../../driving_license/presentation/screens/finalize/finalize_driving_license_screen.dart';
-import '../../driving_license/presentation/cubits/driving_license_cubit.dart';
-import '../../driving_license/presentation/cubits/driving_renewal_cubit.dart';
-import '../../lost_license/presentation/screens/delivery_method_screen.dart';
 import '../domain/entities/order_model.dart';
+import 'widgets/failed_order_alert.dart';
+import 'widgets/finalize_order_button.dart';
+import 'widgets/order_loading_overlay.dart';
 import 'widgets/order_status_timeline.dart';
 import 'widgets/order_summary_header_card.dart';
 
-class OrderDetailsScreen extends StatefulWidget {
+import 'package:traffic/features/orders/presentation/cubits/my_orders_cubit.dart';
+
+import 'cubits/order_details_cubit.dart';
+import 'utils/order_details_helper.dart';
+
+class OrderDetailsScreen extends StatelessWidget {
   final OrderModel order;
 
   const OrderDetailsScreen({super.key, required this.order});
 
   @override
-  State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider<OrderDetailsCubit>(
+      create: (_) => getIt<OrderDetailsCubit>(),
+      child: _OrderDetailsView(order: order),
+    );
+  }
 }
 
-class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
+class _OrderDetailsView extends StatelessWidget {
+  final OrderModel order;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  /// Returns true when this order is an approved driving license renewal
-  /// that the user can finalize (choose delivery method).
-  bool get _showFinalizeButton {
-    final bool isSupportedProcedure =
-        widget.order.title.contains('تجديد رخصة') ||
-        widget.order.title.contains('تجديد رخصة قيادة') ||
-        widget.order.title.contains('إصدار رخصة قيادة') ||
-        widget.order.title.contains('تجديد رخصة مركبة');
-
-    // Show the button when the order was accepted/approved but not yet
-    // completed. "pending" and "needsData" are the typical states where
-    // the backend has approved but the citizen still needs to finalize.
-    final bool isActionable =
-        widget.order.status == OrderStatus.pending ||
-        widget.order.status == OrderStatus.needsData;
-
-    return isSupportedProcedure && isActionable;
-  }
-
-  void _onFinalizePressed() {
-    final String requestNumber = widget.order.id.trim();
-    if (requestNumber.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'تعذر استكمال الطلب: رقم الطلب غير متاح.',
-            textDirection: TextDirection.rtl,
-          ),
-        ),
-      );
-      return;
-    }
-
-    // apiClient is managed by getIt in repositories, manual use here is usually redundant
-    // final apiClient = getIt<ApiClient>(); 
-    final String title = widget.order.title;
-
-    if (title.contains('تجديد رخصة مركبة') || requestNumber.startsWith('VR-')) {
-      // Vehicle License Renewal Finalization
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VehicleRenewalDeliveryScreen(
-            requestNumber: requestNumber,
-            // Pass the ID as plate number since we don't have the original model here
-            plateNumber: widget.order.id, 
-          ),
-        ),
-      );
-    } else if (title.contains('إصدار رخصة قيادة') || requestNumber.startsWith('LR-')) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => BlocProvider<DrivingLicenseCubit>(
-            create: (_) => getIt<DrivingLicenseCubit>(),
-            child: FinalizeDrivingLicenseScreen(requestNumber: requestNumber),
-          ),
-        ),
-      );
-    } else if (title.contains('تجديد رخصة قيادة') ||
-        title.contains('تجديد رخصة') ||
-        requestNumber.startsWith('DR-')) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => BlocProvider<DrivingRenewalCubit>(
-            create: (_) => getIt<DrivingRenewalCubit>(),
-            child: DeliveryMethodScreen.renewalFinalize(
-              renewalRequestNumber: requestNumber,
-            ),
-          ),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'لم يتم دعم استكمال هذه الخدمة بعد.',
-            textDirection: TextDirection.rtl,
-          ),
-        ),
-      );
-    }
-  }
+  _OrderDetailsView({required this.order});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF5F5F5),
-      drawer: const AppDrawer(),
-      body: Column(
-        children: [
-          ServiceScreenAppBar(
-            title: "طلباتي",
-            onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: 16.r,
-                right: 16.r,
-                top: 24.h,
-                bottom: 16.r,
+    return BlocListener<OrderDetailsCubit, OrderDetailsState>(
+      listener: (context, state) {
+        if (state is OrderDetailsMedicalBookingSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'تم حجز موعد الكشف الطبي بنجاح! جاري الانتقال لحجز اختبار القيادة...',
+                textDirection: TextDirection.rtl,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'تفاصيل الطلب',
-                    style: TextStyle(
-                      color: const Color(0xFF222222),
-                      fontSize: 17.sp,
-                      fontFamily: 'Tajawal',
-                      fontWeight: FontWeight.w700,
+              backgroundColor: Color(0xFF27AE60),
+            ),
+          );
+          OrderDetailsHelper.startPracticalBooking(context, state.requestNumber);
+        } else if (state is OrderDetailsPracticalBookingSuccess) {
+          try {
+            context.read<MyOrdersCubit>().fetchMyOrders();
+          } catch (_) {}
+
+          Navigator.of(context).pop();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'تم حجز موعد اختبار القيادة بنجاح! تم استكمال جميع حجز المواعيد.',
+                textDirection: TextDirection.rtl,
+              ),
+              backgroundColor: Color(0xFF27AE60),
+            ),
+          );
+        } else if (state is OrderDetailsFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.errorMessage,
+                textDirection: TextDirection.rtl,
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Stack(
+        children: [
+          Scaffold(
+            key: _scaffoldKey,
+            backgroundColor: const Color(0xFFF5F5F5),
+            drawer: const AppDrawer(),
+            body: Column(
+              children: [
+                ServiceScreenAppBar(
+                  title: "طلباتي",
+                  onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      left: 16.r,
+                      right: 16.r,
+                      top: 24.h,
+                      bottom: 16.r,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'تفاصيل الطلب',
+                          style: TextStyle(
+                            color: const Color(0xFF222222),
+                            fontSize: 17.sp,
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        OrderSummaryHeaderCard(order: order),
+                        if (order.status == OrderStatus.failed ||
+                            (order.stepCode ?? '') == 'MEDICAL_EXAM_FAILED' ||
+                            order.statusLabel.contains('عدم اجتياز') ||
+                            order.statusLabel.contains('راسب') ||
+                            order.statusLabel.contains('لم يجتز') ||
+                            order.statusLabel.contains('failed') ||
+                            order.statusLabel.contains('Failed')) ...[
+                          SizedBox(height: 16.h),
+                          FailedOrderAlert(statusLabel: order.statusLabel),
+                        ],
+                        SizedBox(height: 24.h),
+                        OrderStatusTimeline(order: order),
+                        SizedBox(height: 32.h),
+                      ],
                     ),
                   ),
-                  SizedBox(height: 16.h),
-                  OrderSummaryHeaderCard(order: widget.order),
-                  SizedBox(height: 24.h),
-                  OrderStatusTimeline(status: widget.order.status),
-                  SizedBox(height: 32.h),
-                ],
-              ),
+                ),
+                if (OrderDetailsHelper.showFinalizeButton(order))
+                  FinalizeOrderButton(
+                    label: OrderDetailsHelper.getButtonLabel(order),
+                    onPressed: () => OrderDetailsHelper.handleFinalizePressed(context, order),
+                  ),
+              ],
             ),
           ),
-          if (_showFinalizeButton)
-            Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
-              child: PrimaryButton(
-                label: 'استكمال الإجراءات',
-                onPressed: _onFinalizePressed,
-                height: 48.h,
-              ),
-            ),
+          BlocBuilder<OrderDetailsCubit, OrderDetailsState>(
+            builder: (context, state) {
+              if (state is OrderDetailsLoading) {
+                return const OrderLoadingOverlay();
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ],
       ),
     );

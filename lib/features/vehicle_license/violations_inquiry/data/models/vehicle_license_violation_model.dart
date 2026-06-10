@@ -40,14 +40,33 @@ class VehicleLicenseViolationModel {
       mappedStatus = LicenseStatus.withdrawn;
     }
 
+    final category = json['category'] as String? ?? '';
+    final brand = json['brand'] as String? ?? '';
+    final model = json['model'] as String? ?? '';
+    final rawVehicleType = json['vehicleType'] as String? ?? '';
+
+    String finalVehicleType = rawVehicleType;
+    if (finalVehicleType.isEmpty) {
+      final brandModel = [brand.trim(), model.trim()].where((s) => s.isNotEmpty).join(' ');
+      if (category.trim().isNotEmpty && brandModel.isNotEmpty) {
+        finalVehicleType = '${category.trim()} - $brandModel';
+      } else if (category.trim().isNotEmpty) {
+        finalVehicleType = category.trim();
+      } else {
+        finalVehicleType = brandModel;
+      }
+    } else {
+      finalVehicleType = finalVehicleType.replaceAll('–', '-').replaceAll('  ', ' ').trim();
+    }
+
     return VehicleLicenseViolationModel(
       id: json['id'] as int? ?? 0,
       vehicleLicenseNumber:
           json['vehicleLicenseNumber'] as String? ?? '',
       plateNumber: json['plateNumber'] as String? ?? '',
-      vehicleType: json['vehicleType'] as String? ?? '',
-      brand: json['brand'] as String? ?? '',
-      model: json['model'] as String? ?? '',
+      vehicleType: finalVehicleType,
+      brand: brand,
+      model: model,
       status: mappedStatus,
       issueDate: json['issueDate'] as String? ?? '',
       expiryDate: json['expiryDate'] as String? ?? '',

@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import '../../../../core/api/profile_cache.dart';
 import '../../data/repositories/profile_repository.dart';
 import 'profile_state.dart';
 
@@ -14,6 +15,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(ProfileLoading());
     final result = await _repository.getProfile();
     if (result.isSuccess && result.data != null) {
+      await ProfileCache().saveProfile(result.data!);
       emit(ProfileLoadSuccess(profile: result.data!));
     } else {
       emit(ProfileFailure(message: result.error ?? 'حدث خطأ غير متوقع.'));

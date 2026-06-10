@@ -47,7 +47,7 @@ class VehicleTechnicalInspectionScreen extends StatelessWidget {
                     'تم تقديم طلب التجديد بنجاح. يمكنك متابعة الطلب واستكماله من قائمة "طلباتي".',
                 textDirection: TextDirection.rtl,
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: const Color(0xFF27AE60),
             ),
           );
           Navigator.of(context).popUntil((route) => route.isFirst);

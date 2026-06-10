@@ -16,8 +16,8 @@ class InspectionRetakeButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF2E7D32),
-          side: const BorderSide(color: Color(0xFF2E7D32), width: 1.5),
+          foregroundColor: const Color(0xFF27AE60),
+          side: const BorderSide(color: Color(0xFF27AE60), width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
           ),

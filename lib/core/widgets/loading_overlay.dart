@@ -1,3 +1,4 @@
+import 'package:traffic/core/widgets/custom_loading_indicator.dart';
 import 'package:flutter/material.dart';
 
 class LoadingOverlay extends StatelessWidget {
@@ -19,7 +20,7 @@ class LoadingOverlay extends StatelessWidget {
           Container(
             color: Colors.black.withOpacity(0.3),
             child: const Center(
-              child: CircularProgressIndicator(
+              child: CustomLoadingIndicator(
                 color: Colors.white,
               ),
             ),

@@ -45,6 +45,8 @@ class ProfileInfoRow extends StatelessWidget {
                 SizedBox(height: 4.h),
                 Text(
                   value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: const Color(0xFF222222),
                     fontSize: 15.sp,

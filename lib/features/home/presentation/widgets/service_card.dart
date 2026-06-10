@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// A tall service card with icon on top and label below,
 /// used in the "الخدمات" grid section.
@@ -56,14 +55,19 @@ class _ServiceContent extends StatelessWidget {
       children: [
         SvgPicture.asset(icon, width: 38.w, height: 38.w),
         SizedBox(height: 12.h),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.rtl,
-          style: GoogleFonts.cairo(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w800,
-            color: const Color(0xFF222222),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4.w),
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            textDirection: TextDirection.rtl,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontFamily: 'Cairo', 
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF222222),
+            ),
           ),
         ),
       ],
@@ -84,14 +88,18 @@ class _AssistantContent extends StatelessWidget {
       children: [
         SvgPicture.asset(icon, width: 28.w, height: 28.w),
         SizedBox(width: 10.w),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.rtl,
-          style: GoogleFonts.cairo(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w800,
-            color: const Color(0xFF222222),
+        Flexible(
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            textDirection: TextDirection.rtl,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontFamily: 'Cairo', 
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF222222),
+            ),
           ),
         ),
       ],

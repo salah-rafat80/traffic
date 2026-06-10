@@ -8,6 +8,9 @@ import 'package:traffic/features/examiner_dashboard/presentation/screens/daily_t
 import 'package:traffic/injection_container.dart';
 
 
+import 'package:traffic/features/profile/data/repositories/profile_repository.dart';
+import 'package:traffic/features/auth/presentation/screens/login_screen/login_screen.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -34,22 +37,65 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
 
       if (isAuthenticated) {
-        final roles = await authRepository.getRoles();
-        final isStaff =
-            roles.any((r) => ['INSPECTOR', 'DOCTOR', 'EXAMINATOR'].contains(r));
+        // Verify token validity by calling getProfile
+        final profileRepository = getIt<ProfileRepository>();
+        final profileResult = await profileRepository.getProfile();
 
-        if (isStaff) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const DailyTestsScreen()),
-          );
+        if (profileResult.isSuccess) {
+          final roles = await authRepository.getRoles();
+          final isStaff =
+              roles.any((r) => ['INSPECTOR', 'DOCTOR', 'EXAMINATOR'].contains(r));
+
+          if (!mounted) return;
+          if (isStaff) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const DailyTestsScreen()),
+            );
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                  builder: (context) => const MainNavigationScreen()),
+            );
+          }
         } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-                builder: (context) => const MainNavigationScreen()),
-          );
+          // Token validation failed. Let's see if it's an authorization issue
+          final errorMessage = profileResult.error ?? '';
+          final isUnauthorized = errorMessage.contains('غير مصرح') ||
+              errorMessage.contains('401') ||
+              errorMessage.contains('تسجيل الدخول');
+
+          if (isUnauthorized) {
+            debugPrint('⚠️ Token is expired or unauthorized: $errorMessage. Logging out.');
+            await authRepository.logout(); // Clear token and cache
+
+            if (!mounted) return;
+            // Redirect straight to LoginScreen because the user already finished Onboarding before
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          } else {
+            // It's a network issue or temporary server failure (not 401).
+            // Let the user in anyway because they already have a token saved.
+            debugPrint('🌐 Network issue or server error: $errorMessage. Allowing entry.');
+            final roles = await authRepository.getRoles();
+            final isStaff =
+                roles.any((r) => ['INSPECTOR', 'DOCTOR', 'EXAMINATOR'].contains(r));
+
+            if (!mounted) return;
+            if (isStaff) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const DailyTestsScreen()),
+              );
+            } else {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                    builder: (context) => const MainNavigationScreen()),
+              );
+            }
+          }
         }
       } else {
-        // Navigate to onboarding screen
+        // Navigate to onboarding screen (first-time user)
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const OnboardingScreen()),
         );

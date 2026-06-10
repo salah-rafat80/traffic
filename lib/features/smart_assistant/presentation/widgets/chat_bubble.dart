@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// A single chat message bubble.
 ///
@@ -25,7 +24,7 @@ class ChatBubble extends StatelessWidget {
         ),
         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isUser ? const Color(0xFF2E7D32) : const Color(0xFFEFEFEF),
+          color: isUser ? const Color(0xFF27AE60) : const Color(0xFFEFEFEF),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(17.r),
             topRight: Radius.circular(17.r),
@@ -36,7 +35,7 @@ class ChatBubble extends StatelessWidget {
         child: Text(
           text,
           textDirection: TextDirection.rtl,
-          style: GoogleFonts.cairo(
+          style: TextStyle(fontFamily: 'Cairo', 
             fontSize: 14.sp,
             fontWeight: FontWeight.w600,
             color: isUser ? Colors.white : const Color(0xFF222222),

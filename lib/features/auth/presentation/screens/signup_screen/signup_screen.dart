@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:traffic/core/widgets/signup_app_bar.dart';
 import 'package:traffic/core/api/api_client.dart';
 import 'package:traffic/features/auth/data/repositories/auth_repository.dart';
@@ -269,7 +268,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 content: Text(
                   'تم إنشاء الحساب بنجاح',
                   textAlign: TextAlign.right,
-                  style: GoogleFonts.cairo(),
+                  style: TextStyle(fontFamily: 'Cairo'),
                 ),
                 backgroundColor: const Color(0xFF27AE60),
               ),
@@ -280,7 +279,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 content: Text(
                   state.message,
                   textAlign: TextAlign.right,
-                  style: GoogleFonts.cairo(),
+                  style: TextStyle(fontFamily: 'Cairo'),
                 ),
                 backgroundColor: const Color(0xFFD32F2F),
               ),

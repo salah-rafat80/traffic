@@ -24,6 +24,7 @@ mixin _$VehicleLicenseModel {
   int get id => throw _privateConstructorUsedError;
   @JsonKey(name: 'vehicleLicenseNumber')
   String get vehicleLicenseNumber => throw _privateConstructorUsedError;
+  String? get plateNumber => throw _privateConstructorUsedError;
   @JsonKey(name: 'category')
   String get category => throw _privateConstructorUsedError;
   String get brand => throw _privateConstructorUsedError;
@@ -58,6 +59,7 @@ abstract class $VehicleLicenseModelCopyWith<$Res> {
   $Res call({
     int id,
     @JsonKey(name: 'vehicleLicenseNumber') String vehicleLicenseNumber,
+    String? plateNumber,
     @JsonKey(name: 'category') String category,
     String brand,
     String model,
@@ -92,6 +94,7 @@ class _$VehicleLicenseModelCopyWithImpl<$Res, $Val extends VehicleLicenseModel>
   $Res call({
     Object? id = null,
     Object? vehicleLicenseNumber = null,
+    Object? plateNumber = freezed,
     Object? category = null,
     Object? brand = null,
     Object? model = null,
@@ -114,6 +117,10 @@ class _$VehicleLicenseModelCopyWithImpl<$Res, $Val extends VehicleLicenseModel>
                 ? _value.vehicleLicenseNumber
                 : vehicleLicenseNumber // ignore: cast_nullable_to_non_nullable
                       as String,
+            plateNumber: freezed == plateNumber
+                ? _value.plateNumber
+                : plateNumber // ignore: cast_nullable_to_non_nullable
+                      as String?,
             category: null == category
                 ? _value.category
                 : category // ignore: cast_nullable_to_non_nullable
@@ -190,6 +197,7 @@ abstract class _$$VehicleLicenseModelImplCopyWith<$Res>
   $Res call({
     int id,
     @JsonKey(name: 'vehicleLicenseNumber') String vehicleLicenseNumber,
+    String? plateNumber,
     @JsonKey(name: 'category') String category,
     String brand,
     String model,
@@ -224,6 +232,7 @@ class __$$VehicleLicenseModelImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? vehicleLicenseNumber = null,
+    Object? plateNumber = freezed,
     Object? category = null,
     Object? brand = null,
     Object? model = null,
@@ -246,6 +255,10 @@ class __$$VehicleLicenseModelImplCopyWithImpl<$Res>
             ? _value.vehicleLicenseNumber
             : vehicleLicenseNumber // ignore: cast_nullable_to_non_nullable
                   as String,
+        plateNumber: freezed == plateNumber
+            ? _value.plateNumber
+            : plateNumber // ignore: cast_nullable_to_non_nullable
+                  as String?,
         category: null == category
             ? _value.category
             : category // ignore: cast_nullable_to_non_nullable
@@ -301,6 +314,7 @@ class _$VehicleLicenseModelImpl extends _VehicleLicenseModel {
   const _$VehicleLicenseModelImpl({
     this.id = 0,
     @JsonKey(name: 'vehicleLicenseNumber') this.vehicleLicenseNumber = '',
+    this.plateNumber,
     @JsonKey(name: 'category') this.category = '',
     this.brand = '',
     this.model = '',
@@ -324,6 +338,8 @@ class _$VehicleLicenseModelImpl extends _VehicleLicenseModel {
   @override
   @JsonKey(name: 'vehicleLicenseNumber')
   final String vehicleLicenseNumber;
+  @override
+  final String? plateNumber;
   @override
   @JsonKey(name: 'category')
   final String category;
@@ -359,7 +375,7 @@ class _$VehicleLicenseModelImpl extends _VehicleLicenseModel {
 
   @override
   String toString() {
-    return 'VehicleLicenseModel(id: $id, vehicleLicenseNumber: $vehicleLicenseNumber, category: $category, brand: $brand, model: $model, governorate: $governorate, licensingUnit: $licensingUnit, issueDate: $issueDate, expiryDate: $expiryDate, status: $status, citizenName: $citizenName, hasUnpaidViolations: $hasUnpaidViolations, delivery: $delivery)';
+    return 'VehicleLicenseModel(id: $id, vehicleLicenseNumber: $vehicleLicenseNumber, plateNumber: $plateNumber, category: $category, brand: $brand, model: $model, governorate: $governorate, licensingUnit: $licensingUnit, issueDate: $issueDate, expiryDate: $expiryDate, status: $status, citizenName: $citizenName, hasUnpaidViolations: $hasUnpaidViolations, delivery: $delivery)';
   }
 
   @override
@@ -370,6 +386,8 @@ class _$VehicleLicenseModelImpl extends _VehicleLicenseModel {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.vehicleLicenseNumber, vehicleLicenseNumber) ||
                 other.vehicleLicenseNumber == vehicleLicenseNumber) &&
+            (identical(other.plateNumber, plateNumber) ||
+                other.plateNumber == plateNumber) &&
             (identical(other.category, category) ||
                 other.category == category) &&
             (identical(other.brand, brand) || other.brand == brand) &&
@@ -397,6 +415,7 @@ class _$VehicleLicenseModelImpl extends _VehicleLicenseModel {
     runtimeType,
     id,
     vehicleLicenseNumber,
+    plateNumber,
     category,
     brand,
     model,
@@ -431,6 +450,7 @@ abstract class _VehicleLicenseModel extends VehicleLicenseModel {
   const factory _VehicleLicenseModel({
     final int id,
     @JsonKey(name: 'vehicleLicenseNumber') final String vehicleLicenseNumber,
+    final String? plateNumber,
     @JsonKey(name: 'category') final String category,
     final String brand,
     final String model,
@@ -454,6 +474,8 @@ abstract class _VehicleLicenseModel extends VehicleLicenseModel {
   @override
   @JsonKey(name: 'vehicleLicenseNumber')
   String get vehicleLicenseNumber;
+  @override
+  String? get plateNumber;
   @override
   @JsonKey(name: 'category')
   String get category;
